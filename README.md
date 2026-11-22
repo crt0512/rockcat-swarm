@@ -160,6 +160,8 @@ rockcat-cli --device /dev/hidraw4 raw get 0f 8   # read feature report 0f, 8 byt
 rockcat-cli capture mine.cap info        # run a command and write down everything that went over the wire
 ```
 
+No mouse on the desk? `ROCKCAT_SIM=kone-aimo-remastered` in front of any command (the gui too) gives you a simulated one to play with. It answers like the real thing as far as we know and forgets everything when the program exits.
+
 How recordings work and how to make one of YOUR device (please do, thats how devices get supported): [docs/CAPTURES.md](docs/CAPTURES.md).
 
 `rockcat-cli --help` lists every key, `rockcat-cli types` lists the button functions. Profiles, dpi levels, buttons and leds count from 1 on the command line, like normal people count.
@@ -222,7 +224,7 @@ rockcat_exit();
 
 Link it with `pkg-config --cflags --libs rockcat`, or from CMake with `find_package(rockcat)` and `target_link_libraries(app rockcat::rockcat)`. Every call returns `ROCKCAT_OK` or a negative `rockcat_error`, `rockcat_strerror()` turns that into text.
 
-> Note : the header is in the middle of moving house. The profile api above (ask the device what it has, read a profile, change it, write it back) is where everything is going. The older structs with 11 leds and 24 buttons baked in are still in there because the cli, the gui and the lighting engine still use them, and they get deleted once those have moved. Build on the new one.
+> Note : if you built something against rossat-swarm: the structs with 11 leds and 24 buttons baked in are gone from the header, on purpose. The profile api above works the same for every device, a keyboard just answers `ROCKCAT_ERR_UNSUPPORTED` when you ask it for a dpi.
 
 ## Known meh
 

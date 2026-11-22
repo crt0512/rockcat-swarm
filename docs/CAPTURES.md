@@ -34,7 +34,11 @@ ROCKCAT_REPLAY=tests/captures/kone-aimo-remastered-synthetic.cap rockcat-cli inf
 
 No hardware gets touched. A replay is strict: the code has to send exactly what the recording has, in the same order, and gets the recorded answers back. The moment it sends something else the replay complains on stderr with the line number and every call after that fails. Thats the whole point, it is how one can notice that a refactor changed what goes over the wire.
 
-It also means a replay is not a simulated device. You cant click around in the gui with one, it only knows the one conversation that was recorded.
+It also means a replay is not a simulated device. You cant click around in the gui with one, it only knows the one conversation that was recorded. For clicking around there is `ROCKCAT_SIM=kone-aimo-remastered`, a pretend Kone AIMO Remastered that answers whatever you ask it.
+
+## The cli test
+
+`tests/cli_golden.sh` runs about 40 cli commands against the simulated mouse and compares both what they print and what they send with `tests/cli_golden.txt`. If you change the cli and that test goes red, read the diff: a changed message is fine (update the file), a changed `S` line means the mouse now gets told something different, and thats only fine if you meant it.
 
 ## The format
 

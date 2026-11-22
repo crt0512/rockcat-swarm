@@ -1,12 +1,17 @@
 // a pretend Kone AIMO Remastered, good enough to answer what the library asks
 // built from docs/PROTOCOL.md and NOT from a real mouse (nobody here owns one), so it proves the library
 // keeps saying the same things, not that the mouse agrees with them
+// ROCKCAT_SIM=kone-aimo-remastered puts it in place of real hardware for cli and gui. it forgets everything when the program exits
 #pragma once
 
+#include "families/kone_aimo.h"
 #include "transport.h"
 
+#include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <map>
+#include <thread>
 #include <vector>
 
 struct kone_sim final : transport {
@@ -152,6 +157,20 @@ struct kone_sim final : transport {
         return ROCKCAT_OK;
     }
 
-    int read(uint8_t *, size_t, int) override { return 0; }
+    // input reports a test wants the "mouse" to send, oldest first
+    std::vector<std::vector<uint8_t>> inputs;
+
+    int read(uint8_t *buf, size_t len, int timeout_ms) override
+    {
+        if (!inputs.empty()) {
+            size_t n = std::min(len, inputs.front().size());
+            std::memcpy(buf, inputs.front().data(), n);
+            inputs.erase(inputs.begin());
+            return static_cast<int>(n);
+        }
+        // a real mouse that has nothing to say makes the caller wait, and the engine paces its frames with exactly that wait
+        std::this_thread::sleep_for(std::chrono::milliseconds(timeout_ms));
+        return 0;
+    }
     void sleep_ms(int) override {}
 };

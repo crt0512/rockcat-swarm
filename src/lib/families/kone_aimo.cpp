@@ -20,6 +20,16 @@ struct kone_profile final : rockcat_profile {
 
     const rockcat_caps &caps() const { return desc->caps; }
 
+    rockcat_profile *clone() const override { return new kone_profile(*this); }
+
+    int read_light(rockcat_device *dev) override
+    {
+        int r = rockcat_read_settings(dev, static_cast<uint8_t>(index), &s);
+        settings_dirty = buttons_dirty = false;
+        macros.clear();
+        return r;
+    }
+
     int read(rockcat_device *dev) override
     {
         int r = rockcat_read_settings(dev, static_cast<uint8_t>(index), &s);
@@ -38,17 +48,18 @@ struct kone_profile final : rockcat_profile {
                 return r;
             settings_dirty = false;
         }
-        if (buttons_dirty) {
-            int r = rockcat_write_buttons(dev, &b);
-            if (r != ROCKCAT_OK)
-                return r;
-            buttons_dirty = false;
-        }
+        // macros go before the buttons that point at them, so a button never says "macro" while the slot is still empty
         while (!macros.empty()) {
             int r = rockcat_write_macro(dev, &macros.front());
             if (r != ROCKCAT_OK)
                 return r;
             macros.erase(macros.begin());
+        }
+        if (buttons_dirty) {
+            int r = rockcat_write_buttons(dev, &b);
+            if (r != ROCKCAT_OK)
+                return r;
+            buttons_dirty = false;
         }
         return ROCKCAT_OK;
     }
@@ -223,6 +234,13 @@ struct kone_profile final : rockcat_profile {
         return ROCKCAT_OK;
     }
 
+    int reset_inputs() override
+    {
+        rockcat_buttons_default(static_cast<uint8_t>(index), &b);
+        buttons_dirty = true;
+        return ROCKCAT_OK;
+    }
+
     int get_macro(rockcat_device *dev, int layer, int input, rockcat_macro *m) const override
     {
         int i = slot(layer, input);
@@ -270,6 +288,39 @@ int direct_end(rockcat_device *dev)
     return rockcat_set_direct_lighting(dev, 0);
 }
 
+// [0e 06 01 host ff/00 ff], sent without the status wait
+int direct_switch_fast(rockcat_device *dev, bool host)
+{
+    const uint8_t buf[6] = {0x0e, 6, 1, static_cast<uint8_t>(host ? 1 : 0), static_cast<uint8_t>(host ? 0xff : 0), 0xff};
+    return dev->io->set_feature(buf, sizeof buf);
+}
+
+int direct_active(rockcat_device *dev)
+{
+    uint8_t mode[6] = {0x0e};
+    return dev->io->get_feature(mode, sizeof mode) == static_cast<int>(sizeof mode) && mode[3] == 0 ? 0 : 1;
+}
+
+bool decode_event(const uint8_t *in, int n, rockcat_event *ev)
+{
+    if (in[0] == 0x01 && n > 1) {
+        // the plain mouse report, byte 1 is the buttons
+        *ev = rockcat_event{ROCKCAT_EVENT_ACTIVITY, in[1], 0};
+    } else if (in[0] == 0x03 && n >= 4 && in[2] == 0xee) {
+        // Easy-Shift[+]: 03 00 ee 02 00 = pressed, 03 00 ee 00 00 = released
+        *ev = rockcat_event{ROCKCAT_EVENT_EASYSHIFT, 0, in[3] != 0};
+    } else if (in[0] == 0x03 && n >= 5 && in[2] == 0xf2) {
+        // host action buttons: 03 00 f2 N 00 = press, ... 01 = release
+        *ev = rockcat_event{ROCKCAT_EVENT_HOST_ACTION, in[3], in[4] == 0};
+    } else if (in[0] == 0x03 && n >= 3 && in[2] != 0xef) {
+        // profile / dpi / whatever else the mouse changed by itself
+        *ev = rockcat_event{ROCKCAT_EVENT_CHANGED, in[2], 0};
+    } else {
+        return false;
+    }
+    return true;
+}
+
 const char *input_label(int input)
 {
     return input >= 0 && input < INPUTS ? rockcat_button_name(input) : "?";
@@ -282,4 +333,14 @@ const char *layer_label(int layer)
 
 } // namespace
 
-const family_ops KONE_AIMO_FAMILY = {new_profile, direct_begin, direct_frame, direct_end, input_label, rockcat_led_name, layer_label};
+// wheel, left strip front to back, right strip front to back, then the two rear ones
+// running lights go wheel, down the left side, around the back and up the right side
+const led_geo KONE_AIMO_LEDS[ROCKCAT_LED_COUNT] = {
+    {0, -0.2, 0, 0},
+    {-1, 0.0, 0, 1}, {-1, 0.25, 1, 2}, {-1, 0.5, 1, 3}, {-1, 0.75, 2, 4},
+    {1, 0.0, 0, 10}, {1, 0.25, 1, 9},  {1, 0.5, 1, 8},  {1, 0.75, 2, 7},
+    {-1, 1.0, 2, 5}, {1, 1.0, 2, 6},
+};
+
+const family_ops KONE_AIMO_FAMILY = {new_profile,  direct_begin, direct_frame,     direct_end,  direct_switch_fast,
+                                     direct_active, decode_event, input_label,      rockcat_led_name, layer_label};

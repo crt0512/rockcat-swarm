@@ -6,10 +6,12 @@
 //   rockcat-test-replay parse FILE    only checks that the file is a readable recording
 //   rockcat-test-replay diverge FILE  makes sure a replay actually notices when the code goes off script
 //   rockcat-test-replay profile       the profile api against the pretend mouse, no recording involved
+//   rockcat-test-replay events        input reports turned into events
+//   rockcat-test-replay render [FILE] every effect rendered, compared with FILE or printed if there is none
 //   rockcat-test-replay regen FILE    rewrites the recording. only do that when the traffic was MEANT to change
 
 #include "internal.h"
-#include "kone_sim.h"
+#include "sim_kone.h"
 
 #include <cstdio>
 #include <cstring>
@@ -230,7 +232,7 @@ static int profile_checks()
     const rockcat_caps *caps = rockcat_get_caps(dev);
     CHECK(caps && caps->kind == ROCKCAT_KIND_MOUSE && caps->profile_count == 5 && caps->led_count == 11);
     CHECK(caps && caps->input_count == 12 && caps->layer_count == 2);
-    CHECK(std::strcmp(rockcat_input_label(dev, 0), "Left button") == 0 && std::strcmp(rockcat_input_label(dev, 12), "?") == 0);
+    CHECK(std::strcmp(rockcat_input_label(caps, 0), "Left button") == 0 && std::strcmp(rockcat_input_label(caps, 12), "?") == 0);
 
     rockcat_profile *p = nullptr;
     CHECK(rockcat_profile_read(dev, 5, &p) == ROCKCAT_ERR_ARGUMENT && !p);
@@ -266,6 +268,13 @@ static int profile_checks()
     CHECK(rockcat_profile_set_input(p, 1, 3, &a) == ROCKCAT_OK);
     CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
     CHECK(sim->sets[0x06] == 1 && sim->sets[0x07] == 1);
+    // a clone is its own thing: changing it changes nothing on the original and nothing on the mouse
+    rockcat_profile *copy = rockcat_profile_clone(p);
+    CHECK(copy && rockcat_profile_set_int(copy, ROCKCAT_SET_BRIGHTNESS, 7) == ROCKCAT_OK);
+    int bright = 0;
+    CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_BRIGHTNESS, &bright) == ROCKCAT_OK && bright == 255);
+    CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK && sim->sets[0x06] == 1);
+    rockcat_profile_free(copy);
     rockcat_profile_free(p);
 
     // what the mouse has now: our changes in, the bytes we have no name for exactly as they were
@@ -309,11 +318,95 @@ static int profile_checks()
     return failures ? 1 : 0;
 }
 
+// every effect at a handful of moments, as text. compared against tests/render_golden.txt so the effects keep looking
+// the way they did (the numbers in there came out of the renderer as upstream wrote it, before it learned about other devices)
+static int render_check(const char *golden)
+{
+    std::string got;
+    rockcat_device *dev = device_from_transport(std::unique_ptr<transport>(new kone_sim), sim_info());
+    for (int profile : {0, 3}) {
+        rockcat_profile *p = nullptr;
+        if (rockcat_profile_read(dev, profile, &p) != ROCKCAT_OK)
+            return fail("cant read a profile from the simulated mouse");
+        unsigned mask = profile ? 0x5b7 : 0x7ff;
+        for (int led = 0; led < ROCKCAT_LED_COUNT; ++led) {
+            rockcat_color c{};
+            rockcat_profile_get_led(p, led, &c, nullptr);
+            rockcat_profile_set_led(p, led, c, (mask >> led) & 1);
+        }
+        rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT_SPEED, profile ? 9 : 6);
+        rockcat_profile_set_int(p, ROCKCAT_SET_BRIGHTNESS, profile ? 140 : 255);
+        rockcat_profile_set_int(p, ROCKCAT_SET_COLOR_THEME, profile ? 7 : 0);
+        for (int effect = 0; effect <= ROCKCAT_EFFECT_COLORWAVE; ++effect)
+            for (double t : {0.0, 0.37, 1.9, 12.25})
+                for (double activity : {0.0, 0.6}) {
+                    rockcat_color out[ROCKCAT_LED_COUNT];
+                    if (rockcat_profile_render(p, effect, t, activity, out, ROCKCAT_LED_COUNT) != ROCKCAT_LED_COUNT)
+                        return fail("render didnt return 11 leds");
+                    char line[160];
+                    std::snprintf(line, sizeof line, "p%d e%02d t%.2f a%.1f:", profile, effect, t, activity);
+                    got += line;
+                    for (const rockcat_color &c : out) {
+                        std::snprintf(line, sizeof line, " %02x%02x%02x%02x", c.a, c.r, c.g, c.b);
+                        got += line;
+                    }
+                    got += '\n';
+                }
+        rockcat_profile_free(p);
+    }
+    rockcat_close(dev);
+    if (!golden) {
+        std::fputs(got.c_str(), stdout);
+        return 0;
+    }
+    std::string want;
+    if (FILE *f = std::fopen(golden, "rb")) {
+        char buf[4096];
+        size_t n;
+        while ((n = std::fread(buf, 1, sizeof buf, f)) > 0)
+            want.append(buf, n);
+        std::fclose(f);
+    }
+    return want == got ? 0 : fail("the effects render differently than they used to. if that was the plan: rockcat-test-replay render > tests/render_golden.txt");
+}
+
+// input reports as the engine comments document them, fed through the simulated mouse
+static int event_checks()
+{
+    int failures = 0;
+    kone_sim *sim = new kone_sim;
+    rockcat_device *dev = device_from_transport(std::unique_ptr<transport>(sim), sim_info());
+    sim->inputs = {{0x01, 0x03, 0x10, 0x00},       // mouse report, left + right down
+                   {0x03, 0x00, 0xee, 0x02, 0x00}, // Easy-Shift pressed
+                   {0x03, 0x00, 0xee, 0x00, 0x00}, // and released
+                   {0x03, 0x00, 0xf2, 0x02, 0x00}, // host action 2 (brightness down) pressed
+                   {0x03, 0x00, 0xf2, 0x02, 0x01}, // released
+                   {0x03, 0x00, 0xb0, 0x01, 0x00}, // something changed on the device
+                   {0x03, 0x00, 0xef, 0x00, 0x00}, // the one 0x03 report that means nothing
+                   {0x07, 0x00}};                  // not an event at all
+    rockcat_event ev;
+    CHECK(rockcat_poll_event(dev, &ev, 10) == 1 && ev.type == ROCKCAT_EVENT_ACTIVITY && ev.value == 0x03);
+    CHECK(rockcat_poll_event(dev, &ev, 10) == 1 && ev.type == ROCKCAT_EVENT_EASYSHIFT && ev.pressed == 1);
+    CHECK(rockcat_poll_event(dev, &ev, 10) == 1 && ev.type == ROCKCAT_EVENT_EASYSHIFT && ev.pressed == 0);
+    CHECK(rockcat_poll_event(dev, &ev, 10) == 1 && ev.type == ROCKCAT_EVENT_HOST_ACTION && ev.value == 2 && ev.pressed == 1);
+    CHECK(rockcat_poll_event(dev, &ev, 10) == 1 && ev.type == ROCKCAT_EVENT_HOST_ACTION && ev.value == 2 && ev.pressed == 0);
+    CHECK(rockcat_poll_event(dev, &ev, 10) == 1 && ev.type == ROCKCAT_EVENT_CHANGED);
+    CHECK(rockcat_poll_event(dev, &ev, 10) == 1 && ev.type == ROCKCAT_EVENT_NONE);
+    CHECK(rockcat_poll_event(dev, &ev, 10) == 1 && ev.type == ROCKCAT_EVENT_NONE);
+    CHECK(rockcat_poll_event(dev, &ev, 10) == 0 && ev.type == ROCKCAT_EVENT_NONE);
+    rockcat_close(dev);
+    return failures ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     std::string mode = argc > 1 ? argv[1] : "";
     if (mode == "profile")
         return profile_checks();
+    if (mode == "render")
+        return render_check(argc > 2 ? argv[2] : nullptr);
+    if (mode == "events")
+        return event_checks();
     if (argc != 3)
         return fail("usage: rockcat-test-replay check|parse|diverge|regen FILE, or rockcat-test-replay profile");
     std::string file = argv[2];

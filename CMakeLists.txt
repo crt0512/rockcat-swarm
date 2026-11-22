@@ -30,6 +30,7 @@ add_library(rockcat-objs OBJECT
   src/lib/config.cpp
   src/lib/transport_hid.cpp
   src/lib/capture.cpp
+  src/lib/sim.cpp
   src/lib/devices.cpp
   src/lib/profile.cpp
   src/lib/families/kone_aimo.cpp)
@@ -109,8 +110,9 @@ endif()
 # ---- tests (no hardware needed) -------------------------------------------
 if(ROCKCAT_BUILD_TESTS)
   enable_testing()
-  add_executable(rockcat-test tests/test_codec.cpp)
-  target_link_libraries(rockcat-test PRIVATE rockcat)
+  add_executable(rockcat-test tests/test_codec.cpp $<TARGET_OBJECTS:rockcat-objs>)
+  target_include_directories(rockcat-test PRIVATE include src/lib)
+  target_link_libraries(rockcat-test PRIVATE PkgConfig::HIDAPI Threads::Threads)
   add_test(NAME codec COMMAND rockcat-test)
   add_executable(rockcat-test-config tests/test_config.cpp)
   target_link_libraries(rockcat-test-config PRIVATE rockcat)
@@ -124,6 +126,11 @@ if(ROCKCAT_BUILD_TESTS)
   add_test(NAME replay-kone COMMAND rockcat-test-replay check ${KONE_CAPTURE})
   add_test(NAME replay-diverge COMMAND rockcat-test-replay diverge ${KONE_CAPTURE})
   add_test(NAME profile-api COMMAND rockcat-test-replay profile)
+  add_test(NAME events COMMAND rockcat-test-replay events)
+  add_test(NAME render COMMAND rockcat-test-replay render ${CMAKE_CURRENT_SOURCE_DIR}/tests/render_golden.txt)
+  if(ROCKCAT_BUILD_CLI)
+    add_test(NAME cli-golden COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/cli_golden.sh $<TARGET_FILE:rockcat-cli>)
+  endif()
   file(GLOB CAPTURES ${CMAKE_CURRENT_SOURCE_DIR}/tests/captures/*.cap)
   foreach(cap ${CAPTURES})
     get_filename_component(cap_name ${cap} NAME_WE)

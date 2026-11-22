@@ -38,20 +38,8 @@ extern "C" {
 #define ROCKCAT_VID                     0x1e7d
 #define ROCKCAT_PID_KONE_AIMO_REMASTERED 0x2e2c
 
-#define ROCKCAT_PROFILE_COUNT   5
-#define ROCKCAT_DPI_LEVELS      5
-#define ROCKCAT_DPI_MIN         100
-#define ROCKCAT_DPI_MAX         16000
-#define ROCKCAT_DPI_STEP        50
-#define ROCKCAT_LED_COUNT       11
-#define ROCKCAT_BUTTON_COUNT    24  /* 12 physical buttons + 12 Easy-Shift[+] layer */
+/* most keystrokes one macro can hold */
 #define ROCKCAT_MACRO_KEYSTROKES 480
-
-/* Raw report sizes (including report id and, where present, checksum). */
-#define ROCKCAT_SETTINGS_SIZE   0x7e /* report 0x06 */
-#define ROCKCAT_BUTTONS_SIZE    0x4b /* report 0x07, no checksum */
-#define ROCKCAT_MACRO_SIZE      0x7d2 /* report 0x08, sent as two chunks */
-#define ROCKCAT_DCU_SIZE        6    /* report 0x0f */
 
 typedef enum rockcat_error {
     ROCKCAT_OK              = 0,
@@ -110,7 +98,7 @@ ROCKCAT_API int rockcat_get_active_profile(rockcat_device *dev, uint8_t *profile
 ROCKCAT_API int rockcat_set_active_profile(rockcat_device *dev, uint8_t profile);
 
 /* ------------------------------------------------------------------------ */
-/* Profile settings (report 0x06, 126 bytes)                                 */
+/* Shared value types: polling rate, effects, colours                        */
 /* ------------------------------------------------------------------------ */
 
 typedef enum rockcat_polling_rate {
@@ -138,76 +126,18 @@ typedef enum rockcat_effect {
     ROCKCAT_EFFECT_COLORWAVE    = 10 /* firmware */
 } rockcat_effect;
 
-/* LED index layout (verified on hardware, front to back):
- *   0              scroll wheel
- *   1,2,3,4,9      left side           5,6,7,8,10   right side          */
-enum {
-    ROCKCAT_LED_WHEEL = 0,
-    ROCKCAT_LED_LEFT_FRONT = 1,
-    ROCKCAT_LED_RIGHT_FRONT = 5
-};
-
 typedef struct rockcat_color {
     uint8_t a, r, g, b;     /* a = per-LED brightness (0..255) */
 } rockcat_color;
 
-typedef struct rockcat_settings {
-    uint8_t       profile;           /* 0..4                                   */
-    uint8_t       dpi_enabled_mask;  /* +0x04 bit n = DPI level n enabled      */
-    uint8_t       dpi_active;        /* +0x05 0..4                             */
-    uint16_t      dpi_x[ROCKCAT_DPI_LEVELS]; /* +0x06 real DPI (stored /50)    */
-    uint16_t      dpi_y[ROCKCAT_DPI_LEVELS]; /* +0x10                          */
-    uint8_t       polling_rate;      /* +0x1a rockcat_polling_rate             */
-    uint8_t       angle_snapping;    /* +0x1b 0 = off                          */
-    uint8_t       debounce_ms;       /* +0x1d factory 8                        */
-    uint16_t      led_enable_mask;   /* +0x1e bit n = LED n enabled (0x7ff)    */
-    uint8_t       effect;            /* +0x21 rockcat_effect                   */
-    uint8_t       effect_speed;      /* +0x22 factory 6                        */
-    uint8_t       brightness;        /* +0x23 0..255                           */
-    rockcat_color leds[ROCKCAT_LED_COUNT]; /* +0x3d, 5 bytes each (a,r,g,b,0)  */
-    uint8_t       color_theme;       /* +0x74 bit7 = flag, low bits = AIMO theme */
-    /* Original report bytes. rockcat_write_settings() starts from this buffer
-     * and only overwrites the fields above, so unknown bytes survive a
-     * read-modify-write cycle. Zero it to start from scratch. */
-    uint8_t       raw[ROCKCAT_SETTINGS_SIZE];
-} rockcat_settings;
-
-ROCKCAT_API int rockcat_read_settings(rockcat_device *dev, uint8_t profile, rockcat_settings *out);
-ROCKCAT_API int rockcat_write_settings(rockcat_device *dev, const rockcat_settings *in);
-
-/* Raw access; the write variant fixes header and checksum. */
-ROCKCAT_API int rockcat_read_settings_raw(rockcat_device *dev, uint8_t profile, uint8_t buf[ROCKCAT_SETTINGS_SIZE]);
-ROCKCAT_API int rockcat_write_settings_raw(rockcat_device *dev, uint8_t buf[ROCKCAT_SETTINGS_SIZE]);
-
-/* Pure helpers (no I/O). */
-ROCKCAT_API void rockcat_settings_decode(const uint8_t raw[ROCKCAT_SETTINGS_SIZE], rockcat_settings *out);
-ROCKCAT_API void rockcat_settings_encode(const rockcat_settings *in, uint8_t raw[ROCKCAT_SETTINGS_SIZE]);
 ROCKCAT_API int  rockcat_polling_rate_hz(uint8_t polling_rate);
 ROCKCAT_API const char *rockcat_effect_name(uint8_t effect);
 /* Non-zero if the effect has to be drawn by the host (see rockcat_engine). */
 ROCKCAT_API int rockcat_effect_is_software(uint8_t effect);
-ROCKCAT_API const char *rockcat_led_name(int led);
 
 /* ------------------------------------------------------------------------ */
-/* Button assignment (report 0x07, 75 bytes)                                 */
+/* What a button can do                                                      */
 /* ------------------------------------------------------------------------ */
-
-/* Physical button index; add ROCKCAT_BUTTON_COUNT/2 for the Easy-Shift layer. */
-enum {
-    ROCKCAT_BTN_LEFT = 0,
-    ROCKCAT_BTN_RIGHT = 1,
-    ROCKCAT_BTN_MIDDLE = 2,
-    ROCKCAT_BTN_TILT_LEFT = 3,
-    ROCKCAT_BTN_TILT_RIGHT = 4,
-    ROCKCAT_BTN_WHEEL_UP = 5,
-    ROCKCAT_BTN_WHEEL_DOWN = 6,
-    ROCKCAT_BTN_THUMB_FORWARD = 7,
-    ROCKCAT_BTN_THUMB_BACKWARD = 8,
-    ROCKCAT_BTN_THUMB_EASYSHIFT = 9,
-    ROCKCAT_BTN_DPI_UP = 10,
-    ROCKCAT_BTN_DPI_DOWN = 11,
-    ROCKCAT_BTN_SHIFT_BASE = 12
-};
 
 /* Function codes (ROCCAT's common button table, confirmed for the codes used
  * by the Kone AIMO factory layout). */
@@ -282,15 +212,6 @@ typedef struct rockcat_button {
     uint8_t param2;
 } rockcat_button;
 
-typedef struct rockcat_buttons {
-    uint8_t       profile;
-    rockcat_button buttons[ROCKCAT_BUTTON_COUNT];
-} rockcat_buttons;
-
-ROCKCAT_API int rockcat_read_buttons(rockcat_device *dev, uint8_t profile, rockcat_buttons *out);
-ROCKCAT_API int rockcat_write_buttons(rockcat_device *dev, const rockcat_buttons *in);
-ROCKCAT_API void rockcat_buttons_default(uint8_t profile, rockcat_buttons *out);
-ROCKCAT_API const char *rockcat_button_name(int index);
 ROCKCAT_API const char *rockcat_button_type_name(uint8_t type);
 /* Parses a symbolic type name ("click", "dpi-up", ...) or a number. Returns
  * the type or -1. */
@@ -307,7 +228,7 @@ ROCKCAT_API int rockcat_parse_shortcut(const char *text, uint8_t *modifiers, uin
 ROCKCAT_API void rockcat_format_shortcut(uint8_t modifiers, uint8_t key, char *buf, size_t len);
 
 /* ------------------------------------------------------------------------ */
-/* Macros (report 0x08, 2002 bytes split into two 1026 byte transfers)       */
+/* Macros                                                                    */
 /* ------------------------------------------------------------------------ */
 
 enum { ROCKCAT_KEY_PRESS = 1, ROCKCAT_KEY_RELEASE = 2 };
@@ -334,20 +255,6 @@ typedef struct rockcat_macro {
     uint16_t count;
     rockcat_keystroke keys[ROCKCAT_MACRO_KEYSTROKES];
 } rockcat_macro;
-
-ROCKCAT_API int rockcat_read_macro(rockcat_device *dev, uint8_t profile, uint8_t button, rockcat_macro *out);
-/* Also remember to assign ROCKCAT_BT_MACRO to the button. */
-ROCKCAT_API int rockcat_write_macro(rockcat_device *dev, const rockcat_macro *in);
-
-/* ------------------------------------------------------------------------ */
-/* Direct ("software") lighting, as used by Swarm's AIMO engine             */
-/* ------------------------------------------------------------------------ */
-
-/* enable != 0 hands the LEDs to the host (report 0x0e); 0 returns control to
- * the profile's lighting effect. */
-ROCKCAT_API int rockcat_set_direct_lighting(rockcat_device *dev, int enable);
-/* Sends 11 colours (alpha is applied by the library) via report 0x0d. */
-ROCKCAT_API int rockcat_set_direct_colors(rockcat_device *dev, const rockcat_color colors[ROCKCAT_LED_COUNT]);
 
 /* ------------------------------------------------------------------------ */
 /* Sensor calibration (TDCU, report 0x0f)                                    */
@@ -389,7 +296,6 @@ typedef struct rockcat_engine_status {
     uint8_t profile;          /* active profile it follows, 0xff = unknown   */
     uint8_t effect;           /* effect being rendered                       */
     int     last_error;       /* last rockcat_error from the worker          */
-    rockcat_color leds[ROCKCAT_LED_COUNT]; /* last frame sent                */
 } rockcat_engine_status;
 
 /* Starts a background thread with its own device handle. Only one engine per
@@ -400,6 +306,8 @@ ROCKCAT_API int  rockcat_engine_start(const char *path, rockcat_engine_mode mode
 /* Stops the thread and hands the LEDs back to the firmware. */
 ROCKCAT_API void rockcat_engine_stop(rockcat_engine *engine);
 ROCKCAT_API void rockcat_engine_get_status(rockcat_engine *engine, rockcat_engine_status *out);
+/* the frame the engine sent last, for any number of leds. writes up to max colours, returns how many leds there are */
+ROCKCAT_API int rockcat_engine_get_frame(rockcat_engine *engine, rockcat_color *out, int max);
 /* Ask the engine to re-read the active profile (e.g. after writing settings). */
 ROCKCAT_API void rockcat_engine_reload(rockcat_engine *engine);
 
@@ -427,30 +335,18 @@ typedef struct rockcat_shift_lighting {
  * rendered this way. */
 ROCKCAT_API int rockcat_engine_effect_load(uint16_t pid, uint8_t profile, uint8_t *effect);
 ROCKCAT_API int rockcat_engine_effect_save(uint16_t pid, uint8_t profile, uint8_t effect);
-/* Effect the user sees for a profile: the device byte, or - if the device
- * stores 9 - the effect kept on the PC. *by_engine tells which renders it. */
-ROCKCAT_API void rockcat_effective_effect(uint16_t pid, const rockcat_settings *s, uint8_t *effect, int *by_engine);
-/* Selects an effect for s->profile: updates s->effect (to write with
- * rockcat_write_settings) and the PC-side choice. by_engine is forced on for
- * software-only effects. */
-ROCKCAT_API int rockcat_select_effect(uint16_t pid, rockcat_settings *s, uint8_t effect, int by_engine);
-
 /* where the host side settings live. moves an old ~/.config/rossat over the first time its called */
 ROCKCAT_API const char *rockcat_config_dir(void);
 ROCKCAT_API int rockcat_shift_lighting_load(uint16_t pid, uint8_t profile, rockcat_shift_lighting *out);
 ROCKCAT_API int rockcat_shift_lighting_save(uint16_t pid, uint8_t profile, const rockcat_shift_lighting *in);
 
-/* Pure renderers, usable for previews. t = seconds, activity = 0..1. */
-ROCKCAT_API void rockcat_render_frame(const rockcat_settings *s, uint8_t effect, double t, double activity,
-                                      rockcat_color out[ROCKCAT_LED_COUNT]);
 ROCKCAT_API void rockcat_aimo_theme(int theme, rockcat_color out[3]);
 
 /* ------------------------------------------------------------------------ */
-/* Devices and profiles, the api everything is moving to                     */
+/* Devices and profiles                                                      */
 /* ------------------------------------------------------------------------ */
 
-/* nothing below knows how many leds or buttons "a device" has, you ask. the structs further up with
- * the sizes baked in are the old Kone AIMO only api and go away once cli, gui and engine stopped using them */
+/* nothing in this header knows how many leds or buttons "a device" has, you ask */
 
 typedef enum rockcat_kind { ROCKCAT_KIND_MOUSE, ROCKCAT_KIND_KEYBOARD, ROCKCAT_KIND_PAD, ROCKCAT_KIND_HEADSET } rockcat_kind;
 
@@ -489,10 +385,10 @@ typedef struct rockcat_caps {
 ROCKCAT_API const rockcat_caps *rockcat_get_caps(rockcat_device *dev);
 /* walks the table of supported devices. ROCKCAT_ERR_ARGUMENT once i is past the end */
 ROCKCAT_API int rockcat_model_at(int i, uint16_t *product_id, const char **name, const rockcat_caps **caps);
-/* what to print next to input / led / layer n. "?" when out of range */
-ROCKCAT_API const char *rockcat_input_label(rockcat_device *dev, int input);
-ROCKCAT_API const char *rockcat_led_label(rockcat_device *dev, int led);
-ROCKCAT_API const char *rockcat_layer_label(rockcat_device *dev, int layer);
+/* what to print next to input / led / layer n. takes caps and not a device so a gui can label things before anything is plugged in. "?" when out of range */
+ROCKCAT_API const char *rockcat_input_label(const rockcat_caps *caps, int input);
+ROCKCAT_API const char *rockcat_led_label(const rockcat_caps *caps, int led);
+ROCKCAT_API const char *rockcat_layer_label(const rockcat_caps *caps, int layer);
 
 /* A profile is read from the device, changed through the calls below and written back. It keeps the raw reports
  * inside, so whatever we dont understand yet goes back to the device exactly as it came. */
@@ -516,6 +412,8 @@ ROCKCAT_API int  rockcat_profile_read(rockcat_device *dev, int index, rockcat_pr
 /* only sends the reports that were changed since the read */
 ROCKCAT_API int  rockcat_profile_write(rockcat_device *dev, rockcat_profile *p);
 ROCKCAT_API void rockcat_profile_free(rockcat_profile *p);
+/* a copy to play with, for previews of changes the user hasnt applied yet. NULL if p is */
+ROCKCAT_API rockcat_profile *rockcat_profile_clone(const rockcat_profile *p);
 ROCKCAT_API int  rockcat_profile_index(const rockcat_profile *p);
 /* for restoring a backup into another slot. marks everything as changed */
 ROCKCAT_API int  rockcat_profile_set_index(rockcat_profile *p, int index);
@@ -531,6 +429,8 @@ ROCKCAT_API int rockcat_profile_get_led(const rockcat_profile *p, int led, rockc
 ROCKCAT_API int rockcat_profile_set_led(rockcat_profile *p, int led, rockcat_color c, int enabled);
 ROCKCAT_API int rockcat_profile_get_input(const rockcat_profile *p, int layer, int input, rockcat_assignment *a);
 ROCKCAT_API int rockcat_profile_set_input(rockcat_profile *p, int layer, int input, const rockcat_assignment *a);
+/* puts every input of every layer back to what the device shipped with */
+ROCKCAT_API int rockcat_profile_reset_inputs(rockcat_profile *p);
 /* macros are big and slow to fetch, so they are not read along with the profile. get asks the device every time,
  * set parks the macro in the object until the next rockcat_profile_write. neither touches the assignment of the input */
 ROCKCAT_API int rockcat_profile_get_macro(rockcat_device *dev, const rockcat_profile *p, int layer, int input, rockcat_macro *m);
@@ -545,6 +445,28 @@ ROCKCAT_API int rockcat_profile_select_effect(rockcat_profile *p, int effect, in
 ROCKCAT_API int rockcat_profile_export(const rockcat_profile *p, uint8_t *buf, size_t len);
 /* the other way around. refuses a backup that was made from a different model */
 ROCKCAT_API int rockcat_profile_import(rockcat_device *dev, const uint8_t *buf, size_t len, rockcat_profile **out);
+
+/* what an effect looks like at time t (seconds) with the colours of this profile, for previews. nothing is sent anywhere.
+ * activity is 0..1, how busy the user is. writes up to count colours, returns how many leds there are */
+ROCKCAT_API int rockcat_profile_render(const rockcat_profile *p, int effect, double t, double activity, rockcat_color *out, int count);
+
+/* things the device tells us without being asked */
+typedef enum rockcat_event_type {
+    ROCKCAT_EVENT_NONE,        /* a report came in that means nothing to us */
+    ROCKCAT_EVENT_ACTIVITY,    /* its being used. value = the buttons that are down, as a bitmask */
+    ROCKCAT_EVENT_EASYSHIFT,   /* Easy-Shift[+] went down or up, see pressed */
+    ROCKCAT_EVENT_HOST_ACTION, /* a button that is assigned to something only the pc can do. value = which one, from 1 */
+    ROCKCAT_EVENT_CHANGED      /* profile or dpi got switched on the device itself, whatever you read before may be stale */
+} rockcat_event_type;
+
+typedef struct rockcat_event {
+    rockcat_event_type type;
+    int value;
+    int pressed;
+} rockcat_event;
+
+/* waits up to timeout_ms for the device to say something. 1 = got a report (ev->type may still be NONE), 0 = nothing came */
+ROCKCAT_API int rockcat_poll_event(rockcat_device *dev, rockcat_event *ev, int timeout_ms);
 
 /* host controlled lighting: begin takes the leds away from the firmware, frame wants exactly caps->led_count colours */
 ROCKCAT_API int rockcat_direct_begin(rockcat_device *dev);
@@ -576,6 +498,7 @@ ROCKCAT_API int rockcat_read(rockcat_device *dev, uint8_t *buf, size_t len, int 
 /* Recordings. Two environment variables, looked at whenever a device gets opened:
  *   ROCKCAT_CAPTURE=file  everything that goes over the wire is appended to file
  *   ROCKCAT_REPLAY=file   no hardware gets touched, file plays the device
+ *   ROCKCAT_SIM=kone-aimo-remastered  no hardware either, a simulated mouse that answers whatever you ask (and forgets it on exit)
  * rockcat_replay_verdict() is ROCKCAT_OK as long as the code sent exactly what the recording has, with finished != 0
  * the recording also has to be used up. always ROCKCAT_OK on a real device. format: docs/CAPTURES.md */
 ROCKCAT_API int rockcat_replay_verdict(rockcat_device *dev, int finished);

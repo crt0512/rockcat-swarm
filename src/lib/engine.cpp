@@ -17,6 +17,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include <fcntl.h>
 #include <sys/file.h>
@@ -38,19 +39,6 @@ constexpr uint8_t THEMES[ROCKCAT_AIMO_THEMES][3][3] = {
     {{0xf5, 0x4c, 0x6c}, {0xf6, 0x7e, 0x47}, {0xf9, 0xc2, 0x00}},
     {{0x00, 0x00, 0xff}, {0x00, 0x7f, 0x98}, {0x00, 0xff, 0x32}},
     {{0xf4, 0x00, 0x6b}, {0xf4, 0x00, 0x00}, {0xf6, 0x78, 0xa5}},
-};
-
-// Physical LED positions: side (-1 left, 0 wheel, 1 right) and depth
-// (0 = front, 1 = rear), plus which theme colour Swarm assigns to it.
-struct led_pos {
-    double side, depth;
-    int theme_slot;
-};
-constexpr led_pos LEDS[ROCKCAT_LED_COUNT] = {
-    {0, -0.2, 0},                                                  // wheel
-    {-1, 0.0, 0}, {-1, 0.25, 1}, {-1, 0.5, 1}, {-1, 0.75, 2},      // left 1-4
-    {1, 0.0, 0},  {1, 0.25, 1},  {1, 0.5, 1},  {1, 0.75, 2},       // right 1-4
-    {-1, 1.0, 2}, {1, 1.0, 2},                                     // left/right 5
 };
 
 struct rgb {
@@ -90,16 +78,36 @@ double rate(uint8_t speed)
     return 0.35 + 0.13 * s;
 }
 
-int theme_index(uint8_t color_theme)
-{
-    return (color_theme & 0x7f) % ROCKCAT_AIMO_THEMES;
-}
+// what the renderer needs to know about a profile, pulled out once so it doesnt ask for every led on every frame
+struct light_params {
+    int brightness = 255, speed = 6, theme = 0;
+    std::vector<rockcat_color> leds;
+    std::vector<char> on;
+};
 
-rgb led_color(const rockcat_settings &s, int i)
+rgb led_color(const light_params &lp, int i)
 {
-    const rockcat_color &c = s.leds[i];
+    const rockcat_color &c = lp.leds[i];
     double a = c.a / 255.0;
     return {c.r / 255.0 * a, c.g / 255.0 * a, c.b / 255.0 * a};
+}
+
+light_params params_of(const rockcat_profile &p)
+{
+    light_params lp;
+    int count = p.desc->caps.led_count;
+    lp.leds.assign(static_cast<size_t>(count), rockcat_color{255, 255, 255, 255});
+    lp.on.assign(static_cast<size_t>(count), 1);
+    for (int i = 0; i < count; ++i) {
+        int en = 1;
+        p.get_led(i, &lp.leds[i], &en);
+        lp.on[i] = static_cast<char>(en);
+    }
+    // a device without one of these keeps the default from above
+    p.get_int(ROCKCAT_SET_BRIGHTNESS, &lp.brightness);
+    p.get_int(ROCKCAT_SET_EFFECT_SPEED, &lp.speed);
+    p.get_int(ROCKCAT_SET_COLOR_THEME, &lp.theme);
+    return lp;
 }
 
 uint8_t to8(double v) { return static_cast<uint8_t>(std::lround(clamp01(v) * 255)); }
@@ -118,58 +126,30 @@ rgb hue(double h)
     }
 }
 
-// Order of the LEDs around the mouse for running-light effects:
-// wheel, left side front to back, right side back to front.
-constexpr int RING[ROCKCAT_LED_COUNT] = {0, 1, 2, 3, 4, 9, 10, 8, 7, 6, 5};
-
-int ring_pos(int led)
+void render(const light_params &lp, const led_geo *geo, int effect, double t, double activity, rockcat_color *out)
 {
-    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i)
-        if (RING[i] == led)
-            return i;
-    return 0;
-}
-
-// LED mode switch without the status wait, so Easy-Shift feedback is instant.
-int set_led_mode_fast(rockcat_device *dev, bool host)
-{
-    const uint8_t buf[6] = {0x0e, 6, 1, static_cast<uint8_t>(host ? 1 : 0), static_cast<uint8_t>(host ? 0xff : 0), 0xff};
-    return dev->io->set_feature(buf, sizeof buf);
-}
-
-} // namespace
-
-extern "C" void rockcat_aimo_theme(int theme, rockcat_color out[3])
-{
-    if (theme < 0 || theme >= ROCKCAT_AIMO_THEMES)
-        theme = 0;
-    for (int i = 0; i < 3; ++i)
-        out[i] = rockcat_color{255, THEMES[theme][i][0], THEMES[theme][i][1], THEMES[theme][i][2]};
-}
-
-extern "C" void rockcat_render_frame(const rockcat_settings *s, uint8_t effect, double t, double activity,
-                                     rockcat_color out[ROCKCAT_LED_COUNT])
-{
-    double level = s->brightness / 255.0;
-    double f = rate(s->effect_speed);
+    int count = static_cast<int>(lp.leds.size());
+    double level = lp.brightness / 255.0;
+    double f = rate(static_cast<uint8_t>(lp.speed));
     activity = clamp01(activity);
-    int theme = theme_index(s->color_theme);
+    int theme = (lp.theme & 0x7f) % ROCKCAT_AIMO_THEMES;
 
-    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
-        const led_pos &p = LEDS[i];
+    for (int i = 0; i < count; ++i) {
+        // nobody measured where the leds of this device are: treat them all as one spot, in order
+        const led_geo p = geo ? geo[i] : led_geo{0, 0, i % 3, i};
         rgb c{0, 0, 0};
         switch (effect) {
         case ROCKCAT_EFFECT_OFF:
             break;
         case ROCKCAT_EFFECT_FULLY_LIT:
-            c = led_color(*s, i);
+            c = led_color(lp, i);
             break;
         case ROCKCAT_EFFECT_BLINKING:
-            c = std::fmod(t * f * 0.8, 1.0) < 0.5 ? led_color(*s, i) : rgb{0, 0, 0};
+            c = std::fmod(t * f * 0.8, 1.0) < 0.5 ? led_color(lp, i) : rgb{0, 0, 0};
             break;
         case ROCKCAT_EFFECT_BREATHING: {
             double v = 0.5 - 0.5 * std::cos(2 * PI * t * f * 0.3);
-            c = mix({0, 0, 0}, led_color(*s, i), v * v);
+            c = mix({0, 0, 0}, led_color(lp, i), v * v);
             break;
         }
         case ROCKCAT_EFFECT_COLOR_CYCLE:
@@ -177,27 +157,27 @@ extern "C" void rockcat_render_frame(const rockcat_settings *s, uint8_t effect, 
             break;
         case ROCKCAT_EFFECT_SNAKE: {
             // a bright head with a fading tail running around the mouse
-            double head = std::fmod(t * f * 4.0, static_cast<double>(ROCKCAT_LED_COUNT));
-            double d = head - ring_pos(i);
+            double head = std::fmod(t * f * 4.0, static_cast<double>(count));
+            double d = head - p.ring;
             if (d < 0)
-                d += ROCKCAT_LED_COUNT;
-            c = mix({0, 0, 0}, led_color(*s, i), clamp01(1.0 - d / 4.0));
+                d += count;
+            c = mix({0, 0, 0}, led_color(lp, i), clamp01(1.0 - d / 4.0));
             break;
         }
         case ROCKCAT_EFFECT_COLORWAVE:
             c = hue(t * f * 0.12 - p.depth * 0.35 - (p.side > 0 ? 0.05 : 0));
             break;
         case ROCKCAT_EFFECT_HEARTBEAT:
-            c = led_color(*s, i);
+            c = led_color(lp, i);
             c = mix({0, 0, 0}, c, heartbeat(t * f * 0.75));
             break;
         case ROCKCAT_EFFECT_HEARTBEAT_2:
             // the beat travels from the front of the mouse to the back
-            c = mix({0, 0, 0}, led_color(*s, i), heartbeat(t * f * 0.75 - 0.18 * (p.depth + 0.2)));
+            c = mix({0, 0, 0}, led_color(lp, i), heartbeat(t * f * 0.75 - 0.18 * (p.depth + 0.2)));
             break;
         case ROCKCAT_EFFECT_BREATHING_2: {
             double v = 0.5 - 0.5 * std::cos(2 * PI * (t * f * 0.3 - 0.45 * (p.depth + 0.2)));
-            c = mix({0, 0, 0}, led_color(*s, i), v * v);
+            c = mix({0, 0, 0}, led_color(lp, i), v * v);
             break;
         }
         case ROCKCAT_EFFECT_AIMO:
@@ -220,10 +200,45 @@ extern "C" void rockcat_render_frame(const rockcat_settings *s, uint8_t effect, 
             break;
         }
         }
-        bool on = (s->led_enable_mask >> i) & 1;
-        out[i] = on ? rockcat_color{255, to8(c.r * level), to8(c.g * level), to8(c.b * level)}
-                    : rockcat_color{255, 0, 0, 0};
+        out[i] = lp.on[i] ? rockcat_color{255, to8(c.r * level), to8(c.g * level), to8(c.b * level)}
+                          : rockcat_color{255, 0, 0, 0};
     }
+}
+
+} // namespace
+
+extern "C" void rockcat_aimo_theme(int theme, rockcat_color out[3])
+{
+    if (theme < 0 || theme >= ROCKCAT_AIMO_THEMES)
+        theme = 0;
+    for (int i = 0; i < 3; ++i)
+        out[i] = rockcat_color{255, THEMES[theme][i][0], THEMES[theme][i][1], THEMES[theme][i][2]};
+}
+
+// old struct api, the gui previews still come through here
+extern "C" void rockcat_render_frame(const rockcat_settings *s, uint8_t effect, double t, double activity,
+                                     rockcat_color out[ROCKCAT_LED_COUNT])
+{
+    light_params lp;
+    lp.brightness = s->brightness;
+    lp.speed = s->effect_speed;
+    lp.theme = s->color_theme & 0x7f;
+    lp.leds.assign(s->leds, s->leds + ROCKCAT_LED_COUNT);
+    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i)
+        lp.on.push_back((s->led_enable_mask >> i) & 1);
+    render(lp, KONE_AIMO_LEDS, effect, t, activity, out);
+}
+
+extern "C" int rockcat_profile_render(const rockcat_profile *p, int effect, double t, double activity, rockcat_color *out, int count)
+{
+    if (!p || !out)
+        return ROCKCAT_ERR_ARGUMENT;
+    light_params lp = params_of(*p);
+    std::vector<rockcat_color> frame(lp.leds.size());
+    render(lp, p->desc->leds, effect, t, activity, frame.data());
+    for (size_t i = 0; i < frame.size() && static_cast<int>(i) < count; ++i)
+        out[i] = frame[i];
+    return static_cast<int>(frame.size());
 }
 
 /* ---- engine thread ----------------------------------------------------- */
@@ -237,6 +252,7 @@ struct rockcat_engine {
     int lock_fd = -1;
     std::mutex status_mutex;
     rockcat_engine_status status{};
+    std::vector<rockcat_color> frame; // last one sent, same lock as status
 };
 
 namespace {
@@ -269,7 +285,10 @@ void run(rockcat_engine *e)
     st.running = 1;
     st.profile = 0xff; // unknown until the first read
     rockcat_device *dev = nullptr;
-    rockcat_settings settings{};
+    const family_ops *fam = nullptr;
+    rockcat_profile *prof = nullptr;
+    light_params lp;
+    int dev_effect = ROCKCAT_EFFECT_OFF;
     rockcat_shift_lighting shift{};
     uint8_t engine_effect = ROCKCAT_EFFECT_AIMO;
     // brightness changed by a button, written to the mouse once presses stop
@@ -280,9 +299,9 @@ void run(rockcat_engine *e)
     uint8_t profile = 0xff;
     bool rendering = false;
     double t = 0, activity = 0;
-    uint8_t last_buttons = 0;
-    rockcat_color last[ROCKCAT_LED_COUNT];
-    std::memset(last, 0xff, sizeof last);
+    int last_buttons = 0;
+    // an empty "last frame" never equals a real one, so clearing it is how a redraw gets forced
+    std::vector<rockcat_color> frame, last;
     auto last_profile_check = clock_type::now() - std::chrono::seconds(10);
     auto prev = clock_type::now();
 
@@ -290,6 +309,8 @@ void run(rockcat_engine *e)
         st.last_error = err;
         st.rendering = 0;
         rendering = false;
+        delete prof;
+        prof = nullptr;
         if (dev)
             rockcat_close(dev);
         dev = nullptr;
@@ -305,9 +326,11 @@ void run(rockcat_engine *e)
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
+            fam = dev->desc->family;
+            frame.assign(static_cast<size_t>(dev->desc->caps.led_count), rockcat_color{255, 0, 0, 0});
             profile = 0xff;
             e->reload = true;
-            std::memset(last, 0xff, sizeof last);
+            last.clear();
         }
 
         auto now = clock_type::now();
@@ -320,20 +343,27 @@ void run(rockcat_engine *e)
                 continue;
             }
             if (active != profile || e->reload.exchange(false)) {
-                r = rockcat_read_settings(dev, active, &settings);
+                rockcat_profile *fresh = fam->new_profile(dev->desc, active);
+                r = fresh->read_light(dev);
                 if (r != ROCKCAT_OK) {
+                    delete fresh;
                     fail(r);
                     continue;
                 }
+                delete prof;
+                prof = fresh;
+                lp = params_of(*prof);
+                dev_effect = ROCKCAT_EFFECT_OFF;
+                prof->get_int(ROCKCAT_SET_EFFECT, &dev_effect);
                 profile = active;
                 rockcat_shift_lighting_load(dev->info.product_id, profile, &shift);
                 rockcat_engine_effect_load(dev->info.product_id, profile, &engine_effect);
-                std::memset(last, 0xff, sizeof last);
+                last.clear();
             }
         }
 
-        uint8_t effect = settings.effect;
-        bool engine_rendered = rockcat_effect_is_software(effect);
+        int effect = dev_effect;
+        bool engine_rendered = rockcat_effect_is_software(static_cast<uint8_t>(effect));
         if (effect == ROCKCAT_EFFECT_AIMO)
             effect = engine_effect; // AIMO on the mouse = "rendered by rockcat"
         if (e->mode == ROCKCAT_ENGINE_AIMO)
@@ -345,66 +375,65 @@ void run(rockcat_engine *e)
         if (software != rendering) {
             // Easy-Shift transitions must be immediate; profile changes can wait
             // for the device's acknowledgement.
-            int r = (shift_light || (!software && shift.enabled)) ? set_led_mode_fast(dev, software)
-                                                                  : rockcat_set_direct_lighting(dev, software ? 1 : 0);
+            int r = (shift_light || (!software && shift.enabled)) ? fam->direct_switch_fast(dev, software)
+                                                                  : software ? fam->direct_begin(dev) : fam->direct_end(dev);
             if (r != ROCKCAT_OK) {
                 fail(r);
                 continue;
             }
             rendering = software;
-            std::memset(last, 0xff, sizeof last);
+            last.clear();
         }
 
-        // Pace the loop by reading input reports for ~33 ms; mouse motion and
-        // clicks feed the AIMO activity level, report 0x03 events (profile /
-        // DPI changes) trigger a settings reload.
+        // Pace the loop by waiting for events for ~33 ms; mouse motion and
+        // clicks feed the AIMO activity level, profile / DPI changes on the
+        // device trigger a settings reload.
         auto frame_end = clock_type::now() + std::chrono::milliseconds(33);
         while (!e->stop) {
             int left = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(
                                             frame_end - clock_type::now()).count());
             if (left <= 0)
                 break;
-            unsigned char in[64];
-            int n = dev->io->read(in, sizeof in, left);
+            rockcat_event ev;
+            int n = rockcat_poll_event(dev, &ev, left);
             if (n < 0) {
                 fail(ROCKCAT_ERR_IO);
                 break;
             }
             if (n == 0)
                 break;
-            if (in[0] == 0x01 && n > 1) {
+            if (ev.type == ROCKCAT_EVENT_ACTIVITY) {
                 activity += 0.004;
-                if ((in[1] & ~last_buttons) != 0)
+                if ((ev.value & ~last_buttons) != 0)
                     activity += 0.35;
-                last_buttons = in[1];
-            } else if (in[0] == 0x03 && n >= 4 && in[2] == 0xee) {
-                // Easy-Shift[+]: 03 00 ee 02 00 = pressed, 03 00 ee 00 00 = released
-                bool held = in[3] != 0;
+                last_buttons = ev.value;
+            } else if (ev.type == ROCKCAT_EVENT_EASYSHIFT) {
+                bool held = ev.pressed != 0;
                 // the firmware paints its own Easy-Shift indicator in host
                 // mode; always redraw over it
-                std::memset(last, 0xff, sizeof last);
+                last.clear();
                 if (held != shift_held) {
                     shift_held = held;
                     if (shift.enabled)
                         break; // react this frame
                 }
-            } else if (in[0] == 0x03 && n >= 5 && in[2] == 0xf2) {
-                // host action buttons: 03 00 f2 N 00 = press, ... 01 = release
-                if (in[4] == 0 && profile != 0xff && (in[3] == 1 || in[3] == 2)) {
+            } else if (ev.type == ROCKCAT_EVENT_HOST_ACTION) {
+                // 1 and 2 are the brightness up / down buttons
+                if (ev.pressed && profile != 0xff && (ev.value == 1 || ev.value == 2)) {
                     // logarithmic steps: snap to the nearest level, then move one
                     static constexpr int levels[ROCKCAT_BRIGHTNESS_LEVELS] = ROCKCAT_BRIGHTNESS_LEVEL_TABLE;
                     int idx = 0;
                     for (int i = 1; i < ROCKCAT_BRIGHTNESS_LEVELS; ++i)
-                        if (std::abs(levels[i] - settings.brightness) < std::abs(levels[idx] - settings.brightness))
+                        if (std::abs(levels[i] - lp.brightness) < std::abs(levels[idx] - lp.brightness))
                             idx = i;
-                    idx = std::clamp(idx + (in[3] == 1 ? 1 : -1), 0, ROCKCAT_BRIGHTNESS_LEVELS - 1);
-                    settings.brightness = static_cast<uint8_t>(levels[idx]);
+                    idx = std::clamp(idx + (ev.value == 1 ? 1 : -1), 0, ROCKCAT_BRIGHTNESS_LEVELS - 1);
+                    lp.brightness = levels[idx];
                     brightness_dirty = true;
                     brightness_changed_at = clock_type::now();
-                    std::memset(last, 0xff, sizeof last);
+                    last.clear();
                 }
-            } else if (in[0] == 0x03 && n >= 3 && in[2] != 0xef) {
-                e->reload = true; // profile / DPI / other device events
+            } else if (ev.type == ROCKCAT_EVENT_CHANGED) {
+                e->reload = true;
             }
         }
         if (!dev)
@@ -414,30 +443,31 @@ void run(rockcat_engine *e)
         // firmware effects only see the value stored in the profile).
         if (brightness_dirty && clock_type::now() - brightness_changed_at > std::chrono::milliseconds(400)) {
             brightness_dirty = false;
-            int r = rockcat_write_settings(dev, &settings);
+            int r = prof->set_int(ROCKCAT_SET_BRIGHTNESS, lp.brightness);
+            if (r == ROCKCAT_OK)
+                r = prof->write(dev);
             if (r != ROCKCAT_OK) {
                 fail(r);
                 continue;
             }
             // storing a profile makes the firmware take the LEDs back
-            if (rendering && set_led_mode_fast(dev, true) != ROCKCAT_OK) {
+            if (rendering && fam->direct_switch_fast(dev, true) != ROCKCAT_OK) {
                 fail(ROCKCAT_ERR_IO);
                 continue;
             }
-            std::memset(last, 0xff, sizeof last);
+            last.clear();
         }
 
         // Any profile write (GUI, CLI, Swarm) returns the LEDs to the
         // firmware; check once a second and take them back.
         if (rendering && clock_type::now() - last_mode_check > std::chrono::seconds(1)) {
             last_mode_check = clock_type::now();
-            uint8_t mode[6] = {0x0e};
-            if (dev->io->get_feature(mode, sizeof mode) == static_cast<int>(sizeof mode) && mode[3] == 0) {
-                if (set_led_mode_fast(dev, true) != ROCKCAT_OK) {
+            if (fam->direct_active(dev) == 0) {
+                if (fam->direct_switch_fast(dev, true) != ROCKCAT_OK) {
                     fail(ROCKCAT_ERR_IO);
                     continue;
                 }
-                std::memset(last, 0xff, sizeof last);
+                last.clear();
             }
         }
 
@@ -448,41 +478,44 @@ void run(rockcat_engine *e)
         t += dt * (1.0 + 1.5 * activity);
 
         st.profile = profile;
-        st.effect = effect;
+        st.effect = static_cast<uint8_t>(effect);
         st.rendering = rendering;
         st.last_error = ROCKCAT_OK;
         st.shift_held = shift_held;
         if (rendering) {
-            rockcat_color frame[ROCKCAT_LED_COUNT];
             if (shift_light) {
                 double k = shift.color.a / 255.0;
                 if (shift.style == ROCKCAT_SHIFT_PULSE)
                     k *= 0.55 + 0.45 * std::sin(t * 6.0);
-                for (int i = 0; i < ROCKCAT_LED_COUNT; ++i)
-                    frame[i] = rockcat_color{255, static_cast<uint8_t>(shift.color.r * k),
-                                             static_cast<uint8_t>(shift.color.g * k),
-                                             static_cast<uint8_t>(shift.color.b * k)};
+                for (rockcat_color &c : frame)
+                    c = rockcat_color{255, static_cast<uint8_t>(shift.color.r * k), static_cast<uint8_t>(shift.color.g * k),
+                                      static_cast<uint8_t>(shift.color.b * k)};
             } else {
-                rockcat_render_frame(&settings, effect, t, activity, frame);
+                render(lp, dev->desc->leds, effect, t, activity, frame.data());
             }
-            if (std::memcmp(frame, last, sizeof frame) != 0) {
-                int r = rockcat_set_direct_colors(dev, frame);
+            if (last.size() != frame.size() || std::memcmp(frame.data(), last.data(), frame.size() * sizeof frame[0]) != 0) {
+                int r = fam->direct_frame(dev, frame.data(), static_cast<int>(frame.size()));
                 if (r != ROCKCAT_OK) {
                     fail(r);
                     continue;
                 }
-                std::memcpy(last, frame, sizeof frame);
+                last = frame;
             }
-            std::memcpy(st.leds, frame, sizeof frame);
         }
-        set_status(e, st);
+        {
+            std::lock_guard<std::mutex> g(e->status_mutex);
+            e->status = st;
+            if (rendering)
+                e->frame = frame;
+        }
     }
 
     if (dev) {
         if (rendering)
-            rockcat_set_direct_lighting(dev, 0);
+            fam->direct_end(dev);
         rockcat_close(dev);
     }
+    delete prof;
     st.running = 0;
     st.rendering = 0;
     set_status(e, st);
@@ -530,6 +563,16 @@ extern "C" void rockcat_engine_get_status(rockcat_engine *e, rockcat_engine_stat
         return;
     std::lock_guard<std::mutex> g(e->status_mutex);
     *out = e->status;
+}
+
+extern "C" int rockcat_engine_get_frame(rockcat_engine *e, rockcat_color *out, int max)
+{
+    if (!e || !out)
+        return ROCKCAT_ERR_ARGUMENT;
+    std::lock_guard<std::mutex> g(e->status_mutex);
+    for (size_t i = 0; i < e->frame.size() && static_cast<int>(i) < max; ++i)
+        out[i] = e->frame[i];
+    return static_cast<int>(e->frame.size());
 }
 
 extern "C" void rockcat_engine_reload(rockcat_engine *e)

@@ -68,6 +68,8 @@ ini read_ini(const std::string &path)
 
 bool write_ini(const std::string &path, const ini &data)
 {
+    // on a fresh account ~/.config itself might not be there yet
+    ::mkdir(config_base().c_str(), 0755);
     ::mkdir(config_dir().c_str(), 0755);
     std::string tmp = path + ".tmp";
     {

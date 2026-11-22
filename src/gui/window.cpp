@@ -13,11 +13,28 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 #include <string>
+#include <vector>
 
 namespace {
 
-constexpr int HALF = ROCKCAT_BUTTON_COUNT / 2;
+// this window is still built for exactly one shape of device, the Kone AIMO: these are ITS numbers and thse drawing further down is ITS body
+// asking the device what it has and building the pages from that is the phase 2 rework, until then anything else gets turned away at the door
+constexpr int N_PROFILES = 5, N_DPI = 5, N_LEDS = 11, HALF = 12, N_BUTTONS = 2 * HALF;
+
+const rockcat_caps *kone_caps()
+{
+    static const rockcat_caps *caps = [] {
+        const rockcat_caps *c = nullptr;
+        uint16_t pid = 0;
+        for (int i = 0; rockcat_model_at(i, &pid, nullptr, &c) == ROCKCAT_OK; ++i)
+            if (pid == ROCKCAT_PID_KONE_AIMO_REMASTERED)
+                return c;
+        return static_cast<const rockcat_caps *>(nullptr);
+    }();
+    return caps;
+}
 
 struct dpi_row {
     GtkWidget *enabled;
@@ -38,25 +55,25 @@ struct app_state {
     GtkWidget *device_label = nullptr;
     GtkWidget *status_label = nullptr;
     GtkWidget *notebook = nullptr;
-    GtkWidget *profile_buttons[ROCKCAT_PROFILE_COUNT] = {};
+    GtkWidget *profile_buttons[N_PROFILES] = {};
     GtkWidget *apply_button = nullptr;
     GtkWidget *activate_button = nullptr;
     GtkWidget *reload_button = nullptr;
 
     // settings page
-    dpi_row dpi[ROCKCAT_DPI_LEVELS] = {};
+    dpi_row dpi[N_DPI] = {};
     GtkWidget *dpi_lock = nullptr;
     GtkWidget *polling[4] = {};
 
     // buttons page
-    button_row buttons[ROCKCAT_BUTTON_COUNT] = {};
+    button_row buttons[N_BUTTONS] = {};
 
     // illumination page
     GtkWidget *effect = nullptr;
     GtkWidget *speed = nullptr;
     GtkWidget *brightness = nullptr;
-    GtkWidget *led_color[ROCKCAT_LED_COUNT] = {};
-    GtkWidget *led_enable[ROCKCAT_LED_COUNT] = {};
+    GtkWidget *led_color[N_LEDS] = {};
+    GtkWidget *led_enable[N_LEDS] = {};
     GtkWidget *group_color = nullptr;
     GtkWidget *theme = nullptr;
     GtkWidget *render_engine = nullptr;
@@ -104,8 +121,8 @@ struct app_state {
     int active_profile = 0;
     bool loaded = false;
     bool updating = false; // suppress signal feedback while filling widgets
-    rockcat_settings settings{};
-    rockcat_buttons button_data{};
+    // what was last read from (or written to) the mouse for the profile being edited. nullptr until something is connected
+    rockcat_profile *profile = nullptr;
     guint hotplug_source = 0;
 };
 
@@ -207,7 +224,7 @@ void schedule_auto_apply(app_state *s);
 
 // defined further down, used by the drawing and fill code
 uint8_t current_effect(app_state *s);
-void preview_settings(app_state *s, rockcat_settings *out);
+rockcat_profile *preview_profile(app_state *s);
 void update_effect_ui(app_state *s);
 void update_tdcu_label(app_state *s);
 int combo_type(GtkWidget *combo);
@@ -243,8 +260,8 @@ struct led_shape {
     double x, y, w, h;
 };
 
-// LED zones, see rockcat_led_name(): wheel, left/right front, two bars.
-constexpr led_shape LED_SHAPES[ROCKCAT_LED_COUNT] = {
+// LED zones in the order the mouse numbers them: wheel, left/right front, two bars.
+constexpr led_shape LED_SHAPES[N_LEDS] = {
     {92, 52, 16, 46},   // 0 wheel
     {28, 70, 10, 30},   // 1 left front
     {20, 108, 10, 26},  // 2 left bar
@@ -315,17 +332,19 @@ gboolean on_draw_lighting(GtkWidget *w, cairo_t *cr, gpointer data)
     auto *s = static_cast<app_state *>(data);
     scale_to_widget(w, cr);
     draw_mouse_body(cr);
-    rockcat_color frame[ROCKCAT_LED_COUNT];
+    rockcat_color frame[N_LEDS];
+    std::fill(frame, frame + N_LEDS, rockcat_color{255, 0, 0, 0});
     uint8_t effect = current_effect(s);
     bool software = engine_rendered(s);
     if (software) {
-        rockcat_settings ps;
-        preview_settings(s, &ps);
-        ps.brightness = 255; // preview shape of the effect, brightness is applied by alpha below
-        rockcat_render_frame(&ps, effect, s->preview_t, 0.0, frame);
+        if (rockcat_profile *ps = preview_profile(s)) {
+            rockcat_profile_set_int(ps, ROCKCAT_SET_BRIGHTNESS, 255); // preview shape of the effect, brightness is applied by alpha below
+            rockcat_profile_render(ps, effect, s->preview_t, 0.0, frame, N_LEDS);
+            rockcat_profile_free(ps);
+        }
     }
     double level = gtk_range_get_value(GTK_RANGE(s->brightness)) / 255.0;
-    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
+    for (int i = 0; i < N_LEDS; ++i) {
         const led_shape &l = LED_SHAPES[i];
         GdkRGBA rgba;
         gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(s->led_color[i]), &rgba);
@@ -410,26 +429,26 @@ int combo_type(GtkWidget *combo)
 
 void collect(app_state *s)
 {
-    rockcat_settings &st = s->settings;
-    st.profile = static_cast<uint8_t>(s->edit_profile);
-    st.dpi_enabled_mask = 0;
-    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i) {
-        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->dpi[i].enabled)))
-            st.dpi_enabled_mask |= static_cast<uint8_t>(1 << i);
+    rockcat_profile *p = s->profile;
+    if (!p)
+        return;
+    int active = 0;
+    for (int i = 0; i < N_DPI; ++i)
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->dpi[i].active)))
-            st.dpi_active = static_cast<uint8_t>(i);
-        st.dpi_x[i] = static_cast<uint16_t>(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->dpi[i].x)));
-        st.dpi_y[i] = static_cast<uint16_t>(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->dpi[i].y)));
-    }
-    st.dpi_enabled_mask |= static_cast<uint8_t>(1 << st.dpi_active);
+            active = i;
+    rockcat_profile_set_int(p, ROCKCAT_SET_DPI_ACTIVE, active);
+    for (int i = 0; i < N_DPI; ++i)
+        // the active level counts as enabled no matter what its checkbox says
+        rockcat_profile_set_dpi(p, i, gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->dpi[i].x)),
+                                gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->dpi[i].y)),
+                                i == active || gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->dpi[i].enabled)));
     for (int i = 0; i < 4; ++i)
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->polling[i])))
-            st.polling_rate = static_cast<uint8_t>(i);
+            rockcat_profile_set_int(p, ROCKCAT_SET_POLLING_HZ, rockcat_polling_rate_hz(static_cast<uint8_t>(i)));
 
     int eff = combo_type(s->effect);
     if (eff >= 0)
-        rockcat_select_effect(s->info.product_id, &st, static_cast<uint8_t>(eff),
-                              gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->render_engine)));
+        rockcat_profile_select_effect(p, eff, gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->render_engine)));
     rockcat_shift_lighting sl;
     sl.enabled = gtk_switch_get_active(GTK_SWITCH(s->shift_enable));
     sl.style = static_cast<uint8_t>(gtk_combo_box_get_active(GTK_COMBO_BOX(s->shift_style)) == 1 ? ROCKCAT_SHIFT_PULSE
@@ -437,41 +456,39 @@ void collect(app_state *s)
     GdkRGBA srgba;
     gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(s->shift_color), &srgba);
     sl.color = from_rgba(srgba);
-    rockcat_shift_lighting_save(s->info.product_id, st.profile, &sl);
-    st.effect_speed = static_cast<uint8_t>(gtk_range_get_value(GTK_RANGE(s->speed)));
+    rockcat_shift_lighting_save(s->info.product_id, static_cast<uint8_t>(s->edit_profile), &sl);
+    rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT_SPEED, static_cast<uint8_t>(gtk_range_get_value(GTK_RANGE(s->speed))));
     int th = combo_type(s->theme);
-    if (th >= 0 && (th != (st.color_theme & 0x7f) % ROCKCAT_AIMO_THEMES || !(st.color_theme & 0x80)))
-        st.color_theme = static_cast<uint8_t>(0x80 | th);
-    st.brightness = static_cast<uint8_t>(gtk_range_get_value(GTK_RANGE(s->brightness)));
-    st.led_enable_mask = 0;
-    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
+    if (th >= 0)
+        rockcat_profile_set_int(p, ROCKCAT_SET_COLOR_THEME, th);
+    rockcat_profile_set_int(p, ROCKCAT_SET_BRIGHTNESS, static_cast<uint8_t>(gtk_range_get_value(GTK_RANGE(s->brightness))));
+    for (int i = 0; i < N_LEDS; ++i) {
         GdkRGBA rgba;
         gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(s->led_color[i]), &rgba);
-        st.leds[i] = from_rgba(rgba);
-        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->led_enable[i])))
-            st.led_enable_mask |= static_cast<uint16_t>(1 << i);
+        rockcat_profile_set_led(p, i, from_rgba(rgba), gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->led_enable[i])));
     }
 
-    st.angle_snapping = gtk_switch_get_active(GTK_SWITCH(s->angle_snapping)) ? 1 : 0;
-    st.debounce_ms = static_cast<uint8_t>(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->debounce)));
+    rockcat_profile_set_int(p, ROCKCAT_SET_ANGLE_SNAPPING, gtk_switch_get_active(GTK_SWITCH(s->angle_snapping)) ? 1 : 0);
+    rockcat_profile_set_int(p, ROCKCAT_SET_DEBOUNCE_MS, gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->debounce)));
 
-    rockcat_buttons &b = s->button_data;
-    b.profile = static_cast<uint8_t>(s->edit_profile);
-    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
+    for (int i = 0; i < N_BUTTONS; ++i) {
+        rockcat_assignment b{};
+        rockcat_profile_get_input(p, i / HALF, i % HALF, &b);
         int t = combo_type(s->buttons[i].combo);
         if (t >= 0)
-            b.buttons[i].type = static_cast<uint8_t>(t);
-        b.buttons[i].param1 = static_cast<uint8_t>(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->buttons[i].p1)));
-        b.buttons[i].param2 = static_cast<uint8_t>(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->buttons[i].p2)));
+            b.type = static_cast<uint8_t>(t);
+        b.param1 = static_cast<uint8_t>(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->buttons[i].p1)));
+        b.param2 = static_cast<uint8_t>(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->buttons[i].p2)));
         if (t == ROCKCAT_BT_SHORTCUT) {
             uint8_t mods = 0, key = 0;
             if (rockcat_parse_shortcut(gtk_entry_get_text(GTK_ENTRY(s->buttons[i].text)), &mods, &key) == ROCKCAT_OK) {
-                b.buttons[i].param1 = mods;
-                b.buttons[i].param2 = key;
+                b.param1 = mods;
+                b.param2 = key;
             }
         } else if (t != ROCKCAT_BT_MACRO) {
-            b.buttons[i].param1 = b.buttons[i].param2 = 0;
+            b.param1 = b.param2 = 0;
         }
+        rockcat_profile_set_input(p, i / HALF, i % HALF, &b);
     }
 }
 
@@ -503,12 +520,14 @@ void update_button_row_sensitivity(app_state *s, int i)
 
 void update_raw_view(app_state *s)
 {
+    // the profile the way it goes into a backup: 8 bytes of our own header, then the reports as the mouse has them
     std::string text;
     char line[96];
-    const uint8_t *raw = s->settings.raw;
-    for (int i = 0; i < ROCKCAT_SETTINGS_SIZE; i += 16) {
-        int n = std::snprintf(line, sizeof line, "%04x:", i);
-        for (int j = i; j < i + 16 && j < ROCKCAT_SETTINGS_SIZE; ++j)
+    std::vector<uint8_t> raw(static_cast<size_t>(std::max(0, rockcat_profile_export(s->profile, nullptr, 0))));
+    rockcat_profile_export(s->profile, raw.data(), raw.size());
+    for (size_t i = 0; i < raw.size(); i += 16) {
+        int n = std::snprintf(line, sizeof line, "%04zx:", i);
+        for (size_t j = i; j < i + 16 && j < raw.size(); ++j)
             n += std::snprintf(line + n, sizeof line - n, " %02x", raw[j]);
         text += line;
         text += '\n';
@@ -518,48 +537,60 @@ void update_raw_view(app_state *s)
 
 void fill(app_state *s)
 {
+    const rockcat_profile *p = s->profile;
+    if (!p)
+        return;
     s->updating = true;
-    const rockcat_settings &st = s->settings;
-    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i) {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->dpi[i].enabled), (st.dpi_enabled_mask >> i) & 1);
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->dpi[i].active), st.dpi_active == i);
-        gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->dpi[i].x), st.dpi_x[i]);
-        gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->dpi[i].y), st.dpi_y[i]);
-    }
+    auto get = [p](rockcat_setting which) {
+        int v = 0;
+        rockcat_profile_get_int(p, which, &v);
+        return v;
+    };
     bool same = true;
-    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i)
-        same = same && st.dpi_x[i] == st.dpi_y[i];
+    for (int i = 0; i < N_DPI; ++i) {
+        int x = 0, y = 0, en = 0;
+        rockcat_profile_get_dpi(p, i, &x, &y, &en);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->dpi[i].enabled), en);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->dpi[i].active), get(ROCKCAT_SET_DPI_ACTIVE) == i);
+        gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->dpi[i].x), x);
+        gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->dpi[i].y), y);
+        same = same && x == y;
+    }
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->dpi_lock), same);
-    if (st.polling_rate < 4)
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->polling[st.polling_rate]), TRUE);
+    for (int i = 0; i < 4; ++i)
+        if (rockcat_polling_rate_hz(static_cast<uint8_t>(i)) == get(ROCKCAT_SET_POLLING_HZ))
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->polling[i]), TRUE);
 
-    uint8_t eff = 0;
-    int by_engine = 0;
-    rockcat_effective_effect(s->info.product_id, &st, &eff, &by_engine);
+    int eff = 0, by_engine = 0;
+    rockcat_profile_get_effect(p, &eff, &by_engine);
     ensure_combo_id(s->effect, eff);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->render_engine), by_engine);
     rockcat_shift_lighting sl;
-    rockcat_shift_lighting_load(s->info.product_id, st.profile, &sl);
+    rockcat_shift_lighting_load(s->info.product_id, static_cast<uint8_t>(rockcat_profile_index(p)), &sl);
     gtk_switch_set_active(GTK_SWITCH(s->shift_enable), sl.enabled);
     gtk_combo_box_set_active(GTK_COMBO_BOX(s->shift_style), sl.style == ROCKCAT_SHIFT_PULSE ? 1 : 0);
     GdkRGBA srgba = to_rgba(sl.color);
     gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(s->shift_color), &srgba);
-    gtk_range_set_value(GTK_RANGE(s->speed), st.effect_speed);
+    gtk_range_set_value(GTK_RANGE(s->speed), get(ROCKCAT_SET_EFFECT_SPEED));
     char thid[8];
-    std::snprintf(thid, sizeof thid, "%d", (st.color_theme & 0x7f) % ROCKCAT_AIMO_THEMES);
+    std::snprintf(thid, sizeof thid, "%d", get(ROCKCAT_SET_COLOR_THEME) % ROCKCAT_AIMO_THEMES);
     gtk_combo_box_set_active_id(GTK_COMBO_BOX(s->theme), thid);
-    gtk_range_set_value(GTK_RANGE(s->brightness), st.brightness);
-    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
-        GdkRGBA rgba = to_rgba(st.leds[i]);
+    gtk_range_set_value(GTK_RANGE(s->brightness), get(ROCKCAT_SET_BRIGHTNESS));
+    for (int i = 0; i < N_LEDS; ++i) {
+        rockcat_color c{};
+        int en = 0;
+        rockcat_profile_get_led(p, i, &c, &en);
+        GdkRGBA rgba = to_rgba(c);
         gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(s->led_color[i]), &rgba);
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->led_enable[i]), (st.led_enable_mask >> i) & 1);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->led_enable[i]), en);
     }
 
-    gtk_switch_set_active(GTK_SWITCH(s->angle_snapping), st.angle_snapping != 0);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->debounce), st.debounce_ms);
+    gtk_switch_set_active(GTK_SWITCH(s->angle_snapping), get(ROCKCAT_SET_ANGLE_SNAPPING) != 0);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->debounce), get(ROCKCAT_SET_DEBOUNCE_MS));
 
-    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
-        const rockcat_button &b = s->button_data.buttons[i];
+    for (int i = 0; i < N_BUTTONS; ++i) {
+        rockcat_assignment b{};
+        rockcat_profile_get_input(p, i / HALF, i % HALF, &b);
         ensure_combo_id(s->buttons[i].combo, b.type);
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->buttons[i].p1), b.param1);
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->buttons[i].p2), b.param2);
@@ -592,7 +623,7 @@ void set_controls_sensitive(app_state *s, bool on)
 void update_profile_buttons(app_state *s)
 {
     s->updating = true;
-    for (int i = 0; i < ROCKCAT_PROFILE_COUNT; ++i) {
+    for (int i = 0; i < N_PROFILES; ++i) {
         char text[32];
         std::snprintf(text, sizeof text, i == s->active_profile ? "%d *" : "%d", i + 1);
         gtk_button_set_label(GTK_BUTTON(s->profile_buttons[i]), text);
@@ -616,9 +647,12 @@ bool load_profile(app_state *s)
     while (gtk_events_pending())
         gtk_main_iteration();
 
-    int r = rockcat_read_settings(s->dev, static_cast<uint8_t>(s->edit_profile), &s->settings);
-    if (r == ROCKCAT_OK)
-        r = rockcat_read_buttons(s->dev, static_cast<uint8_t>(s->edit_profile), &s->button_data);
+    rockcat_profile *fresh = nullptr;
+    int r = rockcat_profile_read(s->dev, s->edit_profile, &fresh);
+    if (r == ROCKCAT_OK) {
+        rockcat_profile_free(s->profile);
+        s->profile = fresh;
+    }
 
     if (gw)
         gdk_window_set_cursor(gw, nullptr);
@@ -660,13 +694,20 @@ void connect_device(app_state *s)
         return;
     }
     rockcat_get_info(s->dev, &s->info);
+    if (rockcat_get_caps(s->dev) != kone_caps()) {
+        // the library knows this device, this window doesnt (yet). better to say so than to draw a Kone over a keyboard
+        char msg[160];
+        std::snprintf(msg, sizeof msg, "%s works with rockcat-cli, this window cant show it yet", s->info.name);
+        disconnect(s, msg);
+        return;
+    }
     char fw[16], title[128];
     rockcat_get_firmware_version(s->dev, fw, sizeof fw);
     std::snprintf(title, sizeof title, "%s   |   FW %s", s->info.name, fw);
     gtk_label_set_text(GTK_LABEL(s->device_label), title);
 
     uint8_t active = 0;
-    if (rockcat_get_active_profile(s->dev, &active, nullptr) == ROCKCAT_OK && active < ROCKCAT_PROFILE_COUNT)
+    if (rockcat_get_active_profile(s->dev, &active, nullptr) == ROCKCAT_OK && active < N_PROFILES)
         s->active_profile = active;
     s->edit_profile = s->active_profile;
     update_profile_buttons(s);
@@ -683,6 +724,8 @@ void disconnect(app_state *s, const char *why)
     if (s->dev)
         rockcat_close(s->dev);
     s->dev = nullptr;
+    rockcat_profile_free(s->profile);
+    s->profile = nullptr;
     s->loaded = false;
     gtk_label_set_text(GTK_LABEL(s->device_label), "NO DEVICE");
     set_status(s, why, "error");
@@ -708,7 +751,7 @@ gboolean hotplug_tick(gpointer data)
 
 void write_text_macros(app_state *s)
 {
-    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
+    for (int i = 0; i < N_BUTTONS; ++i) {
         if (combo_type(s->buttons[i].combo) != ROCKCAT_BT_MACRO)
             continue;
         const char *text = gtk_entry_get_text(GTK_ENTRY(s->buttons[i].text));
@@ -716,8 +759,6 @@ void write_text_macros(app_state *s)
             continue; // keep whatever macro is stored
         static rockcat_macro m;
         std::memset(&m, 0, sizeof m);
-        m.profile = static_cast<uint8_t>(s->edit_profile);
-        m.button = static_cast<uint8_t>(i);
         m.loop = 1;
         std::snprintf(m.set_name, sizeof m.set_name, "rockcat");
         std::snprintf(m.name, sizeof m.name, "button %d", i + 1);
@@ -739,7 +780,9 @@ void write_text_macros(app_state *s)
             m.keys[m.count++] = {usage, ROCKCAT_KEY_RELEASE, 20};
             if (shift) m.keys[m.count++] = {0xe1, ROCKCAT_KEY_RELEASE, 20};
         }
-        int r = rockcat_write_macro(s->dev, &m);
+        int r = rockcat_profile_set_macro(s->profile, i / HALF, i % HALF, &m);
+        if (r == ROCKCAT_OK)
+            r = rockcat_profile_write(s->dev, s->profile);
         if (r != ROCKCAT_OK)
             report_error(s, "Writing macro failed", r);
     }
@@ -748,15 +791,14 @@ void write_text_macros(app_state *s)
 void on_apply(GtkButton *, gpointer data)
 {
     auto *s = static_cast<app_state *>(data);
-    if (!s->dev || !s->loaded)
+    if (!s->dev || !s->loaded || !s->profile)
         return;
     collect(s);
     set_status(s, "Writing to device...", nullptr);
     while (gtk_events_pending())
         gtk_main_iteration();
-    int r = rockcat_write_settings(s->dev, &s->settings);
-    if (r == ROCKCAT_OK)
-        r = rockcat_write_buttons(s->dev, &s->button_data);
+    // settings and buttons first, the typed macros in a second go after that (write_text_macros), same order this always had
+    int r = rockcat_profile_write(s->dev, s->profile);
     if (r != ROCKCAT_OK) {
         if (r == ROCKCAT_ERR_IO)
             disconnect(s, "Device disconnected");
@@ -846,7 +888,7 @@ void on_dpi_lock_toggled(GtkToggleButton *b, gpointer data)
 
 GtkWidget *dpi_spin(void)
 {
-    GtkWidget *sp = gtk_spin_button_new_with_range(ROCKCAT_DPI_MIN, ROCKCAT_DPI_MAX, ROCKCAT_DPI_STEP);
+    GtkWidget *sp = gtk_spin_button_new_with_range(kone_caps()->dpi_min, kone_caps()->dpi_max, kone_caps()->dpi_step);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(sp), TRUE);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(sp), TRUE);
     gtk_entry_set_width_chars(GTK_ENTRY(sp), 6);
@@ -868,7 +910,7 @@ GtkWidget *build_settings_page(app_state *s)
     for (int c = 0; c < 5; ++c)
         gtk_grid_attach(GTK_GRID(grid), label(heads[c], "rc-hint"), c, 0, 1, 1);
     GSList *group = nullptr;
-    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i) {
+    for (int i = 0; i < N_DPI; ++i) {
         char t[8];
         std::snprintf(t, sizeof t, "%d", i + 1);
         dpi_row &r = s->dpi[i];
@@ -887,10 +929,10 @@ GtkWidget *build_settings_page(app_state *s)
     }
     s->dpi_lock = gtk_check_button_new_with_label("Same DPI for X and Y");
     g_signal_connect(s->dpi_lock, "toggled", G_CALLBACK(on_dpi_lock_toggled), s);
-    gtk_grid_attach(GTK_GRID(grid), s->dpi_lock, 0, ROCKCAT_DPI_LEVELS + 1, 5, 1);
+    gtk_grid_attach(GTK_GRID(grid), s->dpi_lock, 0, N_DPI + 1, 5, 1);
     gtk_grid_attach(GTK_GRID(grid),
                     label("100 - 16000 DPI in steps of 50. The DPI up/down buttons cycle through enabled levels.", "rc-hint"),
-                    0, ROCKCAT_DPI_LEVELS + 2, 5, 1);
+                    0, N_DPI + 2, 5, 1);
     s->dpi_panel = box_panel("DPI SWITCHER", grid);
     gtk_grid_attach(GTK_GRID(page), s->dpi_panel, 0, 0, 1, 2);
 
@@ -960,10 +1002,13 @@ GtkWidget *button_combo(app_state *s, int idx)
 void on_reset_buttons(GtkButton *, gpointer data)
 {
     auto *s = static_cast<app_state *>(data);
-    rockcat_buttons_default(static_cast<uint8_t>(s->edit_profile), &s->button_data);
+    if (!s->profile || rockcat_profile_reset_inputs(s->profile) != ROCKCAT_OK)
+        return;
     s->updating = true;
-    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
-        ensure_combo_id(s->buttons[i].combo, s->button_data.buttons[i].type);
+    for (int i = 0; i < N_BUTTONS; ++i) {
+        rockcat_assignment b{};
+        rockcat_profile_get_input(s->profile, i / HALF, i % HALF, &b);
+        ensure_combo_id(s->buttons[i].combo, b.type);
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->buttons[i].p1), 0);
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->buttons[i].p2), 0);
         update_button_row_sensitivity(s, i);
@@ -992,7 +1037,7 @@ GtkWidget *build_buttons_page(app_state *s)
 
     for (int i = 0; i < HALF; ++i) {
         char t[64];
-        std::snprintf(t, sizeof t, "%d  %s", i + 1, rockcat_button_name(i));
+        std::snprintf(t, sizeof t, "%d  %s", i + 1, rockcat_input_label(kone_caps(), i));
         gtk_grid_attach(GTK_GRID(grid), label(t), 0, i + 1, 1, 1);
         for (int layer = 0; layer < 2; ++layer) {
             int idx = i + layer * HALF;
@@ -1060,21 +1105,22 @@ uint8_t current_effect(app_state *s)
     return e < 0 ? 0 : static_cast<uint8_t>(e);
 }
 
-void preview_settings(app_state *s, rockcat_settings *out)
+// a copy of the loaded profile with the lighting widgets applied, so the preview shows what APPLY would do. caller frees it
+rockcat_profile *preview_profile(app_state *s)
 {
-    *out = s->settings;
-    out->effect_speed = static_cast<uint8_t>(gtk_range_get_value(GTK_RANGE(s->speed)));
-    out->brightness = static_cast<uint8_t>(gtk_range_get_value(GTK_RANGE(s->brightness)));
+    rockcat_profile *p = rockcat_profile_clone(s->profile);
+    if (!p)
+        return nullptr;
+    rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT_SPEED, static_cast<uint8_t>(gtk_range_get_value(GTK_RANGE(s->speed))));
+    rockcat_profile_set_int(p, ROCKCAT_SET_BRIGHTNESS, static_cast<uint8_t>(gtk_range_get_value(GTK_RANGE(s->brightness))));
     int th = combo_type(s->theme);
-    out->color_theme = static_cast<uint8_t>(0x80 | (th < 0 ? 0 : th));
-    out->led_enable_mask = 0;
-    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
+    rockcat_profile_set_int(p, ROCKCAT_SET_COLOR_THEME, th < 0 ? 0 : th);
+    for (int i = 0; i < N_LEDS; ++i) {
         GdkRGBA rgba;
         gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(s->led_color[i]), &rgba);
-        out->leds[i] = from_rgba(rgba);
-        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->led_enable[i])))
-            out->led_enable_mask |= static_cast<uint16_t>(1 << i);
+        rockcat_profile_set_led(p, i, from_rgba(rgba), gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->led_enable[i])));
     }
+    return p;
 }
 
 gboolean preview_tick(gpointer data)
@@ -1296,10 +1342,10 @@ GtkWidget *build_illumination_page(app_state *s)
     GtkWidget *cg = gtk_grid_new();
     gtk_grid_set_column_spacing(GTK_GRID(cg), 10);
     gtk_grid_set_row_spacing(GTK_GRID(cg), 4);
-    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
+    for (int i = 0; i < N_LEDS; ++i) {
         int col = (i % 2) * 3, row = i / 2;
         char t[40];
-        std::snprintf(t, sizeof t, "%d  %s", i + 1, rockcat_led_name(i));
+        std::snprintf(t, sizeof t, "%d  %s", i + 1, rockcat_led_label(kone_caps(), i));
         s->led_enable[i] = gtk_check_button_new();
         s->led_color[i] = gtk_color_button_new();
         gtk_color_chooser_set_use_alpha(GTK_COLOR_CHOOSER(s->led_color[i]), TRUE);
@@ -1815,7 +1861,7 @@ GtkWidget *rockcat_window_new(GtkApplication *app, bool force_minimized)
     gtk_widget_set_halign(left, GTK_ALIGN_START);
     gtk_widget_set_halign(right, GTK_ALIGN_END);
     gtk_box_pack_start(GTK_BOX(left), label("PROFILE", "rc-box-title"), FALSE, FALSE, 4);
-    for (int i = 0; i < ROCKCAT_PROFILE_COUNT; ++i) {
+    for (int i = 0; i < N_PROFILES; ++i) {
         GtkWidget *b = gtk_toggle_button_new_with_label("");
         add_class(b, "rc-profile");
         g_object_set_data(G_OBJECT(b), "profile", GINT_TO_POINTER(i));

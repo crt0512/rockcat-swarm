@@ -33,19 +33,22 @@ int rockcat_model_at(int i, uint16_t *product_id, const char **name, const rockc
     return ROCKCAT_OK;
 }
 
-const char *rockcat_input_label(rockcat_device *dev, int input)
+const char *rockcat_input_label(const rockcat_caps *caps, int input)
 {
-    return dev && dev->desc ? dev->desc->family->input_label(input) : "?";
+    const device_desc *d = device_of(caps);
+    return d ? d->family->input_label(input) : "?";
 }
 
-const char *rockcat_led_label(rockcat_device *dev, int led)
+const char *rockcat_led_label(const rockcat_caps *caps, int led)
 {
-    return dev && dev->desc ? dev->desc->family->led_label(led) : "?";
+    const device_desc *d = device_of(caps);
+    return d ? d->family->led_label(led) : "?";
 }
 
-const char *rockcat_layer_label(rockcat_device *dev, int layer)
+const char *rockcat_layer_label(const rockcat_caps *caps, int layer)
 {
-    return dev && dev->desc ? dev->desc->family->layer_label(layer) : "?";
+    const device_desc *d = device_of(caps);
+    return d ? d->family->layer_label(layer) : "?";
 }
 
 int rockcat_profile_read(rockcat_device *dev, int index, rockcat_profile **out)
@@ -78,6 +81,11 @@ int rockcat_profile_write(rockcat_device *dev, rockcat_profile *p)
 void rockcat_profile_free(rockcat_profile *p)
 {
     delete p;
+}
+
+rockcat_profile *rockcat_profile_clone(const rockcat_profile *p)
+{
+    return p ? p->clone() : nullptr;
 }
 
 int rockcat_profile_index(const rockcat_profile *p)
@@ -128,6 +136,11 @@ int rockcat_profile_get_input(const rockcat_profile *p, int layer, int input, ro
 int rockcat_profile_set_input(rockcat_profile *p, int layer, int input, const rockcat_assignment *a)
 {
     return p ? p->set_input(layer, input, a) : ROCKCAT_ERR_ARGUMENT;
+}
+
+int rockcat_profile_reset_inputs(rockcat_profile *p)
+{
+    return p ? p->reset_inputs() : ROCKCAT_ERR_ARGUMENT;
 }
 
 int rockcat_profile_get_macro(rockcat_device *dev, const rockcat_profile *p, int layer, int input, rockcat_macro *m)
@@ -211,6 +224,20 @@ int rockcat_profile_import(rockcat_device *dev, const uint8_t *buf, size_t len, 
     }
     *out = p;
     return ROCKCAT_OK;
+}
+
+int rockcat_poll_event(rockcat_device *dev, rockcat_event *ev, int timeout_ms)
+{
+    if (!dev || !dev->io || !ev)
+        return ROCKCAT_ERR_ARGUMENT;
+    *ev = rockcat_event{ROCKCAT_EVENT_NONE, 0, 0};
+    uint8_t in[64];
+    int n = dev->io->read(in, sizeof in, timeout_ms);
+    if (n <= 0)
+        return n;
+    if (dev->desc)
+        dev->desc->family->decode_event(in, n, ev);
+    return 1;
 }
 
 int rockcat_direct_begin(rockcat_device *dev)

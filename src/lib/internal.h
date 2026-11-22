@@ -3,6 +3,7 @@
 
 #include "rockcat/rockcat.h"
 #include "devices.h"
+#include "families/kone_aimo.h"
 #include "transport.h"
 
 // how long to leave the device alone after a write before asking if its done, and how often to ask

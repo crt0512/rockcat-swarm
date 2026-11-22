@@ -70,6 +70,12 @@ std::vector<rockcat_device_info> scan_raw()
             found.push_back(info);
         return found;
     }
+    if (const char *name = env("ROCKCAT_SIM")) {
+        rockcat_device_info info;
+        if (transport_sim(name, &info))
+            found.push_back(info);
+        return found;
+    }
     for (const hid_node &n : hid_nodes(ROCKCAT_VID))
         found.push_back(to_info(n, n.product.c_str()));
     return found;
@@ -80,12 +86,14 @@ std::vector<rockcat_device_info> scan_raw()
 std::vector<rockcat_device_info> scan()
 {
     std::vector<rockcat_device_info> found, fallback;
-    bool replay = env("ROCKCAT_REPLAY") != nullptr;
+    // neither a recording nor a simulated device has a report descriptor to look at
+    bool replay = env("ROCKCAT_REPLAY") || env("ROCKCAT_SIM");
     for (rockcat_device_info info : scan_raw()) {
         const device_desc *m = device_find(info.vendor_id, info.product_id);
         if (!m)
             continue;
-        std::snprintf(info.name, sizeof info.name, "%s", m->name);
+        if (!replay)
+            std::snprintf(info.name, sizeof info.name, "%s", m->name);
         std::vector<uint8_t> ids;
         if (!replay)
             ids = hid_report_ids(info.path);
@@ -102,7 +110,8 @@ std::unique_ptr<transport> open_transport(rockcat_device_info &info)
 {
     if (const char *file = env("ROCKCAT_REPLAY"))
         return transport_replay(file, nullptr);
-    std::unique_ptr<transport> io = transport_open_hid(info.path);
+    const char *sim = env("ROCKCAT_SIM");
+    std::unique_ptr<transport> io = sim ? transport_sim(sim, nullptr) : transport_open_hid(info.path);
     if (io)
         if (const char *file = env("ROCKCAT_CAPTURE"))
             io = transport_record(std::move(io), file, info);
@@ -174,6 +183,12 @@ bool checksum_ok(const uint8_t *buf, size_t len)
 
 uint16_t get16(const uint8_t *p) { return static_cast<uint16_t>(p[0] | (p[1] << 8)); }
 void put16(uint8_t *p, uint16_t v) { p[0] = v & 0xff; p[1] = v >> 8; }
+
+// the sensor calibration reports are a Kone AIMO thing, sending them to a keyboard would be asking for trouble
+bool has_calibration(const rockcat_device *dev)
+{
+    return dev && dev->desc && (dev->desc->caps.features & ROCKCAT_HAS_CALIBRATION);
+}
 
 int ensure_init()
 {
@@ -285,7 +300,7 @@ int rockcat_enumerate_raw(rockcat_device_info *out, int max)
 
 int rockcat_open_raw(const char *path, rockcat_device **out)
 {
-    if (!out || (!path && !env("ROCKCAT_REPLAY")))
+    if (!out || (!path && !env("ROCKCAT_REPLAY") && !env("ROCKCAT_SIM")))
         return ROCKCAT_ERR_ARGUMENT;
     *out = nullptr;
     int r = ensure_init();
@@ -693,6 +708,8 @@ int rockcat_write_macro(rockcat_device *dev, const rockcat_macro *in)
 
 int rockcat_read_tdcu(rockcat_device *dev, rockcat_tdcu *out)
 {
+    if (!has_calibration(dev))
+        return ROCKCAT_ERR_UNSUPPORTED;
     if (!out)
         return ROCKCAT_ERR_ARGUMENT;
     uint8_t buf[ROCKCAT_DCU_SIZE] = {REPORT_TDCU};
@@ -707,12 +724,16 @@ int rockcat_read_tdcu(rockcat_device *dev, rockcat_tdcu *out)
 
 int rockcat_calibration_start(rockcat_device *dev)
 {
+    if (!has_calibration(dev))
+        return ROCKCAT_ERR_UNSUPPORTED;
     const uint8_t buf[ROCKCAT_DCU_SIZE] = {REPORT_TDCU, ROCKCAT_DCU_SIZE, 2, 0xff, 0, 0};
     return set_raw(dev, buf, sizeof buf, false);
 }
 
 int rockcat_calibration_poll(rockcat_device *dev, int *finished)
 {
+    if (!has_calibration(dev))
+        return ROCKCAT_ERR_UNSUPPORTED;
     if (!dev || !dev->io || !finished)
         return ROCKCAT_ERR_ARGUMENT;
     uint8_t status[3] = {REPORT_CONTROL, 0, 0};
@@ -727,6 +748,8 @@ int rockcat_calibration_poll(rockcat_device *dev, int *finished)
 
 int rockcat_calibration_finish(rockcat_device *dev, int save)
 {
+    if (!has_calibration(dev))
+        return ROCKCAT_ERR_UNSUPPORTED;
     const uint8_t buf[ROCKCAT_DCU_SIZE] = {REPORT_TDCU, ROCKCAT_DCU_SIZE, 2, static_cast<uint8_t>(save ? 1 : 0), 0, 0};
     return set_raw(dev, buf, sizeof buf, true);
 }

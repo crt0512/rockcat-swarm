@@ -37,6 +37,9 @@ std::vector<hid_node> hid_nodes(uint16_t vid);
 std::vector<uint8_t> hid_report_ids(const std::string &path);
 std::unique_ptr<transport> transport_open_hid(const std::string &path);
 
+// sim.cpp. what ROCKCAT_SIM can be set to, nullptr for a name nobody knows
+std::unique_ptr<transport> transport_sim(const std::string &name, rockcat_device_info *info);
+
 // capture.cpp
 std::unique_ptr<transport> transport_record(std::unique_ptr<transport> inner, const std::string &file, const rockcat_device_info &info);
 // info gets filled from the header of the recording. nullptr if the file is missing or makes no sense

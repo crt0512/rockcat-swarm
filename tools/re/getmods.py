@@ -4,6 +4,9 @@ import hashlib, json, os, socket, sys, time, urllib.parse, urllib.request
 
 # urlretrieve has no timeout of its own and the storage host sometimes just stops talking mid file
 socket.setdefaulttimeout(60)
+# some of the files sit on a cdn whose ipv6 address just never answers (from here at least), ipv4 always does
+_getaddrinfo = socket.getaddrinfo
+socket.getaddrinfo = lambda *a, **k: [x for x in _getaddrinfo(*a, **k) if x[0] == socket.AF_INET] or _getaddrinfo(*a, **k)
 
 reply = json.load(open(sys.argv[1]))['reply'][1]
 dest = sys.argv[2]

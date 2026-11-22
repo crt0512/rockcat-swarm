@@ -27,7 +27,7 @@ void usage(FILE *f)
         "  profile [N]                  show or switch the active profile (1-5)\n"
         "  show [-p N]                  show settings of a profile (default: active)\n"
         "  set [-p N] KEY=VALUE...      change settings, keys:\n"
-        "        dpiN=DPI | dpiN=XxY    DPI level N (1-5), %d-%d in steps of %d\n"
+        "        dpiN=DPI | dpiN=XxY    DPI level N, how many levels and which range depends on the device\n"
         "        dpi-active=N           selected DPI level (1-5)\n"
         "        dpi-enabled=1,2,3      enabled DPI levels\n"
         "        polling=125|250|500|1000\n"
@@ -73,7 +73,7 @@ void usage(FILE *f)
         "ROCKCAT_REPLAY=FILE makes every command talk to a recording instead of hardware.\n"
         "\n"
         "Profiles, DPI levels and buttons are numbered from 1.\n",
-        g_prog, ROCKCAT_DPI_MIN, ROCKCAT_DPI_MAX, ROCKCAT_DPI_STEP);
+        g_prog);
 }
 
 [[noreturn]] void die(const char *what, int err)
@@ -137,28 +137,31 @@ bool parse_color(const std::string &s, rockcat_color *c)
     return true;
 }
 
-std::vector<int> led_selection(const std::string &s)
+std::vector<int> led_selection(const std::string &s, int led_count)
 {
     if (s == "all") {
         std::vector<int> v;
-        for (int i = 0; i < ROCKCAT_LED_COUNT; ++i)
+        for (int i = 0; i < led_count; ++i)
             v.push_back(i);
         return v;
     }
-    if (s == "wheel")
-        return {0};
-    if (s == "left")
-        return {1, 2, 3, 4, 9};
-    if (s == "right")
-        return {5, 6, 7, 8, 10};
+    // these three only mean something on the Kone AIMO with its two led strips
+    if (led_count == 11) {
+        if (s == "wheel")
+            return {0};
+        if (s == "left")
+            return {1, 2, 3, 4, 9};
+        if (s == "right")
+            return {5, 6, 7, 8, 10};
+    }
     std::vector<int> v;
     size_t pos = 0;
     while (pos <= s.size()) {
         size_t comma = s.find(',', pos);
         std::string part = s.substr(pos, comma == std::string::npos ? std::string::npos : comma - pos);
         long n = parse_long(part, "LED index");
-        if (n < 1 || n > ROCKCAT_LED_COUNT)
-            fail("LED index must be 1-11");
+        if (n < 1 || n > led_count)
+            fail("%s", ("LED index must be 1-" + std::to_string(led_count)).c_str());
         v.push_back(static_cast<int>(n - 1));
         if (comma == std::string::npos)
             break;
@@ -172,75 +175,120 @@ void print_color(const rockcat_color &c)
     std::printf("#%02x%02x%02x@%d", c.r, c.g, c.b, c.a);
 }
 
-uint16_t g_pid = ROCKCAT_PID_KONE_AIMO_REMASTERED;
 
-void print_settings(const rockcat_settings &s)
+void print_profile(rockcat_device *dev, const rockcat_profile *p)
 {
-    std::printf("Profile %d\n", s.profile + 1);
-    std::printf("  DPI levels:\n");
-    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i) {
-        bool en = s.dpi_enabled_mask & (1 << i);
-        std::printf("    %c %d: ", i == s.dpi_active ? '*' : ' ', i + 1);
-        if (s.dpi_x[i] == s.dpi_y[i])
-            std::printf("%5d", s.dpi_x[i]);
-        else
-            std::printf("%5dx%d", s.dpi_x[i], s.dpi_y[i]);
-        std::printf("%s\n", en ? "" : "  (disabled)");
-    }
-    std::printf("  Polling rate:    %d Hz\n", rockcat_polling_rate_hz(s.polling_rate));
-    std::printf("  Angle snapping:  %s\n", s.angle_snapping ? "on" : "off");
-    std::printf("  Debounce time:   %d ms\n", s.debounce_ms);
-    const char *ename = rockcat_effect_name(s.effect);
-    uint8_t eff = 0;
-    int by_engine = 0;
-    rockcat_effective_effect(g_pid, &s, &eff, &by_engine);
-    ename = rockcat_effect_name(eff);
-    std::printf("  Lighting effect: %s (%d), %s\n", ename ? ename : "unknown", eff,
-                by_engine ? "rendered by the rockcat engine (custom Easy-Shift colour possible)"
-                          : "rendered by the mouse (Easy-Shift shows the built-in light blue)");
-    std::printf("  AIMO theme:      %d (raw 0x%02x)\n", (s.color_theme & 0x7f) % ROCKCAT_AIMO_THEMES + 1, s.color_theme);
-    std::printf("  Effect speed:    %d\n", s.effect_speed);
-    std::printf("  Brightness:      %d\n", s.brightness);
-    std::printf("  LEDs (enable mask 0x%03x):\n", s.led_enable_mask);
-    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
-        std::printf("    %2d %-12s ", i + 1, rockcat_led_name(i));
-        print_color(s.leds[i]);
-        std::printf("%s\n", s.led_enable_mask & (1 << i) ? "" : "  (off)");
-    }
-}
-
-void print_buttons(const rockcat_buttons &b)
-{
-    std::printf("Profile %d buttons\n", b.profile + 1);
-    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
-        const rockcat_button &bt = b.buttons[i];
-        const char *tn = rockcat_button_type_name(bt.type);
-        std::printf("  %-9s %-34s %s",
-                    (i < 12 ? std::to_string(i + 1) : "shift+" + std::to_string(i - 11)).c_str(),
-                    rockcat_button_name(i), tn ? tn : "unknown");
-        if (bt.type == ROCKCAT_BT_SHORTCUT) {
-            char sc[64];
-            rockcat_format_shortcut(bt.param1, bt.param2, sc, sizeof sc);
-            std::printf(" %s", sc);
-        } else if (!tn || bt.param1 || bt.param2) {
-            std::printf(" [type 0x%02x, 0x%02x, 0x%02x]", bt.type, bt.param1, bt.param2);
+    const rockcat_caps *caps = rockcat_get_caps(dev);
+    std::printf("Profile %d\n", rockcat_profile_index(p) + 1);
+    int v = 0;
+    if (caps->features & ROCKCAT_HAS_DPI) {
+        int active = 0;
+        rockcat_profile_get_int(p, ROCKCAT_SET_DPI_ACTIVE, &active);
+        std::printf("  DPI levels:\n");
+        for (int i = 0; i < caps->dpi_levels; ++i) {
+            int x = 0, y = 0, en = 0;
+            rockcat_profile_get_dpi(p, i, &x, &y, &en);
+            std::printf("    %c %d: ", i == active ? '*' : ' ', i + 1);
+            if (x == y)
+                std::printf("%5d", x);
+            else
+                std::printf("%5dx%d", x, y);
+            std::printf("%s\n", en ? "" : "  (disabled)");
         }
-        std::printf("\n");
+    }
+    // whatever the device doesnt have simply doesnt get a line
+    if (rockcat_profile_get_int(p, ROCKCAT_SET_POLLING_HZ, &v) == ROCKCAT_OK)
+        std::printf("  Polling rate:    %d Hz\n", v);
+    if (rockcat_profile_get_int(p, ROCKCAT_SET_ANGLE_SNAPPING, &v) == ROCKCAT_OK)
+        std::printf("  Angle snapping:  %s\n", v ? "on" : "off");
+    if (rockcat_profile_get_int(p, ROCKCAT_SET_DEBOUNCE_MS, &v) == ROCKCAT_OK)
+        std::printf("  Debounce time:   %d ms\n", v);
+    int eff = 0, by_engine = 0;
+    if (rockcat_profile_get_effect(p, &eff, &by_engine) == ROCKCAT_OK) {
+        const char *ename = rockcat_effect_name(static_cast<uint8_t>(eff));
+        std::printf("  Lighting effect: %s (%d), %s\n", ename ? ename : "unknown", eff,
+                    by_engine ? "rendered by the rockcat engine (custom Easy-Shift colour possible)"
+                              : "rendered by the mouse (Easy-Shift shows the built-in light blue)");
+    }
+    if (rockcat_profile_get_int(p, ROCKCAT_SET_COLOR_THEME, &v) == ROCKCAT_OK)
+        std::printf("  AIMO theme:      %d\n", v + 1);
+    if (rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT_SPEED, &v) == ROCKCAT_OK)
+        std::printf("  Effect speed:    %d\n", v);
+    if (rockcat_profile_get_int(p, ROCKCAT_SET_BRIGHTNESS, &v) == ROCKCAT_OK)
+        std::printf("  Brightness:      %d\n", v);
+    unsigned mask = 0;
+    for (int i = 0; i < caps->led_count; ++i) {
+        int en = 0;
+        rockcat_profile_get_led(p, i, nullptr, &en);
+        mask |= static_cast<unsigned>(en) << i;
+    }
+    std::printf("  LEDs (enable mask 0x%03x):\n", mask);
+    for (int i = 0; i < caps->led_count; ++i) {
+        rockcat_color c{};
+        rockcat_profile_get_led(p, i, &c, nullptr);
+        std::printf("    %2d %-12s ", i + 1, rockcat_led_label(caps, i));
+        print_color(c);
+        std::printf("%s\n", mask & (1u << i) ? "" : "  (off)");
     }
 }
 
-int parse_button(const std::string &s)
+// a button on a layer. layer 1 is Easy-Shift[+], written "shift+N" on the command line
+struct slot {
+    int layer = 0, input = 0;
+};
+
+std::string slot_key(slot sl)
 {
+    return (sl.layer ? "shift+" : "") + std::to_string(sl.input + 1);
+}
+
+std::string slot_name(rockcat_device *dev, slot sl)
+{
+    return (sl.layer ? "Easy-Shift + " : "") + std::string(rockcat_input_label(rockcat_get_caps(dev), sl.input));
+}
+
+void print_buttons(rockcat_device *dev, const rockcat_profile *p)
+{
+    const rockcat_caps *caps = rockcat_get_caps(dev);
+    std::printf("Profile %d buttons\n", rockcat_profile_index(p) + 1);
+    for (int layer = 0; layer < caps->layer_count; ++layer)
+        for (int input = 0; input < caps->input_count; ++input) {
+            slot sl{layer, input};
+            rockcat_assignment bt{};
+            rockcat_profile_get_input(p, layer, input, &bt);
+            const char *tn = rockcat_button_type_name(bt.type);
+            std::printf("  %-9s %-34s %s", slot_key(sl).c_str(), slot_name(dev, sl).c_str(), tn ? tn : "unknown");
+            if (bt.type == ROCKCAT_BT_SHORTCUT) {
+                char sc[64];
+                rockcat_format_shortcut(bt.param1, bt.param2, sc, sizeof sc);
+                std::printf(" %s", sc);
+            } else if (!tn || bt.param1 || bt.param2) {
+                std::printf(" [type 0x%02x, 0x%02x, 0x%02x]", bt.type, bt.param1, bt.param2);
+            }
+            std::printf("\n");
+        }
+}
+
+// only the syntax, whether the device has that many buttons gets checked once we know which device it is
+slot parse_button(const std::string &s)
+{
+    slot sl;
     std::string t = s;
-    int base = 0;
     if (t.rfind("shift+", 0) == 0) {
-        base = ROCKCAT_BUTTON_COUNT / 2;
+        sl.layer = 1;
         t = t.substr(6);
     }
-    long n = parse_long(t, "button");
-    if (n < 1 || n > ROCKCAT_BUTTON_COUNT / 2)
-        fail("button must be 1-12 or shift+1..12");
-    return base + static_cast<int>(n - 1);
+    sl.input = static_cast<int>(parse_long(t, "button")) - 1;
+    return sl;
+}
+
+void check_slot(rockcat_device *dev, slot sl)
+{
+    const rockcat_caps *caps = rockcat_get_caps(dev);
+    if (sl.input < 0 || sl.input >= caps->input_count || sl.layer >= caps->layer_count) {
+        std::string n = std::to_string(caps->input_count);
+        fail("%s", ("button must be 1-" + n + (caps->layer_count > 1 ? " or shift+1.." + n : "")).c_str());
+    }
 }
 
 void hexdump(const char *title, const uint8_t *buf, size_t len)
@@ -292,12 +340,23 @@ rockcat_device *open_device(const options &o)
     return dev;
 }
 
-uint8_t resolve_profile(rockcat_device *dev, const options &o)
+int resolve_profile(rockcat_device *dev, const options &o)
 {
-    if (o.profile >= 0)
-        return static_cast<uint8_t>(o.profile);
+    if (o.profile >= 0) {
+        int count = rockcat_get_caps(dev)->profile_count;
+        if (o.profile >= count)
+            fail("%s", ("profile must be 1-" + std::to_string(count)).c_str());
+        return o.profile;
+    }
     uint8_t p = 0;
     check(rockcat_get_active_profile(dev, &p, nullptr), "read active profile");
+    return p;
+}
+
+rockcat_profile *read_profile(rockcat_device *dev, const options &o)
+{
+    rockcat_profile *p = nullptr;
+    check(rockcat_profile_read(dev, resolve_profile(dev, o), &p), "read profile");
     return p;
 }
 
@@ -347,7 +406,7 @@ int cmd_raw(const options &o)
     }
     if (sub != "get" && sub != "set" && sub != "send" && sub != "wait" && sub != "read")
         fail("raw wants one of: list, get, set, send, wait, read");
-    if (!o.device && !std::getenv("ROCKCAT_REPLAY"))
+    if (!o.device && !std::getenv("ROCKCAT_REPLAY") && !std::getenv("ROCKCAT_SIM"))
         fail("raw %s needs --device /dev/hidrawN (see 'raw list'), guessing which node you meant is how keyboards get bricked", sub.c_str());
     rockcat_device *dev = nullptr;
     check(rockcat_open_raw(o.device, &dev), "open");
@@ -444,8 +503,9 @@ int cmd_profile(const options &o)
         std::printf("%d\n", p + 1);
     } else {
         long n = parse_long(o.args[0], "profile");
-        if (n < 1 || n > ROCKCAT_PROFILE_COUNT)
-            fail("profile must be 1-5");
+        int count = rockcat_get_caps(dev)->profile_count;
+        if (n < 1 || n > count)
+            fail("%s", ("profile must be 1-" + std::to_string(count)).c_str());
         check(rockcat_set_active_profile(dev, static_cast<uint8_t>(n - 1)), "set active profile");
     }
     rockcat_close(dev);
@@ -455,12 +515,9 @@ int cmd_profile(const options &o)
 int cmd_show(const options &o)
 {
     rockcat_device *dev = open_device(o);
-    rockcat_settings s;
-    check(rockcat_read_settings(dev, resolve_profile(dev, o), &s), "read settings");
-    rockcat_device_info info;
-    rockcat_get_info(dev, &info);
-    g_pid = info.product_id;
-    print_settings(s);
+    rockcat_profile *p = read_profile(dev, o);
+    print_profile(dev, p);
+    rockcat_profile_free(p);
     rockcat_close(dev);
     return 0;
 }
@@ -468,14 +525,23 @@ int cmd_show(const options &o)
 // effect/render are applied after all keys, see cmd_set
 int g_new_effect = -1, g_new_render = -1;
 
-void apply_setting(rockcat_settings &s, const std::string &kv)
+void apply_setting(rockcat_device *dev, rockcat_profile *p, const std::string &kv)
 {
+    const rockcat_caps *caps = rockcat_get_caps(dev);
     auto eq = kv.find('=');
     if (eq == std::string::npos)
         fail("expected KEY=VALUE, got '%s'", kv.c_str());
     std::string key = kv.substr(0, eq), val = kv.substr(eq + 1);
+    // the cli already said what was wrong in its own words wherever it can, this is for whatever slips through
+    auto set_int = [&](rockcat_setting which, long v) {
+        int r = rockcat_profile_set_int(p, which, static_cast<int>(v));
+        if (r == ROCKCAT_ERR_UNSUPPORTED)
+            fail("this device has no '%s' setting", key.c_str());
+        if (r != ROCKCAT_OK)
+            fail("value out of range for '%s'", key.c_str());
+    };
 
-    if (key.size() == 4 && key.rfind("dpi", 0) == 0 && key[3] >= '1' && key[3] <= '5') {
+    if (key.size() == 4 && key.rfind("dpi", 0) == 0 && key[3] >= '1' && key[3] < '1' + caps->dpi_levels) {
         int lvl = key[3] - '1';
         long x, y;
         auto sep = val.find_first_of("xX");
@@ -486,45 +552,59 @@ void apply_setting(rockcat_settings &s, const std::string &kv)
             x = y = parse_long(val, "DPI");
         }
         for (long v : {x, y})
-            if (v < ROCKCAT_DPI_MIN || v > ROCKCAT_DPI_MAX || v % ROCKCAT_DPI_STEP)
-                fail("DPI must be 100-16000 in steps of 50");
-        s.dpi_x[lvl] = static_cast<uint16_t>(x);
-        s.dpi_y[lvl] = static_cast<uint16_t>(y);
+            if (v < caps->dpi_min || v > caps->dpi_max || v % caps->dpi_step)
+                fail("%s", ("DPI must be " + std::to_string(caps->dpi_min) + "-" + std::to_string(caps->dpi_max) + " in steps of " +
+                            std::to_string(caps->dpi_step)).c_str());
+        if (x != y && !(caps->features & ROCKCAT_HAS_DPI_XY))
+            fail("this device cant do different DPI for x and y");
+        int en = 1;
+        rockcat_profile_get_dpi(p, lvl, nullptr, nullptr, &en);
+        rockcat_profile_set_dpi(p, lvl, static_cast<int>(x), static_cast<int>(y), en);
     } else if (key == "dpi-active") {
         long n = parse_long(val, key.c_str());
-        if (n < 1 || n > 5)
-            fail("dpi-active must be 1-5");
-        s.dpi_active = static_cast<uint8_t>(n - 1);
-        s.dpi_enabled_mask |= static_cast<uint8_t>(1 << (n - 1));
+        if (n < 1 || n > caps->dpi_levels)
+            fail("%s", ("dpi-active must be 1-" + std::to_string(caps->dpi_levels)).c_str());
+        set_int(ROCKCAT_SET_DPI_ACTIVE, n - 1);
+        int x = 0, y = 0;
+        rockcat_profile_get_dpi(p, static_cast<int>(n - 1), &x, &y, nullptr);
+        rockcat_profile_set_dpi(p, static_cast<int>(n - 1), x, y, 1);
     } else if (key == "dpi-enabled") {
-        uint8_t mask = 0;
+        unsigned mask = 0;
         size_t pos = 0;
         while (pos <= val.size()) {
             size_t c = val.find(',', pos);
             long n = parse_long(val.substr(pos, c == std::string::npos ? std::string::npos : c - pos), key.c_str());
-            if (n < 1 || n > 5)
-                fail("DPI levels are 1-5");
-            mask |= static_cast<uint8_t>(1 << (n - 1));
+            if (n < 1 || n > caps->dpi_levels)
+                fail("%s", ("DPI levels are 1-" + std::to_string(caps->dpi_levels)).c_str());
+            mask |= 1u << (n - 1);
             if (c == std::string::npos)
                 break;
             pos = c + 1;
         }
-        if (!(mask & (1 << s.dpi_active)))
+        int active = 0;
+        rockcat_profile_get_int(p, ROCKCAT_SET_DPI_ACTIVE, &active);
+        if (!(mask & (1u << active)))
             fail("the active DPI level must stay enabled");
-        s.dpi_enabled_mask = mask;
+        for (int i = 0; i < caps->dpi_levels; ++i) {
+            int x = 0, y = 0;
+            rockcat_profile_get_dpi(p, i, &x, &y, nullptr);
+            rockcat_profile_set_dpi(p, i, x, y, (mask >> i) & 1);
+        }
     } else if (key == "polling") {
         long hz = parse_long(val, key.c_str());
-        int code = hz == 125 ? 0 : hz == 250 ? 1 : hz == 500 ? 2 : hz == 1000 ? 3 : -1;
-        if (code < 0)
-            fail("polling must be 125, 250, 500 or 1000");
-        s.polling_rate = static_cast<uint8_t>(code);
+        if (rockcat_profile_set_int(p, ROCKCAT_SET_POLLING_HZ, static_cast<int>(hz)) != ROCKCAT_OK) {
+            std::string rates;
+            for (int i = 0; i < 8 && caps->polling_hz[i]; ++i)
+                rates += (i == 0 ? "" : caps->polling_hz[i + 1] && i < 7 ? ", " : " or ") + std::to_string(caps->polling_hz[i]);
+            fail("polling must be %s", rates.c_str());
+        }
     } else if (key == "angle-snapping") {
-        s.angle_snapping = parse_bool(val) ? 1 : 0;
+        set_int(ROCKCAT_SET_ANGLE_SNAPPING, parse_bool(val) ? 1 : 0);
     } else if (key == "debounce") {
         long ms = parse_long(val, key.c_str());
         if (ms < 0 || ms > 255)
             fail("debounce must be 0-255 ms");
-        s.debounce_ms = static_cast<uint8_t>(ms);
+        set_int(ROCKCAT_SET_DEBOUNCE_MS, ms);
     } else if (key == "effect") {
         struct { const char *n; uint8_t v; } names[] = {
             {"off", ROCKCAT_EFFECT_OFF}, {"fully-lit", ROCKCAT_EFFECT_FULLY_LIT},
@@ -550,14 +630,14 @@ void apply_setting(rockcat_settings &s, const std::string &kv)
         long th = parse_long(val, key.c_str());
         if (th < 1 || th > ROCKCAT_AIMO_THEMES)
             fail("theme must be 1-10");
-        s.color_theme = static_cast<uint8_t>(0x80 | (th - 1));
+        set_int(ROCKCAT_SET_COLOR_THEME, th - 1);
     } else if (key == "speed") {
-        s.effect_speed = static_cast<uint8_t>(parse_long(val, key.c_str()) & 0xff);
+        set_int(ROCKCAT_SET_EFFECT_SPEED, parse_long(val, key.c_str()) & 0xff);
     } else if (key == "brightness") {
         long b = parse_long(val, key.c_str());
         if (b < 0 || b > 255)
             fail("brightness must be 0-255");
-        s.brightness = static_cast<uint8_t>(b);
+        set_int(ROCKCAT_SET_BRIGHTNESS, b);
     } else if (key == "led") {
         auto colon = val.rfind(':');
         if (colon == std::string::npos)
@@ -565,15 +645,19 @@ void apply_setting(rockcat_settings &s, const std::string &kv)
         rockcat_color c;
         if (!parse_color(val.substr(colon + 1), &c))
             fail("invalid colour '%s'", val.substr(colon + 1).c_str());
-        for (int i : led_selection(val.substr(0, colon)))
-            s.leds[i] = c;
+        for (int i : led_selection(val.substr(0, colon), caps->led_count)) {
+            int en = 1;
+            rockcat_profile_get_led(p, i, nullptr, &en);
+            rockcat_profile_set_led(p, i, c, en);
+        }
     } else if (key == "led-enable") {
-        if (val == "all")
-            s.led_enable_mask = 0x7ff;
-        else if (val == "none")
-            s.led_enable_mask = 0;
-        else
-            s.led_enable_mask = static_cast<uint16_t>(parse_long(val, key.c_str()) & 0x7ff);
+        unsigned all = (1u << caps->led_count) - 1;
+        unsigned mask = val == "all" ? all : val == "none" ? 0 : static_cast<unsigned>(parse_long(val, key.c_str())) & all;
+        for (int i = 0; i < caps->led_count; ++i) {
+            rockcat_color c{};
+            rockcat_profile_get_led(p, i, &c, nullptr);
+            rockcat_profile_set_led(p, i, c, (mask >> i) & 1);
+        }
     } else {
         fail("unknown setting '%s'", key.c_str());
     }
@@ -584,25 +668,22 @@ int cmd_set(const options &o)
     if (o.args.empty())
         fail("set needs at least one KEY=VALUE");
     rockcat_device *dev = open_device(o);
-    rockcat_settings s;
-    check(rockcat_read_settings(dev, resolve_profile(dev, o), &s), "read settings");
+    rockcat_profile *p = read_profile(dev, o);
     for (const auto &kv : o.args)
-        apply_setting(s, kv);
+        apply_setting(dev, p, kv);
     if (g_new_effect >= 0 || g_new_render >= 0) {
-        rockcat_device_info info;
-        rockcat_get_info(dev, &info);
-        uint8_t eff = 0;
-        int engine = 0;
-        rockcat_effective_effect(info.product_id, &s, &eff, &engine);
+        int eff = 0, engine = 0;
+        check(rockcat_profile_get_effect(p, &eff, &engine), "read effect");
         if (g_new_effect >= 0)
-            eff = static_cast<uint8_t>(g_new_effect);
+            eff = g_new_effect;
         if (g_new_render >= 0)
             engine = g_new_render;
-        if (g_new_render == 0 && rockcat_effect_is_software(eff))
-            fail("%s can only be rendered by the engine", rockcat_effect_name(eff));
-        check(rockcat_select_effect(info.product_id, &s, eff, engine), "select effect");
+        if (g_new_render == 0 && rockcat_effect_is_software(static_cast<uint8_t>(eff)))
+            fail("%s can only be rendered by the engine", rockcat_effect_name(static_cast<uint8_t>(eff)));
+        check(rockcat_profile_select_effect(p, eff, engine), "select effect");
     }
-    check(rockcat_write_settings(dev, &s), "write settings");
+    check(rockcat_profile_write(dev, p), "write profile");
+    rockcat_profile_free(p);
     rockcat_close(dev);
     return 0;
 }
@@ -610,9 +691,9 @@ int cmd_set(const options &o)
 int cmd_buttons(const options &o)
 {
     rockcat_device *dev = open_device(o);
-    rockcat_buttons b;
-    check(rockcat_read_buttons(dev, resolve_profile(dev, o), &b), "read buttons");
-    print_buttons(b);
+    rockcat_profile *p = read_profile(dev, o);
+    print_buttons(dev, p);
+    rockcat_profile_free(p);
     rockcat_close(dev);
     return 0;
 }
@@ -621,26 +702,28 @@ int cmd_bind(const options &o)
 {
     if (o.args.size() < 2)
         fail("bind needs BUTTON and TYPE");
-    int btn = parse_button(o.args[0]);
+    slot sl = parse_button(o.args[0]);
     int type = rockcat_button_type_from_string(o.args[1].c_str());
     if (type < 0)
         fail("unknown button type '%s' (see 'types')", o.args[1].c_str());
     rockcat_device *dev = open_device(o);
-    rockcat_buttons b;
-    check(rockcat_read_buttons(dev, resolve_profile(dev, o), &b), "read buttons");
-    b.buttons[btn].type = static_cast<uint8_t>(type);
+    check_slot(dev, sl);
+    rockcat_profile *p = read_profile(dev, o);
+    rockcat_assignment a{static_cast<uint8_t>(type), 0, 0};
     uint8_t mods = 0, key = 0;
     if (type == ROCKCAT_BT_SHORTCUT && o.args.size() == 3 &&
         rockcat_parse_shortcut(o.args[2].c_str(), &mods, &key) == ROCKCAT_OK) {
-        b.buttons[btn].param1 = mods;
-        b.buttons[btn].param2 = key;
+        a.param1 = mods;
+        a.param2 = key;
     } else {
         if (type == ROCKCAT_BT_SHORTCUT && o.args.size() < 3)
             fail("shortcut needs a key combination, e.g. ctrl+c");
-        b.buttons[btn].param1 = o.args.size() > 2 ? static_cast<uint8_t>(parse_long(o.args[2], "P1")) : 0;
-        b.buttons[btn].param2 = o.args.size() > 3 ? static_cast<uint8_t>(parse_long(o.args[3], "P2")) : 0;
+        a.param1 = o.args.size() > 2 ? static_cast<uint8_t>(parse_long(o.args[2], "P1")) : 0;
+        a.param2 = o.args.size() > 3 ? static_cast<uint8_t>(parse_long(o.args[3], "P2")) : 0;
     }
-    check(rockcat_write_buttons(dev, &b), "write buttons");
+    check(rockcat_profile_set_input(p, sl.layer, sl.input, &a), "bind");
+    check(rockcat_profile_write(dev, p), "write profile");
+    rockcat_profile_free(p);
     rockcat_close(dev);
     return 0;
 }
@@ -648,9 +731,10 @@ int cmd_bind(const options &o)
 int cmd_reset_buttons(const options &o)
 {
     rockcat_device *dev = open_device(o);
-    rockcat_buttons b;
-    rockcat_buttons_default(resolve_profile(dev, o), &b);
-    check(rockcat_write_buttons(dev, &b), "write buttons");
+    rockcat_profile *p = read_profile(dev, o);
+    check(rockcat_profile_reset_inputs(p), "reset buttons");
+    check(rockcat_profile_write(dev, p), "write profile");
+    rockcat_profile_free(p);
     rockcat_close(dev);
     return 0;
 }
@@ -668,7 +752,9 @@ int cmd_types()
 
 int cmd_macro(const options &o)
 {
-    int button = -1, delay = 20;
+    slot sl;
+    bool have_button = false;
+    int delay = 20;
     std::string text, name = "rockcat";
     bool have_text = false;
     for (size_t i = 0; i < o.args.size(); ++i) {
@@ -678,8 +764,10 @@ int cmd_macro(const options &o)
                 fail("%s needs a value", what);
             return o.args[++i];
         };
-        if (a == "-b" || a == "--button")
-            button = parse_button(next("-b"));
+        if (a == "-b" || a == "--button") {
+            sl = parse_button(next("-b"));
+            have_button = true;
+        }
         else if (a == "--text") {
             text = next("--text");
             have_text = true;
@@ -690,27 +778,26 @@ int cmd_macro(const options &o)
         else
             fail("unknown macro option '%s'", a.c_str());
     }
-    if (button < 0)
+    if (!have_button)
         fail("macro needs -b BUTTON");
 
     rockcat_device *dev = open_device(o);
-    uint8_t profile = resolve_profile(dev, o);
+    check_slot(dev, sl);
+    rockcat_profile *p = read_profile(dev, o);
+    static rockcat_macro m;
     if (!have_text) {
-        rockcat_macro m;
-        check(rockcat_read_macro(dev, profile, static_cast<uint8_t>(button), &m), "read macro");
+        check(rockcat_profile_get_macro(dev, p, sl.layer, sl.input, &m), "read macro");
         std::printf("Macro '%s' / '%s' (profile %d, button %s), mode %d, loop %d, %d events\n",
-                    m.set_name, m.name, profile + 1, rockcat_button_name(button), m.mode, m.loop, m.count);
+                    m.set_name, m.name, rockcat_profile_index(p) + 1, slot_name(dev, sl).c_str(), m.mode, m.loop, m.count);
         for (int i = 0; i < m.count; ++i)
             std::printf("  key 0x%02x %-7s then wait %d ms\n", m.keys[i].key,
                         m.keys[i].action == ROCKCAT_KEY_PRESS ? "press" : "release", m.keys[i].delay_ms);
+        rockcat_profile_free(p);
         rockcat_close(dev);
         return 0;
     }
 
-    static rockcat_macro m;
     std::memset(&m, 0, sizeof m);
-    m.profile = profile;
-    m.button = static_cast<uint8_t>(button);
     m.loop = 1;
     m.mode = ROCKCAT_MACRO_ON_PRESS;
     std::snprintf(m.set_name, sizeof m.set_name, "rockcat");
@@ -732,11 +819,11 @@ int cmd_macro(const options &o)
         if (shift)
             push(0xe1, ROCKCAT_KEY_RELEASE);
     }
-    check(rockcat_write_macro(dev, &m), "write macro");
-    rockcat_buttons b;
-    check(rockcat_read_buttons(dev, profile, &b), "read buttons");
-    b.buttons[button] = rockcat_button{ROCKCAT_BT_MACRO, 0, 0};
-    check(rockcat_write_buttons(dev, &b), "bind macro");
+    rockcat_assignment bind{ROCKCAT_BT_MACRO, 0, 0};
+    check(rockcat_profile_set_macro(p, sl.layer, sl.input, &m), "store macro");
+    check(rockcat_profile_set_input(p, sl.layer, sl.input, &bind), "bind macro");
+    check(rockcat_profile_write(dev, p), "write profile");
+    rockcat_profile_free(p);
     rockcat_close(dev);
     return 0;
 }
@@ -747,9 +834,10 @@ int cmd_direct(const options &o)
         fail("direct needs off or colours");
     rockcat_device *dev = open_device(o);
     if (o.args[0] == "off") {
-        check(rockcat_set_direct_lighting(dev, 0), "leave direct mode");
+        check(rockcat_direct_end(dev), "leave direct mode");
     } else {
-        rockcat_color colors[ROCKCAT_LED_COUNT];
+        size_t leds = static_cast<size_t>(rockcat_get_caps(dev)->led_count);
+        std::vector<rockcat_color> colors(leds);
         std::string spec = o.args[0];
         std::vector<std::string> parts;
         size_t pos = 0;
@@ -760,34 +848,36 @@ int cmd_direct(const options &o)
                 break;
             pos = c + 1;
         }
-        if (parts.size() != 1 && parts.size() != ROCKCAT_LED_COUNT)
-            fail("give one colour or 11 comma separated colours");
-        for (int i = 0; i < ROCKCAT_LED_COUNT; ++i)
+        if (parts.size() != 1 && parts.size() != leds)
+            fail("%s", ("give one colour or " + std::to_string(leds) + " comma separated colours").c_str());
+        for (size_t i = 0; i < leds; ++i)
             if (!parse_color(parts[parts.size() == 1 ? 0 : i], &colors[i]))
                 fail("invalid colour '%s'", parts[parts.size() == 1 ? 0 : i].c_str());
-        check(rockcat_set_direct_lighting(dev, 1), "enter direct mode");
-        check(rockcat_set_direct_colors(dev, colors), "send colours");
+        check(rockcat_direct_begin(dev), "enter direct mode");
+        check(rockcat_direct_frame(dev, colors.data(), static_cast<int>(leds)), "send colours");
     }
     rockcat_close(dev);
     return 0;
 }
 
+std::vector<uint8_t> export_profile(const rockcat_profile *p)
+{
+    int n = rockcat_profile_export(p, nullptr, 0);
+    if (n < 0)
+        die("export profile", n);
+    std::vector<uint8_t> blob(static_cast<size_t>(n));
+    rockcat_profile_export(p, blob.data(), blob.size());
+    return blob;
+}
+
 int cmd_dump(const options &o)
 {
     rockcat_device *dev = open_device(o);
-    uint8_t profile = resolve_profile(dev, o);
-    uint8_t settings[ROCKCAT_SETTINGS_SIZE];
-    check(rockcat_read_settings_raw(dev, profile, settings), "read settings");
-    hexdump("Settings report 0x06", settings, sizeof settings);
-    rockcat_buttons b;
-    check(rockcat_read_buttons(dev, profile, &b), "read buttons");
-    uint8_t buttons[3 * ROCKCAT_BUTTON_COUNT];
-    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
-        buttons[3 * i] = b.buttons[i].type;
-        buttons[3 * i + 1] = b.buttons[i].param1;
-        buttons[3 * i + 2] = b.buttons[i].param2;
-    }
-    hexdump("Button entries (report 0x07 bytes 3..74)", buttons, sizeof buttons);
+    rockcat_profile *p = read_profile(dev, o);
+    std::vector<uint8_t> blob = export_profile(p);
+    // 8 bytes of our own header (RCPF, version, product id, profile), after that its the reports as the device has them
+    hexdump("Profile as it goes into a backup", blob.data(), blob.size());
+    rockcat_profile_free(p);
     rockcat_close(dev);
     return 0;
 }
@@ -800,12 +890,12 @@ int cmd_shift_light(const options &o)
     rockcat_device *dev = open_device(o);
     rockcat_device_info info;
     rockcat_get_info(dev, &info);
-    uint8_t profile = resolve_profile(dev, o);
-    rockcat_settings st;
-    check(rockcat_read_settings(dev, profile, &st), "read settings");
-    rockcat_close(dev);
+    rockcat_profile *p = read_profile(dev, o);
+    uint8_t profile = static_cast<uint8_t>(rockcat_profile_index(p));
     int by_engine = 0;
-    rockcat_effective_effect(info.product_id, &st, nullptr, &by_engine);
+    rockcat_profile_get_effect(p, nullptr, &by_engine);
+    rockcat_profile_free(p);
+    rockcat_close(dev);
     rockcat_shift_lighting sl;
     check(rockcat_shift_lighting_load(info.product_id, profile, &sl), "load");
     for (const auto &a : o.args) {
@@ -929,29 +1019,33 @@ int cmd_engine(const options &o)
 
 // Backup format: "RSWB" v1, then per profile 126 settings bytes + 72 button bytes.
 constexpr char BACKUP_MAGIC[4] = {'R', 'S', 'W', 'B'};
-constexpr size_t BACKUP_PROFILE = ROCKCAT_SETTINGS_SIZE + 3 * ROCKCAT_BUTTON_COUNT;
+// per profile in a version 1 backup: the 126 byte settings report and 24 buttons at 3 bytes each
+constexpr size_t BACKUP_PROFILE = 126 + 3 * 24;
 
+// backup file: "RSWB", format version, then for version 2 the number of profiles and per profile a 16 bit length + the exported profile
+// version 1 was the Kone AIMO Remastered only layout from rossat-swarm (5 times settings report + button table, no lengths), we still read it
 int cmd_backup(const options &o)
 {
     if (o.args.size() != 1)
         fail("backup needs a FILE");
     rockcat_device *dev = open_device(o);
-    std::vector<uint8_t> out = {'R', 'S', 'W', 'B', 1};
-    for (uint8_t p = 0; p < ROCKCAT_PROFILE_COUNT; ++p) {
-        uint8_t raw[ROCKCAT_SETTINGS_SIZE];
-        check(rockcat_read_settings_raw(dev, p, raw), "read settings");
-        out.insert(out.end(), raw, raw + sizeof raw);
-        rockcat_buttons b;
-        check(rockcat_read_buttons(dev, p, &b), "read buttons");
-        for (const auto &bt : b.buttons)
-            out.insert(out.end(), {bt.type, bt.param1, bt.param2});
+    int count = rockcat_get_caps(dev)->profile_count;
+    std::vector<uint8_t> out = {'R', 'S', 'W', 'B', 2, static_cast<uint8_t>(count)};
+    for (int i = 0; i < count; ++i) {
+        rockcat_profile *p = nullptr;
+        check(rockcat_profile_read(dev, i, &p), "read profile");
+        std::vector<uint8_t> blob = export_profile(p);
+        out.push_back(static_cast<uint8_t>(blob.size() & 0xff));
+        out.push_back(static_cast<uint8_t>(blob.size() >> 8));
+        out.insert(out.end(), blob.begin(), blob.end());
+        rockcat_profile_free(p);
     }
     rockcat_close(dev);
     FILE *f = std::fopen(o.args[0].c_str(), "wb");
     if (!f || std::fwrite(out.data(), 1, out.size(), f) != out.size())
         fail("cannot write '%s'", o.args[0].c_str());
     std::fclose(f);
-    std::printf("Saved %d profiles to %s\n", ROCKCAT_PROFILE_COUNT, o.args[0].c_str());
+    std::printf("Saved %d profiles to %s\n", count, o.args[0].c_str());
     return 0;
 }
 
@@ -962,28 +1056,51 @@ int cmd_restore(const options &o)
     FILE *f = std::fopen(o.args[0].c_str(), "rb");
     if (!f)
         fail("cannot open '%s'", o.args[0].c_str());
-    std::vector<uint8_t> in(5 + ROCKCAT_PROFILE_COUNT * BACKUP_PROFILE + 1);
-    size_t n = std::fread(in.data(), 1, in.size(), f);
+    std::vector<uint8_t> in(1 << 20);
+    in.resize(std::fread(in.data(), 1, in.size(), f));
     std::fclose(f);
-    if (n != in.size() - 1 || std::memcmp(in.data(), BACKUP_MAGIC, 4) != 0 || in[4] != 1)
+    if (in.size() < 6 || std::memcmp(in.data(), BACKUP_MAGIC, 4) != 0 || (in[4] != 1 && in[4] != 2))
         fail("'%s' is not a rockcat backup", o.args[0].c_str());
+
     rockcat_device *dev = open_device(o);
-    for (uint8_t p = 0; p < ROCKCAT_PROFILE_COUNT; ++p) {
-        const uint8_t *blk = in.data() + 5 + p * BACKUP_PROFILE;
-        uint8_t raw[ROCKCAT_SETTINGS_SIZE];
-        std::memcpy(raw, blk, sizeof raw);
-        raw[2] = p;
-        check(rockcat_write_settings_raw(dev, raw), "write settings");
-        rockcat_buttons b;
-        b.profile = p;
-        for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
-            const uint8_t *e = blk + ROCKCAT_SETTINGS_SIZE + 3 * i;
-            b.buttons[i] = rockcat_button{e[0], e[1], e[2]};
+    rockcat_device_info info;
+    rockcat_get_info(dev, &info);
+    std::vector<std::vector<uint8_t>> blobs;
+    if (in[4] == 1) {
+        // old layout has no idea which mouse it came from, it only ever came from this one
+        if (info.product_id != ROCKCAT_PID_KONE_AIMO_REMASTERED || in.size() != 5 + 5 * BACKUP_PROFILE)
+            fail("'%s' is an old Kone AIMO Remastered backup and doesnt fit this device", o.args[0].c_str());
+        for (uint8_t i = 0; i < 5; ++i) {
+            std::vector<uint8_t> blob = {'R', 'C', 'P', 'F', 1, static_cast<uint8_t>(info.product_id & 0xff),
+                                         static_cast<uint8_t>(info.product_id >> 8), i};
+            blob.insert(blob.end(), in.begin() + 5 + i * BACKUP_PROFILE, in.begin() + 5 + (i + 1) * BACKUP_PROFILE);
+            blobs.push_back(blob);
         }
-        check(rockcat_write_buttons(dev, &b), "write buttons");
+    } else {
+        size_t pos = 6;
+        for (int i = 0; i < in[5]; ++i) {
+            if (pos + 2 > in.size())
+                fail("'%s' is cut off", o.args[0].c_str());
+            size_t len = in[pos] | (in[pos + 1] << 8);
+            pos += 2;
+            if (pos + len > in.size())
+                fail("'%s' is cut off", o.args[0].c_str());
+            blobs.emplace_back(in.begin() + static_cast<long>(pos), in.begin() + static_cast<long>(pos + len));
+            pos += len;
+        }
+    }
+    int n = 0;
+    for (const auto &blob : blobs) {
+        rockcat_profile *p = nullptr;
+        if (rockcat_profile_import(dev, blob.data(), blob.size(), &p) != ROCKCAT_OK)
+            fail("'%s' was made with a different device, not restoring it onto this one", o.args[0].c_str());
+        check(rockcat_profile_set_index(p, n), "restore profile");
+        check(rockcat_profile_write(dev, p), "write profile");
+        rockcat_profile_free(p);
+        ++n;
     }
     rockcat_close(dev);
-    std::printf("Restored %d profiles from %s\n", ROCKCAT_PROFILE_COUNT, o.args[0].c_str());
+    std::printf("Restored %d profiles from %s\n", n, o.args[0].c_str());
     return 0;
 }
 
@@ -1018,8 +1135,8 @@ int main(int argc, char **argv)
             if (++i >= argc)
                 fail("--profile needs a number");
             long n = parse_long(argv[i], "profile");
-            if (n < 1 || n > ROCKCAT_PROFILE_COUNT)
-                fail("profile must be 1-5");
+            if (n < 1 || n > 255)
+                fail("profile numbers start at 1");
             o.profile = static_cast<int>(n - 1);
         } else if (cmd.empty()) {
             cmd = a;

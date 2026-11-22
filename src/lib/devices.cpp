@@ -7,7 +7,7 @@ namespace {
 constexpr uint32_t bit(int n) { return 1u << n; }
 
 const device_desc DEVICES[] = {
-    {ROCKCAT_PID_KONE_AIMO_REMASTERED, "ROCCAT Kone AIMO Remastered", &KONE_AIMO_FAMILY,
+    {ROCKCAT_PID_KONE_AIMO_REMASTERED, "ROCCAT Kone AIMO Remastered", &KONE_AIMO_FAMILY, KONE_AIMO_LEDS,
      {ROCKCAT_KIND_MOUSE, "kone-aimo",
       // upstream ran it on a real mouse with firmware 1.05. nothing since the fork has seen one, so replay is all we can honestly claim
       ROCKCAT_TESTED_REPLAY, "1.05 (upstream, before the fork)",
@@ -36,4 +36,12 @@ const device_desc *device_find(uint16_t vid, uint16_t pid)
 const device_desc *device_at(int i)
 {
     return i >= 0 && i < static_cast<int>(sizeof DEVICES / sizeof DEVICES[0]) ? &DEVICES[i] : nullptr;
+}
+
+const device_desc *device_of(const rockcat_caps *caps)
+{
+    for (const device_desc &d : DEVICES)
+        if (&d.caps == caps)
+            return &d;
+    return nullptr;
 }

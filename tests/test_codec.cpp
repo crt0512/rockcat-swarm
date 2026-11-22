@@ -1,6 +1,6 @@
 // Offline tests for the report codecs; no device required.
 
-#include "rockcat/rockcat.h"
+#include "internal.h"
 
 #include <cstdio>
 #include <cstring>

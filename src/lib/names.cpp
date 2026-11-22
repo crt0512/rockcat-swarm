@@ -1,6 +1,6 @@
 // Human readable names and factory defaults for the Kone AIMO Remastered.
 
-#include "rockcat/rockcat.h"
+#include "internal.h"
 
 #include <cctype>
 #include <cstdio>
