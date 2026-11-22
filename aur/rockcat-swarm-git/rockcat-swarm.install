@@ -1,0 +1,18 @@
+post_install() {
+    udevadm control --reload-rules 2>/dev/null
+    udevadm trigger --subsystem-match=hidraw 2>/dev/null
+    cat <<'MSG'
+==> rockcat-swarm: replug the device (or log out and back in) so the udev rule lets you at it.
+==> AIMO / Heartbeat / Easy-Shift lighting is drawn by the PC. Run it with
+    the GUI's Engine switch, `rockcat-swarm --minimized` in your autostart, or
+      systemctl --user enable --now rockcat-engine.service
+==> coming from rossat-swarm? the service got renamed, the old one is gone:
+      systemctl --user disable rossat-engine.service
+      systemctl --user enable --now rockcat-engine.service
+    your settings in ~/.config/rossat get moved to ~/.config/rockcat on first start.
+MSG
+}
+
+post_upgrade() {
+    udevadm control --reload-rules 2>/dev/null
+}

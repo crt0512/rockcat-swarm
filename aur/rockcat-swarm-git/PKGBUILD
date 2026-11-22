@@ -1,16 +1,17 @@
-# Maintainer: TheElevatedOne <adam.mlady@elevated.ovh>
-pkgname=rossat-swarm-git
-_pkgname=rossat-swarm
-pkgver=1.0.1
+# Maintainer: crt0512
+# Contributor: TheElevatedOne <adam.mlady@elevated.ovh>
+pkgname=rockcat-swarm-git
+_pkgname=rockcat-swarm
+pkgver=2.0.0
 pkgrel=1
-pkgdesc="Open re-implementation of ROCCAT Swarm (GUI, CLI, library) for the Kone AIMO Remastered (git version)"
+pkgdesc="Open re-implementation of ROCCAT Swarm (GUI, CLI, library) for ROCCAT mice and keyboards (git version)"
 arch=('x86_64')
-url="https://github.com/TheElevatedOne/rossat-swarm"
+url="https://github.com/crt0512/rockcat-swarm"
 license=('GPL-3.0-only')
 depends=('glibc' 'gcc-libs' 'hidapi' 'gtk3' 'glib2' 'cairo' 'gdk-pixbuf2' 'libayatana-appindicator')
 makedepends=('git' 'cmake' 'ninja' 'pkgconf')
 provides=("${_pkgname}")
-conflicts=("${_pkgname}" "${_pkgname}-bin")
+conflicts=("${_pkgname}" "${_pkgname}-bin" 'rossat-swarm-bin' 'rossat-swarm-git')
 install="${_pkgname}.install"
 source=("${_pkgname}::git+${url}.git")
 sha256sums=('SKIP')

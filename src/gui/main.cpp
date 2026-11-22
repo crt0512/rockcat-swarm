@@ -1,8 +1,8 @@
-// rossat-swarm - GTK3 front end.
+// rockcat-swarm - GTK3 front end.
 
 #include "window.h"
 
-#include "rossat/rossat.h"
+#include "rockcat/rockcat.h"
 
 #include <cstring>
 
@@ -20,14 +20,14 @@ void on_activate(GtkApplication *app, gpointer)
     }
 
     GtkCssProvider *css = gtk_css_provider_new();
-    gtk_css_provider_load_from_resource(css, "/org/rossat/swarm/rossat.css");
+    gtk_css_provider_load_from_resource(css, "/org/rockcat/swarm/rockcat.css");
     gtk_style_context_add_provider_for_screen(gdk_screen_get_default(), GTK_STYLE_PROVIDER(css),
                                               GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     g_object_unref(css);
 
-    GtkWidget *win = rossat_window_new(app, g_minimized);
+    GtkWidget *win = rockcat_window_new(app, g_minimized);
     if (g_start_page)
-        rossat_window_show_page(win, g_start_page);
+        rockcat_window_show_page(win, g_start_page);
 }
 
 } // namespace
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
                           if (!std::strstr(msg, "deprecated"))
                               g_log_default_handler(domain, level, msg, nullptr);
                       }, nullptr);
-    GtkApplication *app = gtk_application_new("org.rossat.Swarm", G_APPLICATION_DEFAULT_FLAGS);
+    GtkApplication *app = gtk_application_new("org.rockcat.Swarm", G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(app, "activate", G_CALLBACK(on_activate), nullptr);
     static gchar *page = nullptr;
     const GOptionEntry entries[] = {
@@ -56,6 +56,6 @@ int main(int argc, char **argv)
     }), nullptr);
     int status = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);
-    rossat_exit();
+    rockcat_exit();
     return status;
 }

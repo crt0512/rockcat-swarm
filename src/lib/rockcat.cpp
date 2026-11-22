@@ -1,4 +1,4 @@
-// rossat-swarm core library: HID transport and Kone AIMO Remastered protocol.
+// rockcat-swarm core library: HID transport and Kone AIMO Remastered protocol.
 //
 // Report flow mirrors ROCCAT_Swarm_Monitor.exe (kone_aimo_base_device_c):
 //   * every SetFeature is followed by polling report 0x04 until the device
@@ -51,14 +51,14 @@ struct supported_model {
 };
 
 constexpr supported_model MODELS[] = {
-    {ROSSAT_PID_KONE_AIMO_REMASTERED, "ROCCAT Kone AIMO Remastered"},
+    {ROCKCAT_PID_KONE_AIMO_REMASTERED, "ROCCAT Kone AIMO Remastered"},
 };
 
 bool g_initialised = false;
 
 const supported_model *find_model(uint16_t vid, uint16_t pid)
 {
-    if (vid != ROSSAT_VID)
+    if (vid != ROCKCAT_VID)
         return nullptr;
     for (const auto &m : MODELS)
         if (m.pid == pid)
@@ -114,7 +114,7 @@ bool is_control_interface(const hid_device_info *d)
     return len > 0 && descriptor_has_report(desc, len, REPORT_SETTINGS);
 }
 
-void fill_info(rossat_device_info *info, const hid_device_info *d, const supported_model *m)
+void fill_info(rockcat_device_info *info, const hid_device_info *d, const supported_model *m)
 {
     std::memset(info, 0, sizeof *info);
     std::snprintf(info->path, sizeof info->path, "%s", d->path);
@@ -128,12 +128,12 @@ void fill_info(rossat_device_info *info, const hid_device_info *d, const support
 
 // Collects the control interface of every supported device. When the report
 // descriptor cannot be read the device's interface 0 is used as fallback.
-std::vector<rossat_device_info> scan()
+std::vector<rockcat_device_info> scan()
 {
-    std::vector<rossat_device_info> found;
+    std::vector<rockcat_device_info> found;
     std::vector<const hid_device_info *> fallback;
 
-    hid_device_info *all = hid_enumerate(ROSSAT_VID, 0);
+    hid_device_info *all = hid_enumerate(ROCKCAT_VID, 0);
     for (hid_device_info *d = all; d; d = d->next) {
         const supported_model *m = find_model(d->vendor_id, d->product_id);
         if (!m)
@@ -147,7 +147,7 @@ std::vector<rossat_device_info> scan()
         if (seen)
             continue;
         if (is_control_interface(d)) {
-            rossat_device_info info;
+            rockcat_device_info info;
             fill_info(&info, d, m);
             found.push_back(info);
         } else if (d->interface_number == 0) {
@@ -156,7 +156,7 @@ std::vector<rossat_device_info> scan()
     }
     if (found.empty())
         for (const hid_device_info *d : fallback) {
-            rossat_device_info info;
+            rockcat_device_info info;
             fill_info(&info, d, find_model(d->vendor_id, d->product_id));
             found.push_back(info);
         }
@@ -164,49 +164,49 @@ std::vector<rossat_device_info> scan()
     return found;
 }
 
-int get_raw(rossat_device *dev, uint8_t *buf, size_t len)
+int get_raw(rockcat_device *dev, uint8_t *buf, size_t len)
 {
     if (!dev || !dev->hid || !buf || len == 0)
-        return ROSSAT_ERR_ARGUMENT;
+        return ROCKCAT_ERR_ARGUMENT;
     uint8_t id = buf[0];
     int r = hid_get_feature_report(dev->hid, buf, len);
     if (r < 0)
-        return ROSSAT_ERR_IO;
+        return ROCKCAT_ERR_IO;
     if (buf[0] != id)
-        return ROSSAT_ERR_PROTOCOL;
-    return ROSSAT_OK;
+        return ROCKCAT_ERR_PROTOCOL;
+    return ROCKCAT_OK;
 }
 
-int wait_ready(rossat_device *dev)
+int wait_ready(rockcat_device *dev)
 {
     sleep_ms(STATUS_FIRST_DELAY_MS);
     for (int i = 0; i < STATUS_MAX_POLLS; ++i) {
         uint8_t status[3] = {REPORT_CONTROL, 0, 0};
         if (hid_get_feature_report(dev->hid, status, sizeof status) < 0)
-            return ROSSAT_ERR_IO;
+            return ROCKCAT_ERR_IO;
         switch (status[1]) {
         case 3: // busy
             sleep_ms(STATUS_POLL_DELAY_MS);
             continue;
         case 2:
-            return ROSSAT_ERR_REJECTED;
+            return ROCKCAT_ERR_REJECTED;
         default:
-            return ROSSAT_OK;
+            return ROCKCAT_OK;
         }
     }
-    return ROSSAT_ERR_BUSY;
+    return ROCKCAT_ERR_BUSY;
 }
 
-int set_raw(rossat_device *dev, const uint8_t *buf, size_t len, bool wait)
+int set_raw(rockcat_device *dev, const uint8_t *buf, size_t len, bool wait)
 {
     if (!dev || !dev->hid || !buf || len == 0)
-        return ROSSAT_ERR_ARGUMENT;
+        return ROCKCAT_ERR_ARGUMENT;
     if (hid_send_feature_report(dev->hid, buf, len) < 0)
-        return ROSSAT_ERR_IO;
-    return wait ? wait_ready(dev) : ROSSAT_OK;
+        return ROCKCAT_ERR_IO;
+    return wait ? wait_ready(dev) : ROCKCAT_OK;
 }
 
-int select_data(rossat_device *dev, uint8_t a, uint8_t b)
+int select_data(rockcat_device *dev, uint8_t a, uint8_t b)
 {
     const uint8_t sel[3] = {REPORT_CONTROL, a, b};
     return set_raw(dev, sel, sizeof sel, true);
@@ -214,7 +214,7 @@ int select_data(rossat_device *dev, uint8_t a, uint8_t b)
 
 void put_checksum(uint8_t *buf, size_t len)
 {
-    uint16_t sum = rossat_checksum(buf, len - 2);
+    uint16_t sum = rockcat_checksum(buf, len - 2);
     buf[len - 2] = sum & 0xff;
     buf[len - 1] = sum >> 8;
 }
@@ -222,7 +222,7 @@ void put_checksum(uint8_t *buf, size_t len)
 bool checksum_ok(const uint8_t *buf, size_t len)
 {
     uint16_t stored = buf[len - 2] | (buf[len - 1] << 8);
-    return stored == rossat_checksum(buf, len - 2);
+    return stored == rockcat_checksum(buf, len - 2);
 }
 
 uint16_t get16(const uint8_t *p) { return static_cast<uint16_t>(p[0] | (p[1] << 8)); }
@@ -230,58 +230,58 @@ void put16(uint8_t *p, uint16_t v) { p[0] = v & 0xff; p[1] = v >> 8; }
 
 int ensure_init()
 {
-    return g_initialised ? ROSSAT_OK : rossat_init();
+    return g_initialised ? ROCKCAT_OK : rockcat_init();
 }
 
 } // namespace
 
 extern "C" {
 
-const char *rossat_version(void)
+const char *rockcat_version(void)
 {
-#define ROSSAT_STR2(x) #x
-#define ROSSAT_STR(x) ROSSAT_STR2(x)
-    return ROSSAT_STR(ROSSAT_VERSION_MAJOR) "." ROSSAT_STR(ROSSAT_VERSION_MINOR) "." ROSSAT_STR(ROSSAT_VERSION_PATCH);
+#define ROCKCAT_STR2(x) #x
+#define ROCKCAT_STR(x) ROCKCAT_STR2(x)
+    return ROCKCAT_STR(ROCKCAT_VERSION_MAJOR) "." ROCKCAT_STR(ROCKCAT_VERSION_MINOR) "." ROCKCAT_STR(ROCKCAT_VERSION_PATCH);
 }
 
-const char *rossat_strerror(int error)
+const char *rockcat_strerror(int error)
 {
     switch (error) {
-    case ROSSAT_OK:            return "success";
-    case ROSSAT_ERR_INIT:      return "failed to initialise hidapi";
-    case ROSSAT_ERR_NO_DEVICE: return "no supported ROCCAT device found";
-    case ROSSAT_ERR_ACCESS:    return "cannot open device (check udev permissions)";
-    case ROSSAT_ERR_IO:        return "HID feature report transfer failed";
-    case ROSSAT_ERR_BUSY:      return "device stayed busy";
-    case ROSSAT_ERR_REJECTED:  return "device rejected the data";
-    case ROSSAT_ERR_CHECKSUM:  return "checksum mismatch in data read from device";
-    case ROSSAT_ERR_ARGUMENT:  return "invalid argument";
-    case ROSSAT_ERR_PROTOCOL:  return "unexpected answer from device";
+    case ROCKCAT_OK:            return "success";
+    case ROCKCAT_ERR_INIT:      return "failed to initialise hidapi";
+    case ROCKCAT_ERR_NO_DEVICE: return "no supported ROCCAT device found";
+    case ROCKCAT_ERR_ACCESS:    return "cannot open device (check udev permissions)";
+    case ROCKCAT_ERR_IO:        return "HID feature report transfer failed";
+    case ROCKCAT_ERR_BUSY:      return "device stayed busy";
+    case ROCKCAT_ERR_REJECTED:  return "device rejected the data";
+    case ROCKCAT_ERR_CHECKSUM:  return "checksum mismatch in data read from device";
+    case ROCKCAT_ERR_ARGUMENT:  return "invalid argument";
+    case ROCKCAT_ERR_PROTOCOL:  return "unexpected answer from device";
     default:                   return "unknown error";
     }
 }
 
-int rossat_init(void)
+int rockcat_init(void)
 {
     if (g_initialised)
-        return ROSSAT_OK;
+        return ROCKCAT_OK;
     if (hid_init() != 0)
-        return ROSSAT_ERR_INIT;
+        return ROCKCAT_ERR_INIT;
     g_initialised = true;
-    return ROSSAT_OK;
+    return ROCKCAT_OK;
 }
 
-void rossat_exit(void)
+void rockcat_exit(void)
 {
     if (g_initialised)
         hid_exit();
     g_initialised = false;
 }
 
-int rossat_enumerate(rossat_device_info *out, int max)
+int rockcat_enumerate(rockcat_device_info *out, int max)
 {
     int r = ensure_init();
-    if (r != ROSSAT_OK)
+    if (r != ROCKCAT_OK)
         return r;
     auto found = scan();
     for (int i = 0; i < static_cast<int>(found.size()) && i < max && out; ++i)
@@ -289,36 +289,36 @@ int rossat_enumerate(rossat_device_info *out, int max)
     return static_cast<int>(found.size());
 }
 
-int rossat_open(const char *path, rossat_device **out)
+int rockcat_open(const char *path, rockcat_device **out)
 {
     if (!out)
-        return ROSSAT_ERR_ARGUMENT;
+        return ROCKCAT_ERR_ARGUMENT;
     *out = nullptr;
     int r = ensure_init();
-    if (r != ROSSAT_OK)
+    if (r != ROCKCAT_OK)
         return r;
 
     auto found = scan();
-    const rossat_device_info *chosen = nullptr;
+    const rockcat_device_info *chosen = nullptr;
     for (const auto &i : found)
         if (!path || std::strcmp(path, i.path) == 0) {
             chosen = &i;
             break;
         }
     if (!chosen)
-        return ROSSAT_ERR_NO_DEVICE;
+        return ROCKCAT_ERR_NO_DEVICE;
 
     hid_device *h = hid_open_path(chosen->path);
     if (!h)
-        return ROSSAT_ERR_ACCESS;
-    auto *dev = new rossat_device;
+        return ROCKCAT_ERR_ACCESS;
+    auto *dev = new rockcat_device;
     dev->hid = h;
     dev->info = *chosen;
     *out = dev;
-    return ROSSAT_OK;
+    return ROCKCAT_OK;
 }
 
-void rossat_close(rossat_device *dev)
+void rockcat_close(rockcat_device *dev)
 {
     if (!dev)
         return;
@@ -327,31 +327,31 @@ void rossat_close(rossat_device *dev)
     delete dev;
 }
 
-int rossat_get_info(rossat_device *dev, rossat_device_info *info)
+int rockcat_get_info(rockcat_device *dev, rockcat_device_info *info)
 {
     if (!dev || !info)
-        return ROSSAT_ERR_ARGUMENT;
+        return ROCKCAT_ERR_ARGUMENT;
     *info = dev->info;
-    return ROSSAT_OK;
+    return ROCKCAT_OK;
 }
 
-int rossat_get_firmware_version(rossat_device *dev, char *buf, size_t len)
+int rockcat_get_firmware_version(rockcat_device *dev, char *buf, size_t len)
 {
     if (!dev || !buf || len == 0)
-        return ROSSAT_ERR_ARGUMENT;
+        return ROCKCAT_ERR_ARGUMENT;
     // Report 0x09 = [09 09 fw ...]; fw 105 = "1.05" (matches Swarm's
     // firmware_upgrade.ini). Fall back to the USB release number.
     uint8_t info[9] = {REPORT_INFO};
-    if (get_raw(dev, info, sizeof info) == ROSSAT_OK && info[1] == sizeof info) {
+    if (get_raw(dev, info, sizeof info) == ROCKCAT_OK && info[1] == sizeof info) {
         std::snprintf(buf, len, "%d.%02d", info[2] / 100, info[2] % 100);
-        return ROSSAT_OK;
+        return ROCKCAT_OK;
     }
     unsigned v = dev->info.release;
     std::snprintf(buf, len, "%x.%02x", v >> 8, v & 0xff);
-    return ROSSAT_OK;
+    return ROCKCAT_OK;
 }
 
-uint16_t rossat_checksum(const uint8_t *buf, size_t len)
+uint16_t rockcat_checksum(const uint8_t *buf, size_t len)
 {
     uint16_t sum = 0;
     for (size_t i = 0; i < len; ++i)
@@ -359,97 +359,97 @@ uint16_t rossat_checksum(const uint8_t *buf, size_t len)
     return sum;
 }
 
-int rossat_feature_get(rossat_device *dev, uint8_t *buf, size_t len)
+int rockcat_feature_get(rockcat_device *dev, uint8_t *buf, size_t len)
 {
     return get_raw(dev, buf, len);
 }
 
-int rossat_feature_set(rossat_device *dev, const uint8_t *buf, size_t len)
+int rockcat_feature_set(rockcat_device *dev, const uint8_t *buf, size_t len)
 {
     return set_raw(dev, buf, len, true);
 }
 
 /* ---- profiles ---------------------------------------------------------- */
 
-int rossat_get_active_profile(rossat_device *dev, uint8_t *profile, uint8_t *count)
+int rockcat_get_active_profile(rockcat_device *dev, uint8_t *profile, uint8_t *count)
 {
     uint8_t buf[4] = {REPORT_PROFILE, 0, 0, 0};
     int r = get_raw(dev, buf, sizeof buf);
-    if (r != ROSSAT_OK)
+    if (r != ROCKCAT_OK)
         return r;
     if (profile)
         *profile = buf[2];
     if (count)
         *count = buf[3];
-    return ROSSAT_OK;
+    return ROCKCAT_OK;
 }
 
-int rossat_set_active_profile(rossat_device *dev, uint8_t profile)
+int rockcat_set_active_profile(rockcat_device *dev, uint8_t profile)
 {
-    uint8_t current = 0, count = ROSSAT_PROFILE_COUNT;
-    int r = rossat_get_active_profile(dev, &current, &count);
-    if (r != ROSSAT_OK)
+    uint8_t current = 0, count = ROCKCAT_PROFILE_COUNT;
+    int r = rockcat_get_active_profile(dev, &current, &count);
+    if (r != ROCKCAT_OK)
         return r;
-    if (count == 0 || count > ROSSAT_PROFILE_COUNT)
-        count = ROSSAT_PROFILE_COUNT;
+    if (count == 0 || count > ROCKCAT_PROFILE_COUNT)
+        count = ROCKCAT_PROFILE_COUNT;
     if (profile >= count)
-        return ROSSAT_ERR_ARGUMENT;
+        return ROCKCAT_ERR_ARGUMENT;
     const uint8_t buf[4] = {REPORT_PROFILE, 4, profile, count};
     return set_raw(dev, buf, sizeof buf, true);
 }
 
 /* ---- settings ---------------------------------------------------------- */
 
-int rossat_polling_rate_hz(uint8_t rate)
+int rockcat_polling_rate_hz(uint8_t rate)
 {
     static const int hz[] = {125, 250, 500, 1000};
     return rate < 4 ? hz[rate] : 0;
 }
 
-const char *rossat_effect_name(uint8_t effect)
+const char *rockcat_effect_name(uint8_t effect)
 {
     switch (effect) {
-    case ROSSAT_EFFECT_OFF:         return "Off";
-    case ROSSAT_EFFECT_FULLY_LIT:   return "Fully lit";
-    case ROSSAT_EFFECT_BLINKING:    return "Blinking";
-    case ROSSAT_EFFECT_BREATHING:   return "Breathing";
-    case ROSSAT_EFFECT_HEARTBEAT:   return "Heartbeat";
-    case ROSSAT_EFFECT_COLOR_CYCLE: return "Colour cycle";
-    case ROSSAT_EFFECT_SNAKE:       return "Snake";
-    case ROSSAT_EFFECT_BREATHING_2: return "Breathing 2.0";
-    case ROSSAT_EFFECT_HEARTBEAT_2: return "Heartbeat 2.0";
-    case ROSSAT_EFFECT_AIMO:        return "AIMO";
-    case ROSSAT_EFFECT_COLORWAVE:   return "Colorwave";
+    case ROCKCAT_EFFECT_OFF:         return "Off";
+    case ROCKCAT_EFFECT_FULLY_LIT:   return "Fully lit";
+    case ROCKCAT_EFFECT_BLINKING:    return "Blinking";
+    case ROCKCAT_EFFECT_BREATHING:   return "Breathing";
+    case ROCKCAT_EFFECT_HEARTBEAT:   return "Heartbeat";
+    case ROCKCAT_EFFECT_COLOR_CYCLE: return "Colour cycle";
+    case ROCKCAT_EFFECT_SNAKE:       return "Snake";
+    case ROCKCAT_EFFECT_BREATHING_2: return "Breathing 2.0";
+    case ROCKCAT_EFFECT_HEARTBEAT_2: return "Heartbeat 2.0";
+    case ROCKCAT_EFFECT_AIMO:        return "AIMO";
+    case ROCKCAT_EFFECT_COLORWAVE:   return "Colorwave";
     default:                        return nullptr;
     }
 }
 
-int rossat_effect_is_software(uint8_t effect)
+int rockcat_effect_is_software(uint8_t effect)
 {
-    return effect == ROSSAT_EFFECT_HEARTBEAT || effect == ROSSAT_EFFECT_BREATHING_2 ||
-           effect == ROSSAT_EFFECT_HEARTBEAT_2 || effect == ROSSAT_EFFECT_AIMO;
+    return effect == ROCKCAT_EFFECT_HEARTBEAT || effect == ROCKCAT_EFFECT_BREATHING_2 ||
+           effect == ROCKCAT_EFFECT_HEARTBEAT_2 || effect == ROCKCAT_EFFECT_AIMO;
 }
 
-const char *rossat_led_name(int led)
+const char *rockcat_led_name(int led)
 {
-    static const char *names[ROSSAT_LED_COUNT] = {
+    static const char *names[ROCKCAT_LED_COUNT] = {
         "Wheel",        "Left 1 (front)", "Left 2",       "Left 3",
         "Left 4",       "Right 1 (front)", "Right 2",     "Right 3",
         "Right 4",      "Left 5 (rear)",   "Right 5 (rear)",
     };
-    return led >= 0 && led < ROSSAT_LED_COUNT ? names[led] : "?";
+    return led >= 0 && led < ROCKCAT_LED_COUNT ? names[led] : "?";
 }
 
-void rossat_settings_decode(const uint8_t raw[ROSSAT_SETTINGS_SIZE], rossat_settings *s)
+void rockcat_settings_decode(const uint8_t raw[ROCKCAT_SETTINGS_SIZE], rockcat_settings *s)
 {
     std::memset(s, 0, sizeof *s);
-    std::memcpy(s->raw, raw, ROSSAT_SETTINGS_SIZE);
+    std::memcpy(s->raw, raw, ROCKCAT_SETTINGS_SIZE);
     s->profile = raw[0x02];
     s->dpi_enabled_mask = raw[0x04];
     s->dpi_active = raw[0x05];
-    for (int i = 0; i < ROSSAT_DPI_LEVELS; ++i) {
-        s->dpi_x[i] = static_cast<uint16_t>(get16(raw + 0x06 + 2 * i) * ROSSAT_DPI_STEP);
-        s->dpi_y[i] = static_cast<uint16_t>(get16(raw + 0x10 + 2 * i) * ROSSAT_DPI_STEP);
+    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i) {
+        s->dpi_x[i] = static_cast<uint16_t>(get16(raw + 0x06 + 2 * i) * ROCKCAT_DPI_STEP);
+        s->dpi_y[i] = static_cast<uint16_t>(get16(raw + 0x10 + 2 * i) * ROCKCAT_DPI_STEP);
     }
     s->polling_rate = raw[0x1a];
     s->angle_snapping = raw[0x1b];
@@ -458,24 +458,24 @@ void rossat_settings_decode(const uint8_t raw[ROSSAT_SETTINGS_SIZE], rossat_sett
     s->effect = raw[0x21];
     s->effect_speed = raw[0x22];
     s->brightness = raw[0x23];
-    for (int i = 0; i < ROSSAT_LED_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
         const uint8_t *p = raw + 0x3d + 5 * i;
-        s->leds[i] = rossat_color{p[0], p[1], p[2], p[3]};
+        s->leds[i] = rockcat_color{p[0], p[1], p[2], p[3]};
     }
     s->color_theme = raw[0x74];
 }
 
-void rossat_settings_encode(const rossat_settings *s, uint8_t raw[ROSSAT_SETTINGS_SIZE])
+void rockcat_settings_encode(const rockcat_settings *s, uint8_t raw[ROCKCAT_SETTINGS_SIZE])
 {
-    std::memcpy(raw, s->raw, ROSSAT_SETTINGS_SIZE);
+    std::memcpy(raw, s->raw, ROCKCAT_SETTINGS_SIZE);
     raw[0x00] = REPORT_SETTINGS;
-    raw[0x01] = ROSSAT_SETTINGS_SIZE;
+    raw[0x01] = ROCKCAT_SETTINGS_SIZE;
     raw[0x02] = s->profile;
     raw[0x04] = s->dpi_enabled_mask & 0x1f;
     raw[0x05] = s->dpi_active;
-    for (int i = 0; i < ROSSAT_DPI_LEVELS; ++i) {
-        put16(raw + 0x06 + 2 * i, static_cast<uint16_t>(s->dpi_x[i] / ROSSAT_DPI_STEP));
-        put16(raw + 0x10 + 2 * i, static_cast<uint16_t>(s->dpi_y[i] / ROSSAT_DPI_STEP));
+    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i) {
+        put16(raw + 0x06 + 2 * i, static_cast<uint16_t>(s->dpi_x[i] / ROCKCAT_DPI_STEP));
+        put16(raw + 0x10 + 2 * i, static_cast<uint16_t>(s->dpi_y[i] / ROCKCAT_DPI_STEP));
     }
     raw[0x1a] = s->polling_rate;
     raw[0x1b] = s->angle_snapping;
@@ -484,7 +484,7 @@ void rossat_settings_encode(const rossat_settings *s, uint8_t raw[ROSSAT_SETTING
     raw[0x21] = s->effect;
     raw[0x22] = s->effect_speed;
     raw[0x23] = s->brightness;
-    for (int i = 0; i < ROSSAT_LED_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
         uint8_t *p = raw + 0x3d + 5 * i;
         p[0] = s->leds[i].a;
         p[1] = s->leds[i].r;
@@ -493,92 +493,92 @@ void rossat_settings_encode(const rossat_settings *s, uint8_t raw[ROSSAT_SETTING
         p[4] = 0;
     }
     raw[0x74] = s->color_theme;
-    put_checksum(raw, ROSSAT_SETTINGS_SIZE);
+    put_checksum(raw, ROCKCAT_SETTINGS_SIZE);
 }
 
-int rossat_read_settings_raw(rossat_device *dev, uint8_t profile, uint8_t buf[ROSSAT_SETTINGS_SIZE])
+int rockcat_read_settings_raw(rockcat_device *dev, uint8_t profile, uint8_t buf[ROCKCAT_SETTINGS_SIZE])
 {
-    if (profile >= ROSSAT_PROFILE_COUNT || !buf)
-        return ROSSAT_ERR_ARGUMENT;
+    if (profile >= ROCKCAT_PROFILE_COUNT || !buf)
+        return ROCKCAT_ERR_ARGUMENT;
     int r = select_data(dev, profile, SELECT_SETTINGS);
-    if (r != ROSSAT_OK)
+    if (r != ROCKCAT_OK)
         return r;
-    std::memset(buf, 0, ROSSAT_SETTINGS_SIZE);
+    std::memset(buf, 0, ROCKCAT_SETTINGS_SIZE);
     buf[0] = REPORT_SETTINGS;
-    r = get_raw(dev, buf, ROSSAT_SETTINGS_SIZE);
-    if (r != ROSSAT_OK)
+    r = get_raw(dev, buf, ROCKCAT_SETTINGS_SIZE);
+    if (r != ROCKCAT_OK)
         return r;
-    if (buf[1] != ROSSAT_SETTINGS_SIZE || buf[2] != profile)
-        return ROSSAT_ERR_PROTOCOL;
-    return checksum_ok(buf, ROSSAT_SETTINGS_SIZE) ? ROSSAT_OK : ROSSAT_ERR_CHECKSUM;
+    if (buf[1] != ROCKCAT_SETTINGS_SIZE || buf[2] != profile)
+        return ROCKCAT_ERR_PROTOCOL;
+    return checksum_ok(buf, ROCKCAT_SETTINGS_SIZE) ? ROCKCAT_OK : ROCKCAT_ERR_CHECKSUM;
 }
 
-int rossat_write_settings_raw(rossat_device *dev, uint8_t buf[ROSSAT_SETTINGS_SIZE])
+int rockcat_write_settings_raw(rockcat_device *dev, uint8_t buf[ROCKCAT_SETTINGS_SIZE])
 {
-    if (!buf || buf[2] >= ROSSAT_PROFILE_COUNT)
-        return ROSSAT_ERR_ARGUMENT;
+    if (!buf || buf[2] >= ROCKCAT_PROFILE_COUNT)
+        return ROCKCAT_ERR_ARGUMENT;
     buf[0] = REPORT_SETTINGS;
-    buf[1] = ROSSAT_SETTINGS_SIZE;
-    put_checksum(buf, ROSSAT_SETTINGS_SIZE);
-    return set_raw(dev, buf, ROSSAT_SETTINGS_SIZE, true);
+    buf[1] = ROCKCAT_SETTINGS_SIZE;
+    put_checksum(buf, ROCKCAT_SETTINGS_SIZE);
+    return set_raw(dev, buf, ROCKCAT_SETTINGS_SIZE, true);
 }
 
-int rossat_read_settings(rossat_device *dev, uint8_t profile, rossat_settings *out)
+int rockcat_read_settings(rockcat_device *dev, uint8_t profile, rockcat_settings *out)
 {
     if (!out)
-        return ROSSAT_ERR_ARGUMENT;
-    uint8_t raw[ROSSAT_SETTINGS_SIZE];
-    int r = rossat_read_settings_raw(dev, profile, raw);
-    if (r != ROSSAT_OK)
+        return ROCKCAT_ERR_ARGUMENT;
+    uint8_t raw[ROCKCAT_SETTINGS_SIZE];
+    int r = rockcat_read_settings_raw(dev, profile, raw);
+    if (r != ROCKCAT_OK)
         return r;
-    rossat_settings_decode(raw, out);
-    return ROSSAT_OK;
+    rockcat_settings_decode(raw, out);
+    return ROCKCAT_OK;
 }
 
-int rossat_write_settings(rossat_device *dev, const rossat_settings *in)
+int rockcat_write_settings(rockcat_device *dev, const rockcat_settings *in)
 {
-    if (!in || in->profile >= ROSSAT_PROFILE_COUNT || in->dpi_active >= ROSSAT_DPI_LEVELS ||
-        in->polling_rate > ROSSAT_POLLING_1000HZ)
-        return ROSSAT_ERR_ARGUMENT;
-    for (int i = 0; i < ROSSAT_DPI_LEVELS; ++i)
-        if (in->dpi_x[i] < ROSSAT_DPI_MIN || in->dpi_x[i] > ROSSAT_DPI_MAX ||
-            in->dpi_y[i] < ROSSAT_DPI_MIN || in->dpi_y[i] > ROSSAT_DPI_MAX)
-            return ROSSAT_ERR_ARGUMENT;
-    uint8_t raw[ROSSAT_SETTINGS_SIZE];
-    rossat_settings_encode(in, raw);
+    if (!in || in->profile >= ROCKCAT_PROFILE_COUNT || in->dpi_active >= ROCKCAT_DPI_LEVELS ||
+        in->polling_rate > ROCKCAT_POLLING_1000HZ)
+        return ROCKCAT_ERR_ARGUMENT;
+    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i)
+        if (in->dpi_x[i] < ROCKCAT_DPI_MIN || in->dpi_x[i] > ROCKCAT_DPI_MAX ||
+            in->dpi_y[i] < ROCKCAT_DPI_MIN || in->dpi_y[i] > ROCKCAT_DPI_MAX)
+            return ROCKCAT_ERR_ARGUMENT;
+    uint8_t raw[ROCKCAT_SETTINGS_SIZE];
+    rockcat_settings_encode(in, raw);
     return set_raw(dev, raw, sizeof raw, true);
 }
 
 /* ---- buttons ----------------------------------------------------------- */
 
-int rossat_read_buttons(rossat_device *dev, uint8_t profile, rossat_buttons *out)
+int rockcat_read_buttons(rockcat_device *dev, uint8_t profile, rockcat_buttons *out)
 {
-    if (!out || profile >= ROSSAT_PROFILE_COUNT)
-        return ROSSAT_ERR_ARGUMENT;
+    if (!out || profile >= ROCKCAT_PROFILE_COUNT)
+        return ROCKCAT_ERR_ARGUMENT;
     int r = select_data(dev, profile, SELECT_BUTTONS);
-    if (r != ROSSAT_OK)
+    if (r != ROCKCAT_OK)
         return r;
-    uint8_t raw[ROSSAT_BUTTONS_SIZE] = {REPORT_BUTTONS};
+    uint8_t raw[ROCKCAT_BUTTONS_SIZE] = {REPORT_BUTTONS};
     r = get_raw(dev, raw, sizeof raw);
-    if (r != ROSSAT_OK)
+    if (r != ROCKCAT_OK)
         return r;
     // unlike settings and macros, this report carries no checksum
-    if (raw[1] != ROSSAT_BUTTONS_SIZE || raw[2] != profile)
-        return ROSSAT_ERR_PROTOCOL;
+    if (raw[1] != ROCKCAT_BUTTONS_SIZE || raw[2] != profile)
+        return ROCKCAT_ERR_PROTOCOL;
     out->profile = raw[2];
-    for (int i = 0; i < ROSSAT_BUTTON_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
         const uint8_t *p = raw + 3 + 3 * i;
-        out->buttons[i] = rossat_button{p[0], p[1], p[2]};
+        out->buttons[i] = rockcat_button{p[0], p[1], p[2]};
     }
-    return ROSSAT_OK;
+    return ROCKCAT_OK;
 }
 
-int rossat_write_buttons(rossat_device *dev, const rossat_buttons *in)
+int rockcat_write_buttons(rockcat_device *dev, const rockcat_buttons *in)
 {
-    if (!in || in->profile >= ROSSAT_PROFILE_COUNT)
-        return ROSSAT_ERR_ARGUMENT;
-    uint8_t raw[ROSSAT_BUTTONS_SIZE] = {REPORT_BUTTONS, ROSSAT_BUTTONS_SIZE, in->profile};
-    for (int i = 0; i < ROSSAT_BUTTON_COUNT; ++i) {
+    if (!in || in->profile >= ROCKCAT_PROFILE_COUNT)
+        return ROCKCAT_ERR_ARGUMENT;
+    uint8_t raw[ROCKCAT_BUTTONS_SIZE] = {REPORT_BUTTONS, ROCKCAT_BUTTONS_SIZE, in->profile};
+    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
         uint8_t *p = raw + 3 + 3 * i;
         p[0] = in->buttons[i].type;
         p[1] = in->buttons[i].param1;
@@ -589,24 +589,24 @@ int rossat_write_buttons(rossat_device *dev, const rossat_buttons *in)
 
 /* ---- macros ------------------------------------------------------------ */
 
-int rossat_read_macro(rossat_device *dev, uint8_t profile, uint8_t button, rossat_macro *out)
+int rockcat_read_macro(rockcat_device *dev, uint8_t profile, uint8_t button, rockcat_macro *out)
 {
-    if (!out || profile >= ROSSAT_PROFILE_COUNT || button >= ROSSAT_BUTTON_COUNT)
-        return ROSSAT_ERR_ARGUMENT;
+    if (!out || profile >= ROCKCAT_PROFILE_COUNT || button >= ROCKCAT_BUTTON_COUNT)
+        return ROCKCAT_ERR_ARGUMENT;
 
-    std::vector<uint8_t> blob(ROSSAT_MACRO_SIZE, 0);
+    std::vector<uint8_t> blob(ROCKCAT_MACRO_SIZE, 0);
     const uint8_t selects[2] = {SELECT_MACRO_1, SELECT_MACRO_2};
     for (int chunk = 0; chunk < 2; ++chunk) {
         int r = select_data(dev, static_cast<uint8_t>(profile | selects[chunk]), button);
-        if (r != ROSSAT_OK)
+        if (r != ROCKCAT_OK)
             return r;
         std::vector<uint8_t> rep(MACRO_CHUNK_REPORT, 0);
         rep[0] = REPORT_MACRO;
         r = get_raw(dev, rep.data(), rep.size());
-        if (r != ROSSAT_OK)
+        if (r != ROCKCAT_OK)
             return r;
         size_t off = chunk * MACRO_CHUNK_DATA;
-        size_t n = std::min(MACRO_CHUNK_DATA, ROSSAT_MACRO_SIZE - off);
+        size_t n = std::min(MACRO_CHUNK_DATA, ROCKCAT_MACRO_SIZE - off);
         std::memcpy(blob.data() + off, rep.data() + 2, n);
     }
 
@@ -619,27 +619,27 @@ int rossat_read_macro(rossat_device *dev, uint8_t profile, uint8_t button, rossa
     std::memcpy(out->name, b + 0x2e, 32);
     uint16_t cm = get16(b + 0x4e);
     out->mode = static_cast<uint8_t>(cm >> 12);
-    out->count = std::min<uint16_t>(cm & 0x0fff, ROSSAT_MACRO_KEYSTROKES);
+    out->count = std::min<uint16_t>(cm & 0x0fff, ROCKCAT_MACRO_KEYSTROKES);
     for (int i = 0; i < out->count; ++i) {
         const uint8_t *k = b + MACRO_KEYS_OFFSET + 4 * i;
-        out->keys[i] = rossat_keystroke{k[0], k[1], get16(k + 2)};
+        out->keys[i] = rockcat_keystroke{k[0], k[1], get16(k + 2)};
     }
     // An unused slot reads back as zeros; only validate populated macros.
-    if (b[0] == MACRO_HEADER_ID && get16(b + MACRO_CSUM_OFFSET) != rossat_checksum(b, MACRO_CSUM_OFFSET))
-        return ROSSAT_ERR_CHECKSUM;
-    return ROSSAT_OK;
+    if (b[0] == MACRO_HEADER_ID && get16(b + MACRO_CSUM_OFFSET) != rockcat_checksum(b, MACRO_CSUM_OFFSET))
+        return ROCKCAT_ERR_CHECKSUM;
+    return ROCKCAT_OK;
 }
 
-int rossat_write_macro(rossat_device *dev, const rossat_macro *in)
+int rockcat_write_macro(rockcat_device *dev, const rockcat_macro *in)
 {
-    if (!in || in->profile >= ROSSAT_PROFILE_COUNT || in->button >= ROSSAT_BUTTON_COUNT ||
-        in->count > ROSSAT_MACRO_KEYSTROKES || in->mode > ROSSAT_MACRO_INFINITE)
-        return ROSSAT_ERR_ARGUMENT;
+    if (!in || in->profile >= ROCKCAT_PROFILE_COUNT || in->button >= ROCKCAT_BUTTON_COUNT ||
+        in->count > ROCKCAT_MACRO_KEYSTROKES || in->mode > ROCKCAT_MACRO_INFINITE)
+        return ROCKCAT_ERR_ARGUMENT;
 
-    std::vector<uint8_t> blob(ROSSAT_MACRO_SIZE, 0);
+    std::vector<uint8_t> blob(ROCKCAT_MACRO_SIZE, 0);
     uint8_t *b = blob.data();
     b[0] = MACRO_HEADER_ID;
-    put16(b + 1, ROSSAT_MACRO_SIZE);
+    put16(b + 1, ROCKCAT_MACRO_SIZE);
     b[3] = in->profile;
     b[4] = in->button;
     b[5] = in->loop;
@@ -652,20 +652,20 @@ int rossat_write_macro(rossat_device *dev, const rossat_macro *in)
         k[1] = in->keys[i].action;
         put16(k + 2, in->keys[i].delay_ms);
     }
-    put16(b + MACRO_CSUM_OFFSET, rossat_checksum(b, MACRO_CSUM_OFFSET));
+    put16(b + MACRO_CSUM_OFFSET, rockcat_checksum(b, MACRO_CSUM_OFFSET));
 
     for (int chunk = 0; chunk < 2; ++chunk) {
         std::vector<uint8_t> rep(MACRO_CHUNK_REPORT, 0);
         rep[0] = REPORT_MACRO;
         rep[1] = static_cast<uint8_t>(chunk + 1);
         size_t off = chunk * MACRO_CHUNK_DATA;
-        size_t n = std::min(MACRO_CHUNK_DATA, ROSSAT_MACRO_SIZE - off);
+        size_t n = std::min(MACRO_CHUNK_DATA, ROCKCAT_MACRO_SIZE - off);
         std::memcpy(rep.data() + 2, b + off, n);
         int r = set_raw(dev, rep.data(), rep.size(), true);
-        if (r != ROSSAT_OK)
+        if (r != ROCKCAT_OK)
             return r;
     }
-    return ROSSAT_OK;
+    return ROCKCAT_OK;
 }
 
 /* ---- sensor calibration (TDCU) -------------------------------------------- */
@@ -675,48 +675,48 @@ int rossat_write_macro(rossat_device *dev, const rossat_macro *in)
 // stays "busy" while the sensor samples, [0f 06 02 01] keeps the result and
 // [0f 06 02 00] discards it.
 
-int rossat_read_tdcu(rossat_device *dev, rossat_tdcu *out)
+int rockcat_read_tdcu(rockcat_device *dev, rockcat_tdcu *out)
 {
     if (!out)
-        return ROSSAT_ERR_ARGUMENT;
-    uint8_t buf[ROSSAT_DCU_SIZE] = {REPORT_TDCU};
+        return ROCKCAT_ERR_ARGUMENT;
+    uint8_t buf[ROCKCAT_DCU_SIZE] = {REPORT_TDCU};
     int r = get_raw(dev, buf, sizeof buf);
-    if (r != ROSSAT_OK)
+    if (r != ROCKCAT_OK)
         return r;
     out->mode = buf[2];
     out->state = buf[3];
     out->value = get16(buf + 4);
-    return ROSSAT_OK;
+    return ROCKCAT_OK;
 }
 
-int rossat_calibration_start(rossat_device *dev)
+int rockcat_calibration_start(rockcat_device *dev)
 {
-    const uint8_t buf[ROSSAT_DCU_SIZE] = {REPORT_TDCU, ROSSAT_DCU_SIZE, 2, 0xff, 0, 0};
+    const uint8_t buf[ROCKCAT_DCU_SIZE] = {REPORT_TDCU, ROCKCAT_DCU_SIZE, 2, 0xff, 0, 0};
     return set_raw(dev, buf, sizeof buf, false);
 }
 
-int rossat_calibration_poll(rossat_device *dev, int *finished)
+int rockcat_calibration_poll(rockcat_device *dev, int *finished)
 {
     if (!dev || !dev->hid || !finished)
-        return ROSSAT_ERR_ARGUMENT;
+        return ROCKCAT_ERR_ARGUMENT;
     uint8_t status[3] = {REPORT_CONTROL, 0, 0};
     if (hid_get_feature_report(dev->hid, status, sizeof status) < 0)
-        return ROSSAT_ERR_IO;
+        return ROCKCAT_ERR_IO;
     if (status[1] == 2)
-        return ROSSAT_ERR_REJECTED;
+        return ROCKCAT_ERR_REJECTED;
     *finished = status[1] != 3;
-    return ROSSAT_OK;
+    return ROCKCAT_OK;
 }
 
-int rossat_calibration_finish(rossat_device *dev, int save)
+int rockcat_calibration_finish(rockcat_device *dev, int save)
 {
-    const uint8_t buf[ROSSAT_DCU_SIZE] = {REPORT_TDCU, ROSSAT_DCU_SIZE, 2, static_cast<uint8_t>(save ? 1 : 0), 0, 0};
+    const uint8_t buf[ROCKCAT_DCU_SIZE] = {REPORT_TDCU, ROCKCAT_DCU_SIZE, 2, static_cast<uint8_t>(save ? 1 : 0), 0, 0};
     return set_raw(dev, buf, sizeof buf, true);
 }
 
 /* ---- direct lighting ----------------------------------------------------- */
 
-int rossat_set_direct_lighting(rossat_device *dev, int enable)
+int rockcat_set_direct_lighting(rockcat_device *dev, int enable)
 {
     // byte 4 != 0 makes the firmware show host colours unscaled; otherwise
     // they are multiplied by the profile brightness (0 = invisible)
@@ -725,18 +725,18 @@ int rossat_set_direct_lighting(rossat_device *dev, int enable)
     return set_raw(dev, buf, sizeof buf, true);
 }
 
-int rossat_set_direct_colors(rossat_device *dev, const rossat_color colors[ROSSAT_LED_COUNT])
+int rockcat_set_direct_colors(rockcat_device *dev, const rockcat_color colors[ROCKCAT_LED_COUNT])
 {
     if (!colors)
-        return ROSSAT_ERR_ARGUMENT;
-    uint8_t buf[2 + 4 * ROSSAT_LED_COUNT] = {REPORT_LEDS, sizeof buf};
+        return ROCKCAT_ERR_ARGUMENT;
+    uint8_t buf[2 + 4 * ROCKCAT_LED_COUNT] = {REPORT_LEDS, sizeof buf};
     // The LEDs are R, G, B + amber. The firmware's own white (R=G=80 %,
     // B=100 %, amber on) looks mint; this neutral mix was calibrated by eye on
     // a Kone AIMO Remastered. The white part of each colour, min(R,G,B), is
     // drawn with that mix, the rest of the colour stays as given.
     constexpr int WHITE_R = 200, WHITE_G = 190, WHITE_B = 170, WHITE_A = 255;
-    for (int i = 0; i < ROSSAT_LED_COUNT; ++i) {
-        const rossat_color &c = colors[i];
+    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
+        const rockcat_color &c = colors[i];
         int r = (c.r * c.a + 127) / 255;
         int g = (c.g * c.a + 127) / 255;
         int b = (c.b * c.a + 127) / 255;

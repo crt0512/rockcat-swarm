@@ -1,11 +1,11 @@
-// Private definitions shared by the librossat translation units.
+// Private definitions shared by the librockcat translation units.
 #pragma once
 
-#include "rossat/rossat.h"
+#include "rockcat/rockcat.h"
 
 #include <hidapi/hidapi.h>
 
-struct rossat_device {
+struct rockcat_device {
     hid_device *hid = nullptr;
-    rossat_device_info info{};
+    rockcat_device_info info{};
 };

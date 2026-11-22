@@ -1,66 +1,66 @@
-/* rossat-swarm GTK3 stylesheet.
+/* rockcat-swarm GTK3 stylesheet.
  * Layout and typography follow ROCCAT Swarm (header bar, underlined page
  * tabs, boxed panels with uppercase titles, profile bar in the footer).
  * All colours come from the active GTK theme. */
 
-window.rossat {
+window.rockcat {
     font-family: "Eurostile", "Eurostile LT Std", "Michroma", "Saira Condensed",
                  "Rajdhani", sans-serif;
 }
 
 /* ---- header ---------------------------------------------------------- */
-.rs-header {
+.rc-header {
     border-bottom: 1px solid @borders;
     padding: 8px 16px;
 }
-.rs-brand {
+.rc-brand {
     font-size: 22px;
     font-weight: bold;
     letter-spacing: 4px;
 }
-.rs-brand-sub {
+.rc-brand-sub {
     font-size: 11px;
     letter-spacing: 3px;
     color: @theme_selected_bg_color;
 }
-.rs-device-name {
+.rc-device-name {
     font-size: 15px;
     letter-spacing: 2px;
 }
-.rs-status {
+.rc-status {
     font-size: 10px;
     letter-spacing: 1px;
     opacity: 0.7;
 }
-.rs-status.connected { color: @theme_selected_bg_color; opacity: 1; }
-.rs-status.error     { color: @error_color; opacity: 1; }
+.rc-status.connected { color: @theme_selected_bg_color; opacity: 1; }
+.rc-status.error     { color: @error_color; opacity: 1; }
 
 /* ---- page tabs ------------------------------------------------------- */
-notebook.rs-tabs > header {
+notebook.rc-tabs > header {
     border-bottom: 1px solid @borders;
     padding: 0 12px;
 }
-notebook.rs-tabs > header > tabs > tab {
+notebook.rc-tabs > header > tabs > tab {
     border: none;
     border-bottom: 3px solid transparent;
     padding: 10px 18px 7px 18px;
     margin: 0;
 }
-notebook.rs-tabs > header > tabs > tab label {
+notebook.rc-tabs > header > tabs > tab label {
     font-size: 12px;
     letter-spacing: 2px;
 }
-notebook.rs-tabs > header > tabs > tab:checked {
+notebook.rc-tabs > header > tabs > tab:checked {
     border-bottom-color: @theme_selected_bg_color;
 }
 
 /* ---- control boxes --------------------------------------------------- */
-.rs-box {
+.rc-box {
     border: 1px solid @borders;
     border-radius: 4px;
     padding: 12px 14px;
 }
-.rs-box-title {
+.rc-box-title {
     font-size: 12px;
     font-weight: bold;
     letter-spacing: 2px;
@@ -68,11 +68,11 @@ notebook.rs-tabs > header > tabs > tab:checked {
     border-bottom: 1px solid @borders;
     margin-bottom: 8px;
 }
-.rs-hint {
+.rc-hint {
     font-size: 10px;
     opacity: 0.7;
 }
-.rs-value {
+.rc-value {
     color: @theme_selected_bg_color;
     font-weight: bold;
 }
@@ -80,19 +80,19 @@ notebook.rs-tabs > header > tabs > tab:checked {
 button label { letter-spacing: 1px; }
 
 /* profile slots in the footer */
-.rs-footer {
+.rc-footer {
     border-top: 1px solid @borders;
     padding: 8px 14px;
 }
-button.rs-profile {
+button.rc-profile {
     min-width: 34px;
     padding: 6px 10px;
 }
-.rs-footer .rs-box-title { border: none; margin: 0; padding: 0; }
-.rs-footer flowboxchild { padding: 0; background: none; }
+.rc-footer .rc-box-title { border: none; margin: 0; padding: 0; }
+.rc-footer flowboxchild { padding: 0; background: none; }
 
 /* colour swatch buttons */
-button.rs-swatch {
+button.rc-swatch {
     min-width: 26px;
     min-height: 26px;
     padding: 0;

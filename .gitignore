@@ -7,5 +7,6 @@ compile_commands.json
 /.claude/
 /aur/*/src/
 /aur/*/pkg/
-/aur/*/rossat-swarm/
+/aur/*/rockcat-swarm/
 /aur/*/*.tar.*
+DEV/

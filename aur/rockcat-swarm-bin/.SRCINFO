@@ -1,0 +1,25 @@
+pkgbase = rockcat-swarm-bin
+	pkgdesc = Open re-implementation of ROCCAT Swarm (GUI, CLI, library) for ROCCAT mice and keyboards
+	pkgver = 2.0.0
+	pkgrel = 1
+	url = https://github.com/crt0512/rockcat-swarm
+	install = rockcat-swarm.install
+	arch = x86_64
+	license = GPL-3.0-only
+	depends = glibc
+	depends = gcc-libs
+	depends = hidapi
+	depends = gtk3
+	depends = glib2
+	depends = cairo
+	depends = gdk-pixbuf2
+	depends = libayatana-appindicator
+	provides = rockcat-swarm
+	conflicts = rockcat-swarm
+	conflicts = rockcat-swarm-git
+	conflicts = rossat-swarm-bin
+	conflicts = rossat-swarm-git
+	source = rockcat-swarm-2.0.0-x86_64.tar.gz::https://github.com/crt0512/rockcat-swarm/releases/download/2.0.0/rockcat-swarm-2.0.0-x86_64.tar.gz
+	sha256sums = SKIP
+
+pkgname = rockcat-swarm-bin

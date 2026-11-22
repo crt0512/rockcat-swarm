@@ -27,7 +27,7 @@ namespace {
 constexpr double PI = 3.14159265358979323846;
 
 // AIMO colour themes from Swarm's data/Swarm/aimo_color_theme.dat.
-constexpr uint8_t THEMES[ROSSAT_AIMO_THEMES][3][3] = {
+constexpr uint8_t THEMES[ROCKCAT_AIMO_THEMES][3][3] = {
     {{0xff, 0x00, 0x00}, {0xff, 0x50, 0x00}, {0xe6, 0x8c, 0x00}},
     {{0x00, 0x00, 0xff}, {0x4b, 0x4b, 0xff}, {0x96, 0x96, 0xff}},
     {{0x5a, 0x13, 0xff}, {0x9d, 0x14, 0xff}, {0xaf, 0x0d, 0xdb}},
@@ -46,7 +46,7 @@ struct led_pos {
     double side, depth;
     int theme_slot;
 };
-constexpr led_pos LEDS[ROSSAT_LED_COUNT] = {
+constexpr led_pos LEDS[ROCKCAT_LED_COUNT] = {
     {0, -0.2, 0},                                                  // wheel
     {-1, 0.0, 0}, {-1, 0.25, 1}, {-1, 0.5, 1}, {-1, 0.75, 2},      // left 1-4
     {1, 0.0, 0},  {1, 0.25, 1},  {1, 0.5, 1},  {1, 0.75, 2},       // right 1-4
@@ -92,12 +92,12 @@ double rate(uint8_t speed)
 
 int theme_index(uint8_t color_theme)
 {
-    return (color_theme & 0x7f) % ROSSAT_AIMO_THEMES;
+    return (color_theme & 0x7f) % ROCKCAT_AIMO_THEMES;
 }
 
-rgb led_color(const rossat_settings &s, int i)
+rgb led_color(const rockcat_settings &s, int i)
 {
-    const rossat_color &c = s.leds[i];
+    const rockcat_color &c = s.leds[i];
     double a = c.a / 255.0;
     return {c.r / 255.0 * a, c.g / 255.0 * a, c.b / 255.0 * a};
 }
@@ -120,87 +120,87 @@ rgb hue(double h)
 
 // Order of the LEDs around the mouse for running-light effects:
 // wheel, left side front to back, right side back to front.
-constexpr int RING[ROSSAT_LED_COUNT] = {0, 1, 2, 3, 4, 9, 10, 8, 7, 6, 5};
+constexpr int RING[ROCKCAT_LED_COUNT] = {0, 1, 2, 3, 4, 9, 10, 8, 7, 6, 5};
 
 int ring_pos(int led)
 {
-    for (int i = 0; i < ROSSAT_LED_COUNT; ++i)
+    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i)
         if (RING[i] == led)
             return i;
     return 0;
 }
 
 // LED mode switch without the status wait, so Easy-Shift feedback is instant.
-int set_led_mode_fast(rossat_device *dev, bool host)
+int set_led_mode_fast(rockcat_device *dev, bool host)
 {
     const uint8_t buf[6] = {0x0e, 6, 1, static_cast<uint8_t>(host ? 1 : 0), static_cast<uint8_t>(host ? 0xff : 0), 0xff};
-    return hid_send_feature_report(dev->hid, buf, sizeof buf) < 0 ? ROSSAT_ERR_IO : ROSSAT_OK;
+    return hid_send_feature_report(dev->hid, buf, sizeof buf) < 0 ? ROCKCAT_ERR_IO : ROCKCAT_OK;
 }
 
 } // namespace
 
-extern "C" void rossat_aimo_theme(int theme, rossat_color out[3])
+extern "C" void rockcat_aimo_theme(int theme, rockcat_color out[3])
 {
-    if (theme < 0 || theme >= ROSSAT_AIMO_THEMES)
+    if (theme < 0 || theme >= ROCKCAT_AIMO_THEMES)
         theme = 0;
     for (int i = 0; i < 3; ++i)
-        out[i] = rossat_color{255, THEMES[theme][i][0], THEMES[theme][i][1], THEMES[theme][i][2]};
+        out[i] = rockcat_color{255, THEMES[theme][i][0], THEMES[theme][i][1], THEMES[theme][i][2]};
 }
 
-extern "C" void rossat_render_frame(const rossat_settings *s, uint8_t effect, double t, double activity,
-                                    rossat_color out[ROSSAT_LED_COUNT])
+extern "C" void rockcat_render_frame(const rockcat_settings *s, uint8_t effect, double t, double activity,
+                                     rockcat_color out[ROCKCAT_LED_COUNT])
 {
     double level = s->brightness / 255.0;
     double f = rate(s->effect_speed);
     activity = clamp01(activity);
     int theme = theme_index(s->color_theme);
 
-    for (int i = 0; i < ROSSAT_LED_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
         const led_pos &p = LEDS[i];
         rgb c{0, 0, 0};
         switch (effect) {
-        case ROSSAT_EFFECT_OFF:
+        case ROCKCAT_EFFECT_OFF:
             break;
-        case ROSSAT_EFFECT_FULLY_LIT:
+        case ROCKCAT_EFFECT_FULLY_LIT:
             c = led_color(*s, i);
             break;
-        case ROSSAT_EFFECT_BLINKING:
+        case ROCKCAT_EFFECT_BLINKING:
             c = std::fmod(t * f * 0.8, 1.0) < 0.5 ? led_color(*s, i) : rgb{0, 0, 0};
             break;
-        case ROSSAT_EFFECT_BREATHING: {
+        case ROCKCAT_EFFECT_BREATHING: {
             double v = 0.5 - 0.5 * std::cos(2 * PI * t * f * 0.3);
             c = mix({0, 0, 0}, led_color(*s, i), v * v);
             break;
         }
-        case ROSSAT_EFFECT_COLOR_CYCLE:
+        case ROCKCAT_EFFECT_COLOR_CYCLE:
             c = hue(t * f * 0.08);
             break;
-        case ROSSAT_EFFECT_SNAKE: {
+        case ROCKCAT_EFFECT_SNAKE: {
             // a bright head with a fading tail running around the mouse
-            double head = std::fmod(t * f * 4.0, static_cast<double>(ROSSAT_LED_COUNT));
+            double head = std::fmod(t * f * 4.0, static_cast<double>(ROCKCAT_LED_COUNT));
             double d = head - ring_pos(i);
             if (d < 0)
-                d += ROSSAT_LED_COUNT;
+                d += ROCKCAT_LED_COUNT;
             c = mix({0, 0, 0}, led_color(*s, i), clamp01(1.0 - d / 4.0));
             break;
         }
-        case ROSSAT_EFFECT_COLORWAVE:
+        case ROCKCAT_EFFECT_COLORWAVE:
             c = hue(t * f * 0.12 - p.depth * 0.35 - (p.side > 0 ? 0.05 : 0));
             break;
-        case ROSSAT_EFFECT_HEARTBEAT:
+        case ROCKCAT_EFFECT_HEARTBEAT:
             c = led_color(*s, i);
             c = mix({0, 0, 0}, c, heartbeat(t * f * 0.75));
             break;
-        case ROSSAT_EFFECT_HEARTBEAT_2:
+        case ROCKCAT_EFFECT_HEARTBEAT_2:
             // the beat travels from the front of the mouse to the back
             c = mix({0, 0, 0}, led_color(*s, i), heartbeat(t * f * 0.75 - 0.18 * (p.depth + 0.2)));
             break;
-        case ROSSAT_EFFECT_BREATHING_2: {
+        case ROCKCAT_EFFECT_BREATHING_2: {
             double v = 0.5 - 0.5 * std::cos(2 * PI * (t * f * 0.3 - 0.45 * (p.depth + 0.2)));
             c = mix({0, 0, 0}, led_color(*s, i), v * v);
             break;
         }
-        case ROSSAT_EFFECT_AIMO:
+        case ROCKCAT_EFFECT_AIMO:
         default: {
             // Slowly drifting colour field over the three theme colours. Each
             // LED starts at its own theme slot; activity brightens and
@@ -221,22 +221,22 @@ extern "C" void rossat_render_frame(const rossat_settings *s, uint8_t effect, do
         }
         }
         bool on = (s->led_enable_mask >> i) & 1;
-        out[i] = on ? rossat_color{255, to8(c.r * level), to8(c.g * level), to8(c.b * level)}
-                    : rossat_color{255, 0, 0, 0};
+        out[i] = on ? rockcat_color{255, to8(c.r * level), to8(c.g * level), to8(c.b * level)}
+                    : rockcat_color{255, 0, 0, 0};
     }
 }
 
 /* ---- engine thread ----------------------------------------------------- */
 
-struct rossat_engine {
+struct rockcat_engine {
     std::string path;
-    rossat_engine_mode mode = ROSSAT_ENGINE_AUTO;
+    rockcat_engine_mode mode = ROCKCAT_ENGINE_AUTO;
     std::thread worker;
     std::atomic<bool> stop{false};
     std::atomic<bool> reload{true};
     int lock_fd = -1;
     std::mutex status_mutex;
-    rossat_engine_status status{};
+    rockcat_engine_status status{};
 };
 
 namespace {
@@ -246,7 +246,7 @@ using clock_type = std::chrono::steady_clock;
 int acquire_lock()
 {
     const char *dir = std::getenv("XDG_RUNTIME_DIR");
-    std::string path = std::string(dir && *dir ? dir : "/tmp") + "/rossat-engine.lock";
+    std::string path = std::string(dir && *dir ? dir : "/tmp") + "/rockcat-engine.lock";
     int fd = ::open(path.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0600);
     if (fd < 0)
         return -1;
@@ -257,21 +257,21 @@ int acquire_lock()
     return fd;
 }
 
-void set_status(rossat_engine *e, const rossat_engine_status &s)
+void set_status(rockcat_engine *e, const rockcat_engine_status &s)
 {
     std::lock_guard<std::mutex> g(e->status_mutex);
     e->status = s;
 }
 
-void run(rossat_engine *e)
+void run(rockcat_engine *e)
 {
-    rossat_engine_status st{};
+    rockcat_engine_status st{};
     st.running = 1;
     st.profile = 0xff; // unknown until the first read
-    rossat_device *dev = nullptr;
-    rossat_settings settings{};
-    rossat_shift_lighting shift{};
-    uint8_t engine_effect = ROSSAT_EFFECT_AIMO;
+    rockcat_device *dev = nullptr;
+    rockcat_settings settings{};
+    rockcat_shift_lighting shift{};
+    uint8_t engine_effect = ROCKCAT_EFFECT_AIMO;
     // brightness changed by a button, written to the mouse once presses stop
     bool brightness_dirty = false;
     auto brightness_changed_at = clock_type::now();
@@ -281,7 +281,7 @@ void run(rossat_engine *e)
     bool rendering = false;
     double t = 0, activity = 0;
     uint8_t last_buttons = 0;
-    rossat_color last[ROSSAT_LED_COUNT];
+    rockcat_color last[ROCKCAT_LED_COUNT];
     std::memset(last, 0xff, sizeof last);
     auto last_profile_check = clock_type::now() - std::chrono::seconds(10);
     auto prev = clock_type::now();
@@ -291,15 +291,15 @@ void run(rossat_engine *e)
         st.rendering = 0;
         rendering = false;
         if (dev)
-            rossat_close(dev);
+            rockcat_close(dev);
         dev = nullptr;
         set_status(e, st);
     };
 
     while (!e->stop) {
         if (!dev) {
-            int r = rossat_open(e->path.empty() ? nullptr : e->path.c_str(), &dev);
-            if (r != ROSSAT_OK) {
+            int r = rockcat_open(e->path.empty() ? nullptr : e->path.c_str(), &dev);
+            if (r != ROCKCAT_OK) {
                 fail(r);
                 for (int i = 0; i < 20 && !e->stop; ++i)
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -314,40 +314,40 @@ void run(rossat_engine *e)
         if (e->reload || now - last_profile_check > std::chrono::seconds(2)) {
             last_profile_check = now;
             uint8_t active = 0;
-            int r = rossat_get_active_profile(dev, &active, nullptr);
-            if (r != ROSSAT_OK) {
+            int r = rockcat_get_active_profile(dev, &active, nullptr);
+            if (r != ROCKCAT_OK) {
                 fail(r);
                 continue;
             }
             if (active != profile || e->reload.exchange(false)) {
-                r = rossat_read_settings(dev, active, &settings);
-                if (r != ROSSAT_OK) {
+                r = rockcat_read_settings(dev, active, &settings);
+                if (r != ROCKCAT_OK) {
                     fail(r);
                     continue;
                 }
                 profile = active;
-                rossat_shift_lighting_load(dev->info.product_id, profile, &shift);
-                rossat_engine_effect_load(dev->info.product_id, profile, &engine_effect);
+                rockcat_shift_lighting_load(dev->info.product_id, profile, &shift);
+                rockcat_engine_effect_load(dev->info.product_id, profile, &engine_effect);
                 std::memset(last, 0xff, sizeof last);
             }
         }
 
         uint8_t effect = settings.effect;
-        bool engine_rendered = rossat_effect_is_software(effect);
-        if (effect == ROSSAT_EFFECT_AIMO)
-            effect = engine_effect; // AIMO on the mouse = "rendered by rossat"
-        if (e->mode == ROSSAT_ENGINE_AIMO)
-            effect = ROSSAT_EFFECT_AIMO;
-        else if (e->mode == ROSSAT_ENGINE_HEARTBEAT)
-            effect = ROSSAT_EFFECT_HEARTBEAT;
+        bool engine_rendered = rockcat_effect_is_software(effect);
+        if (effect == ROCKCAT_EFFECT_AIMO)
+            effect = engine_effect; // AIMO on the mouse = "rendered by rockcat"
+        if (e->mode == ROCKCAT_ENGINE_AIMO)
+            effect = ROCKCAT_EFFECT_AIMO;
+        else if (e->mode == ROCKCAT_ENGINE_HEARTBEAT)
+            effect = ROCKCAT_EFFECT_HEARTBEAT;
         bool shift_light = shift_held && shift.enabled;
-        bool software = engine_rendered || e->mode != ROSSAT_ENGINE_AUTO || shift_light;
+        bool software = engine_rendered || e->mode != ROCKCAT_ENGINE_AUTO || shift_light;
         if (software != rendering) {
             // Easy-Shift transitions must be immediate; profile changes can wait
             // for the device's acknowledgement.
             int r = (shift_light || (!software && shift.enabled)) ? set_led_mode_fast(dev, software)
-                                                                  : rossat_set_direct_lighting(dev, software ? 1 : 0);
-            if (r != ROSSAT_OK) {
+                                                                  : rockcat_set_direct_lighting(dev, software ? 1 : 0);
+            if (r != ROCKCAT_OK) {
                 fail(r);
                 continue;
             }
@@ -367,7 +367,7 @@ void run(rossat_engine *e)
             unsigned char in[64];
             int n = hid_read_timeout(dev->hid, in, sizeof in, left);
             if (n < 0) {
-                fail(ROSSAT_ERR_IO);
+                fail(ROCKCAT_ERR_IO);
                 break;
             }
             if (n == 0)
@@ -392,12 +392,12 @@ void run(rossat_engine *e)
                 // host action buttons: 03 00 f2 N 00 = press, ... 01 = release
                 if (in[4] == 0 && profile != 0xff && (in[3] == 1 || in[3] == 2)) {
                     // logarithmic steps: snap to the nearest level, then move one
-                    static constexpr int levels[ROSSAT_BRIGHTNESS_LEVELS] = ROSSAT_BRIGHTNESS_LEVEL_TABLE;
+                    static constexpr int levels[ROCKCAT_BRIGHTNESS_LEVELS] = ROCKCAT_BRIGHTNESS_LEVEL_TABLE;
                     int idx = 0;
-                    for (int i = 1; i < ROSSAT_BRIGHTNESS_LEVELS; ++i)
+                    for (int i = 1; i < ROCKCAT_BRIGHTNESS_LEVELS; ++i)
                         if (std::abs(levels[i] - settings.brightness) < std::abs(levels[idx] - settings.brightness))
                             idx = i;
-                    idx = std::clamp(idx + (in[3] == 1 ? 1 : -1), 0, ROSSAT_BRIGHTNESS_LEVELS - 1);
+                    idx = std::clamp(idx + (in[3] == 1 ? 1 : -1), 0, ROCKCAT_BRIGHTNESS_LEVELS - 1);
                     settings.brightness = static_cast<uint8_t>(levels[idx]);
                     brightness_dirty = true;
                     brightness_changed_at = clock_type::now();
@@ -414,14 +414,14 @@ void run(rossat_engine *e)
         // firmware effects only see the value stored in the profile).
         if (brightness_dirty && clock_type::now() - brightness_changed_at > std::chrono::milliseconds(400)) {
             brightness_dirty = false;
-            int r = rossat_write_settings(dev, &settings);
-            if (r != ROSSAT_OK) {
+            int r = rockcat_write_settings(dev, &settings);
+            if (r != ROCKCAT_OK) {
                 fail(r);
                 continue;
             }
             // storing a profile makes the firmware take the LEDs back
-            if (rendering && set_led_mode_fast(dev, true) != ROSSAT_OK) {
-                fail(ROSSAT_ERR_IO);
+            if (rendering && set_led_mode_fast(dev, true) != ROCKCAT_OK) {
+                fail(ROCKCAT_ERR_IO);
                 continue;
             }
             std::memset(last, 0xff, sizeof last);
@@ -433,8 +433,8 @@ void run(rossat_engine *e)
             last_mode_check = clock_type::now();
             uint8_t mode[6] = {0x0e};
             if (hid_get_feature_report(dev->hid, mode, sizeof mode) == static_cast<int>(sizeof mode) && mode[3] == 0) {
-                if (set_led_mode_fast(dev, true) != ROSSAT_OK) {
-                    fail(ROSSAT_ERR_IO);
+                if (set_led_mode_fast(dev, true) != ROCKCAT_OK) {
+                    fail(ROCKCAT_ERR_IO);
                     continue;
                 }
                 std::memset(last, 0xff, sizeof last);
@@ -450,24 +450,24 @@ void run(rossat_engine *e)
         st.profile = profile;
         st.effect = effect;
         st.rendering = rendering;
-        st.last_error = ROSSAT_OK;
+        st.last_error = ROCKCAT_OK;
         st.shift_held = shift_held;
         if (rendering) {
-            rossat_color frame[ROSSAT_LED_COUNT];
+            rockcat_color frame[ROCKCAT_LED_COUNT];
             if (shift_light) {
                 double k = shift.color.a / 255.0;
-                if (shift.style == ROSSAT_SHIFT_PULSE)
+                if (shift.style == ROCKCAT_SHIFT_PULSE)
                     k *= 0.55 + 0.45 * std::sin(t * 6.0);
-                for (int i = 0; i < ROSSAT_LED_COUNT; ++i)
-                    frame[i] = rossat_color{255, static_cast<uint8_t>(shift.color.r * k),
-                                            static_cast<uint8_t>(shift.color.g * k),
-                                            static_cast<uint8_t>(shift.color.b * k)};
+                for (int i = 0; i < ROCKCAT_LED_COUNT; ++i)
+                    frame[i] = rockcat_color{255, static_cast<uint8_t>(shift.color.r * k),
+                                             static_cast<uint8_t>(shift.color.g * k),
+                                             static_cast<uint8_t>(shift.color.b * k)};
             } else {
-                rossat_render_frame(&settings, effect, t, activity, frame);
+                rockcat_render_frame(&settings, effect, t, activity, frame);
             }
             if (std::memcmp(frame, last, sizeof frame) != 0) {
-                int r = rossat_set_direct_colors(dev, frame);
-                if (r != ROSSAT_OK) {
+                int r = rockcat_set_direct_colors(dev, frame);
+                if (r != ROCKCAT_OK) {
                     fail(r);
                     continue;
                 }
@@ -480,8 +480,8 @@ void run(rossat_engine *e)
 
     if (dev) {
         if (rendering)
-            rossat_set_direct_lighting(dev, 0);
-        rossat_close(dev);
+            rockcat_set_direct_lighting(dev, 0);
+        rockcat_close(dev);
     }
     st.running = 0;
     st.rendering = 0;
@@ -490,18 +490,18 @@ void run(rossat_engine *e)
 
 } // namespace
 
-extern "C" int rossat_engine_start(const char *path, rossat_engine_mode mode, rossat_engine **out)
+extern "C" int rockcat_engine_start(const char *path, rockcat_engine_mode mode, rockcat_engine **out)
 {
     if (!out)
-        return ROSSAT_ERR_ARGUMENT;
+        return ROCKCAT_ERR_ARGUMENT;
     *out = nullptr;
-    int r = rossat_init();
-    if (r != ROSSAT_OK)
+    int r = rockcat_init();
+    if (r != ROCKCAT_OK)
         return r;
     int fd = acquire_lock();
     if (fd < 0)
-        return ROSSAT_ERR_BUSY;
-    auto *e = new rossat_engine;
+        return ROCKCAT_ERR_BUSY;
+    auto *e = new rockcat_engine;
     e->path = path ? path : "";
     e->mode = mode;
     e->lock_fd = fd;
@@ -509,10 +509,10 @@ extern "C" int rossat_engine_start(const char *path, rossat_engine_mode mode, ro
     e->status.profile = 0xff;
     e->worker = std::thread(run, e);
     *out = e;
-    return ROSSAT_OK;
+    return ROCKCAT_OK;
 }
 
-extern "C" void rossat_engine_stop(rossat_engine *e)
+extern "C" void rockcat_engine_stop(rockcat_engine *e)
 {
     if (!e)
         return;
@@ -524,7 +524,7 @@ extern "C" void rossat_engine_stop(rossat_engine *e)
     delete e;
 }
 
-extern "C" void rossat_engine_get_status(rossat_engine *e, rossat_engine_status *out)
+extern "C" void rockcat_engine_get_status(rockcat_engine *e, rockcat_engine_status *out)
 {
     if (!e || !out)
         return;
@@ -532,7 +532,7 @@ extern "C" void rossat_engine_get_status(rossat_engine *e, rossat_engine_status 
     *out = e->status;
 }
 
-extern "C" void rossat_engine_reload(rossat_engine *e)
+extern "C" void rockcat_engine_reload(rockcat_engine *e)
 {
     if (e)
         e->reload = true;

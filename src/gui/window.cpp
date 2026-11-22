@@ -1,12 +1,12 @@
-// rossat-swarm GTK3 main window, laid out after ROCCAT Swarm's Kone AIMO
+// rockcat-swarm GTK3 main window, laid out after ROCCAT Swarm's Kone AIMO
 // module: header, tab pages (Settings / Button assignment / Illumination /
 // Advanced settings) and a profile bar with Apply/Reload in the footer.
 
 #include "window.h"
 
-#include "rossat/rossat.h"
+#include "rockcat/rockcat.h"
 
-#ifdef ROSSAT_HAVE_TRAY
+#ifdef ROCKCAT_HAVE_TRAY
 #include <libayatana-appindicator/app-indicator.h>
 #endif
 
@@ -17,7 +17,7 @@
 
 namespace {
 
-constexpr int HALF = ROSSAT_BUTTON_COUNT / 2;
+constexpr int HALF = ROCKCAT_BUTTON_COUNT / 2;
 
 struct dpi_row {
     GtkWidget *enabled;
@@ -38,25 +38,25 @@ struct app_state {
     GtkWidget *device_label = nullptr;
     GtkWidget *status_label = nullptr;
     GtkWidget *notebook = nullptr;
-    GtkWidget *profile_buttons[ROSSAT_PROFILE_COUNT] = {};
+    GtkWidget *profile_buttons[ROCKCAT_PROFILE_COUNT] = {};
     GtkWidget *apply_button = nullptr;
     GtkWidget *activate_button = nullptr;
     GtkWidget *reload_button = nullptr;
 
     // settings page
-    dpi_row dpi[ROSSAT_DPI_LEVELS] = {};
+    dpi_row dpi[ROCKCAT_DPI_LEVELS] = {};
     GtkWidget *dpi_lock = nullptr;
     GtkWidget *polling[4] = {};
 
     // buttons page
-    button_row buttons[ROSSAT_BUTTON_COUNT] = {};
+    button_row buttons[ROCKCAT_BUTTON_COUNT] = {};
 
     // illumination page
     GtkWidget *effect = nullptr;
     GtkWidget *speed = nullptr;
     GtkWidget *brightness = nullptr;
-    GtkWidget *led_color[ROSSAT_LED_COUNT] = {};
-    GtkWidget *led_enable[ROSSAT_LED_COUNT] = {};
+    GtkWidget *led_color[ROCKCAT_LED_COUNT] = {};
+    GtkWidget *led_enable[ROCKCAT_LED_COUNT] = {};
     GtkWidget *group_color = nullptr;
     GtkWidget *theme = nullptr;
     GtkWidget *render_engine = nullptr;
@@ -70,7 +70,7 @@ struct app_state {
     int engine_retry = 0;
     guint engine_source = 0;
     GtkWidget *colors_panel = nullptr;
-    rossat_engine *engine = nullptr;
+    rockcat_engine *engine = nullptr;
     guint preview_source = 0;
     double preview_t = 0;
     GtkWidget *mouse_light = nullptr;
@@ -84,7 +84,7 @@ struct app_state {
     GtkWidget *tdcu_label = nullptr;
     GtkWidget *calib_button = nullptr;
 
-    // application preferences (~/.config/rossat/gui.ini)
+    // application preferences (~/.config/rockcat/gui.ini)
     GtkWidget *pref_tray = nullptr;
     GtkWidget *pref_start_min = nullptr;
     GtkWidget *dpi_panel = nullptr;
@@ -93,19 +93,19 @@ struct app_state {
     GtkWidget *auto_apply = nullptr;
     guint auto_apply_source = 0;
     bool quitting = false;
-#ifdef ROSSAT_HAVE_TRAY
+#ifdef ROCKCAT_HAVE_TRAY
     AppIndicator *indicator = nullptr;
     GtkWidget *tray_show_item = nullptr;
 #endif
 
-    rossat_device *dev = nullptr;
-    rossat_device_info info{};
+    rockcat_device *dev = nullptr;
+    rockcat_device_info info{};
     int edit_profile = 0;
     int active_profile = 0;
     bool loaded = false;
     bool updating = false; // suppress signal feedback while filling widgets
-    rossat_settings settings{};
-    rossat_buttons button_data{};
+    rockcat_settings settings{};
+    rockcat_buttons button_data{};
     guint hotplug_source = 0;
 };
 
@@ -128,8 +128,8 @@ void add_class(GtkWidget *w, const char *cls)
 GtkWidget *box_panel(const char *title, GtkWidget *content)
 {
     GtkWidget *outer = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
-    add_class(outer, "rs-box");
-    gtk_box_pack_start(GTK_BOX(outer), label(title, "rs-box-title"), FALSE, FALSE, 0);
+    add_class(outer, "rc-box");
+    gtk_box_pack_start(GTK_BOX(outer), label(title, "rc-box-title"), FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(outer), content, TRUE, TRUE, 0);
     return outer;
 }
@@ -147,19 +147,19 @@ void set_status(app_state *s, const char *text, const char *cls)
 void report_error(app_state *s, const char *what, int err)
 {
     char msg[256];
-    std::snprintf(msg, sizeof msg, "%s: %s", what, rossat_strerror(err));
+    std::snprintf(msg, sizeof msg, "%s: %s", what, rockcat_strerror(err));
     set_status(s, msg, "error");
 }
 
-GdkRGBA to_rgba(const rossat_color &c)
+GdkRGBA to_rgba(const rockcat_color &c)
 {
     return GdkRGBA{c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0};
 }
 
-rossat_color from_rgba(const GdkRGBA &c)
+rockcat_color from_rgba(const GdkRGBA &c)
 {
     auto cv = [](double v) { return static_cast<uint8_t>(std::lround(std::fmin(std::fmax(v, 0.0), 1.0) * 255)); };
-    return rossat_color{cv(c.alpha), cv(c.red), cv(c.green), cv(c.blue)};
+    return rockcat_color{cv(c.alpha), cv(c.red), cv(c.green), cv(c.blue)};
 }
 
 /* ---- application preferences ----------------------------------------- */
@@ -172,7 +172,7 @@ struct gui_prefs {
 
 std::string prefs_path()
 {
-    return std::string(g_get_user_config_dir()) + "/rossat/gui.ini";
+    return std::string(rockcat_config_dir()) + "/gui.ini";
 }
 
 gui_prefs load_prefs()
@@ -196,8 +196,7 @@ void save_prefs(const gui_prefs &p)
     g_key_file_set_boolean(kf, "gui", "start_minimized", p.start_minimized);
     g_key_file_remove_key(kf, "gui", "engine", nullptr); // pre-1.0.1 setting
     g_key_file_set_boolean(kf, "gui", "auto_apply", p.auto_apply);
-    std::string dir = std::string(g_get_user_config_dir()) + "/rossat";
-    g_mkdir_with_parents(dir.c_str(), 0755);
+    g_mkdir_with_parents(rockcat_config_dir(), 0755);
     g_key_file_save_to_file(kf, prefs_path().c_str(), nullptr);
     g_key_file_unref(kf);
 }
@@ -208,7 +207,7 @@ void schedule_auto_apply(app_state *s);
 
 // defined further down, used by the drawing and fill code
 uint8_t current_effect(app_state *s);
-void preview_settings(app_state *s, rossat_settings *out);
+void preview_settings(app_state *s, rockcat_settings *out);
 void update_effect_ui(app_state *s);
 void update_tdcu_label(app_state *s);
 int combo_type(GtkWidget *combo);
@@ -230,7 +229,7 @@ void mouse_path(cairo_t *cr)
     cairo_close_path(cr);
 }
 
-void set_led_source(cairo_t *cr, const rossat_color &c, bool on, double extra_alpha = 1.0)
+void set_led_source(cairo_t *cr, const rockcat_color &c, bool on, double extra_alpha = 1.0)
 {
     if (!on) {
         cairo_set_source_rgba(cr, 0.12, 0.12, 0.12, 1.0);
@@ -244,8 +243,8 @@ struct led_shape {
     double x, y, w, h;
 };
 
-// LED zones, see rossat_led_name(): wheel, left/right front, two bars.
-constexpr led_shape LED_SHAPES[ROSSAT_LED_COUNT] = {
+// LED zones, see rockcat_led_name(): wheel, left/right front, two bars.
+constexpr led_shape LED_SHAPES[ROCKCAT_LED_COUNT] = {
     {92, 52, 16, 46},   // 0 wheel
     {28, 70, 10, 30},   // 1 left front
     {20, 108, 10, 26},  // 2 left bar
@@ -316,23 +315,23 @@ gboolean on_draw_lighting(GtkWidget *w, cairo_t *cr, gpointer data)
     auto *s = static_cast<app_state *>(data);
     scale_to_widget(w, cr);
     draw_mouse_body(cr);
-    rossat_color frame[ROSSAT_LED_COUNT];
+    rockcat_color frame[ROCKCAT_LED_COUNT];
     uint8_t effect = current_effect(s);
     bool software = engine_rendered(s);
     if (software) {
-        rossat_settings ps;
+        rockcat_settings ps;
         preview_settings(s, &ps);
         ps.brightness = 255; // preview shape of the effect, brightness is applied by alpha below
-        rossat_render_frame(&ps, effect, s->preview_t, 0.0, frame);
+        rockcat_render_frame(&ps, effect, s->preview_t, 0.0, frame);
     }
     double level = gtk_range_get_value(GTK_RANGE(s->brightness)) / 255.0;
-    for (int i = 0; i < ROSSAT_LED_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
         const led_shape &l = LED_SHAPES[i];
         GdkRGBA rgba;
         gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(s->led_color[i]), &rgba);
-        rossat_color c = software ? frame[i] : from_rgba(rgba);
+        rockcat_color c = software ? frame[i] : from_rgba(rgba);
         c.a = static_cast<uint8_t>(c.a * (0.15 + 0.85 * level));
-        bool on = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->led_enable[i])) && effect != ROSSAT_EFFECT_OFF;
+        bool on = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->led_enable[i])) && effect != ROCKCAT_EFFECT_OFF;
         // glow
         if (on) {
             cairo_pattern_t *glow = cairo_pattern_create_radial(l.x + l.w / 2, l.y + l.h / 2, 1,
@@ -411,10 +410,10 @@ int combo_type(GtkWidget *combo)
 
 void collect(app_state *s)
 {
-    rossat_settings &st = s->settings;
+    rockcat_settings &st = s->settings;
     st.profile = static_cast<uint8_t>(s->edit_profile);
     st.dpi_enabled_mask = 0;
-    for (int i = 0; i < ROSSAT_DPI_LEVELS; ++i) {
+    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i) {
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->dpi[i].enabled)))
             st.dpi_enabled_mask |= static_cast<uint8_t>(1 << i);
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->dpi[i].active)))
@@ -429,23 +428,23 @@ void collect(app_state *s)
 
     int eff = combo_type(s->effect);
     if (eff >= 0)
-        rossat_select_effect(s->info.product_id, &st, static_cast<uint8_t>(eff),
-                             gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->render_engine)));
-    rossat_shift_lighting sl;
+        rockcat_select_effect(s->info.product_id, &st, static_cast<uint8_t>(eff),
+                              gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->render_engine)));
+    rockcat_shift_lighting sl;
     sl.enabled = gtk_switch_get_active(GTK_SWITCH(s->shift_enable));
-    sl.style = static_cast<uint8_t>(gtk_combo_box_get_active(GTK_COMBO_BOX(s->shift_style)) == 1 ? ROSSAT_SHIFT_PULSE
-                                                                                                 : ROSSAT_SHIFT_SOLID);
+    sl.style = static_cast<uint8_t>(gtk_combo_box_get_active(GTK_COMBO_BOX(s->shift_style)) == 1 ? ROCKCAT_SHIFT_PULSE
+                                                                                                 : ROCKCAT_SHIFT_SOLID);
     GdkRGBA srgba;
     gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(s->shift_color), &srgba);
     sl.color = from_rgba(srgba);
-    rossat_shift_lighting_save(s->info.product_id, st.profile, &sl);
+    rockcat_shift_lighting_save(s->info.product_id, st.profile, &sl);
     st.effect_speed = static_cast<uint8_t>(gtk_range_get_value(GTK_RANGE(s->speed)));
     int th = combo_type(s->theme);
-    if (th >= 0 && (th != (st.color_theme & 0x7f) % ROSSAT_AIMO_THEMES || !(st.color_theme & 0x80)))
+    if (th >= 0 && (th != (st.color_theme & 0x7f) % ROCKCAT_AIMO_THEMES || !(st.color_theme & 0x80)))
         st.color_theme = static_cast<uint8_t>(0x80 | th);
     st.brightness = static_cast<uint8_t>(gtk_range_get_value(GTK_RANGE(s->brightness)));
     st.led_enable_mask = 0;
-    for (int i = 0; i < ROSSAT_LED_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
         GdkRGBA rgba;
         gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(s->led_color[i]), &rgba);
         st.leds[i] = from_rgba(rgba);
@@ -456,21 +455,21 @@ void collect(app_state *s)
     st.angle_snapping = gtk_switch_get_active(GTK_SWITCH(s->angle_snapping)) ? 1 : 0;
     st.debounce_ms = static_cast<uint8_t>(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->debounce)));
 
-    rossat_buttons &b = s->button_data;
+    rockcat_buttons &b = s->button_data;
     b.profile = static_cast<uint8_t>(s->edit_profile);
-    for (int i = 0; i < ROSSAT_BUTTON_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
         int t = combo_type(s->buttons[i].combo);
         if (t >= 0)
             b.buttons[i].type = static_cast<uint8_t>(t);
         b.buttons[i].param1 = static_cast<uint8_t>(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->buttons[i].p1)));
         b.buttons[i].param2 = static_cast<uint8_t>(gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(s->buttons[i].p2)));
-        if (t == ROSSAT_BT_SHORTCUT) {
+        if (t == ROCKCAT_BT_SHORTCUT) {
             uint8_t mods = 0, key = 0;
-            if (rossat_parse_shortcut(gtk_entry_get_text(GTK_ENTRY(s->buttons[i].text)), &mods, &key) == ROSSAT_OK) {
+            if (rockcat_parse_shortcut(gtk_entry_get_text(GTK_ENTRY(s->buttons[i].text)), &mods, &key) == ROCKCAT_OK) {
                 b.buttons[i].param1 = mods;
                 b.buttons[i].param2 = key;
             }
-        } else if (t != ROSSAT_BT_MACRO) {
+        } else if (t != ROCKCAT_BT_MACRO) {
             b.buttons[i].param1 = b.buttons[i].param2 = 0;
         }
     }
@@ -493,13 +492,13 @@ void ensure_combo_id(GtkWidget *combo, int value)
 void update_button_row_sensitivity(app_state *s, int i)
 {
     int t = combo_type(s->buttons[i].combo);
-    bool shortcut = t == ROSSAT_BT_SHORTCUT;
+    bool shortcut = t == ROCKCAT_BT_SHORTCUT;
     GtkEntry *e = GTK_ENTRY(s->buttons[i].text);
     gtk_entry_set_placeholder_text(e, shortcut ? "e.g. ctrl+c" : "macro text (optional)");
     gtk_widget_set_tooltip_text(s->buttons[i].text,
                                 shortcut ? "Key combination: ctrl, shift, alt, win + a key (a-z, 0-9, f1-f24, enter, esc, tab, space, up, ...)"
                                          : "Typed as a keystroke macro when you press APPLY");
-    gtk_widget_set_visible(s->buttons[i].text, shortcut || t == ROSSAT_BT_MACRO);
+    gtk_widget_set_visible(s->buttons[i].text, shortcut || t == ROCKCAT_BT_MACRO);
 }
 
 void update_raw_view(app_state *s)
@@ -507,9 +506,9 @@ void update_raw_view(app_state *s)
     std::string text;
     char line[96];
     const uint8_t *raw = s->settings.raw;
-    for (int i = 0; i < ROSSAT_SETTINGS_SIZE; i += 16) {
+    for (int i = 0; i < ROCKCAT_SETTINGS_SIZE; i += 16) {
         int n = std::snprintf(line, sizeof line, "%04x:", i);
-        for (int j = i; j < i + 16 && j < ROSSAT_SETTINGS_SIZE; ++j)
+        for (int j = i; j < i + 16 && j < ROCKCAT_SETTINGS_SIZE; ++j)
             n += std::snprintf(line + n, sizeof line - n, " %02x", raw[j]);
         text += line;
         text += '\n';
@@ -520,15 +519,15 @@ void update_raw_view(app_state *s)
 void fill(app_state *s)
 {
     s->updating = true;
-    const rossat_settings &st = s->settings;
-    for (int i = 0; i < ROSSAT_DPI_LEVELS; ++i) {
+    const rockcat_settings &st = s->settings;
+    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i) {
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->dpi[i].enabled), (st.dpi_enabled_mask >> i) & 1);
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->dpi[i].active), st.dpi_active == i);
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->dpi[i].x), st.dpi_x[i]);
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->dpi[i].y), st.dpi_y[i]);
     }
     bool same = true;
-    for (int i = 0; i < ROSSAT_DPI_LEVELS; ++i)
+    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i)
         same = same && st.dpi_x[i] == st.dpi_y[i];
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->dpi_lock), same);
     if (st.polling_rate < 4)
@@ -536,21 +535,21 @@ void fill(app_state *s)
 
     uint8_t eff = 0;
     int by_engine = 0;
-    rossat_effective_effect(s->info.product_id, &st, &eff, &by_engine);
+    rockcat_effective_effect(s->info.product_id, &st, &eff, &by_engine);
     ensure_combo_id(s->effect, eff);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->render_engine), by_engine);
-    rossat_shift_lighting sl;
-    rossat_shift_lighting_load(s->info.product_id, st.profile, &sl);
+    rockcat_shift_lighting sl;
+    rockcat_shift_lighting_load(s->info.product_id, st.profile, &sl);
     gtk_switch_set_active(GTK_SWITCH(s->shift_enable), sl.enabled);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(s->shift_style), sl.style == ROSSAT_SHIFT_PULSE ? 1 : 0);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(s->shift_style), sl.style == ROCKCAT_SHIFT_PULSE ? 1 : 0);
     GdkRGBA srgba = to_rgba(sl.color);
     gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(s->shift_color), &srgba);
     gtk_range_set_value(GTK_RANGE(s->speed), st.effect_speed);
     char thid[8];
-    std::snprintf(thid, sizeof thid, "%d", (st.color_theme & 0x7f) % ROSSAT_AIMO_THEMES);
+    std::snprintf(thid, sizeof thid, "%d", (st.color_theme & 0x7f) % ROCKCAT_AIMO_THEMES);
     gtk_combo_box_set_active_id(GTK_COMBO_BOX(s->theme), thid);
     gtk_range_set_value(GTK_RANGE(s->brightness), st.brightness);
-    for (int i = 0; i < ROSSAT_LED_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
         GdkRGBA rgba = to_rgba(st.leds[i]);
         gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(s->led_color[i]), &rgba);
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->led_enable[i]), (st.led_enable_mask >> i) & 1);
@@ -559,14 +558,14 @@ void fill(app_state *s)
     gtk_switch_set_active(GTK_SWITCH(s->angle_snapping), st.angle_snapping != 0);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->debounce), st.debounce_ms);
 
-    for (int i = 0; i < ROSSAT_BUTTON_COUNT; ++i) {
-        const rossat_button &b = s->button_data.buttons[i];
+    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
+        const rockcat_button &b = s->button_data.buttons[i];
         ensure_combo_id(s->buttons[i].combo, b.type);
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->buttons[i].p1), b.param1);
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->buttons[i].p2), b.param2);
         char sc[64] = "";
-        if (b.type == ROSSAT_BT_SHORTCUT)
-            rossat_format_shortcut(b.param1, b.param2, sc, sizeof sc);
+        if (b.type == ROCKCAT_BT_SHORTCUT)
+            rockcat_format_shortcut(b.param1, b.param2, sc, sizeof sc);
         gtk_entry_set_text(GTK_ENTRY(s->buttons[i].text), sc);
         update_button_row_sensitivity(s, i);
     }
@@ -593,9 +592,9 @@ void set_controls_sensitive(app_state *s, bool on)
 void update_profile_buttons(app_state *s)
 {
     s->updating = true;
-    for (int i = 0; i < ROSSAT_PROFILE_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_PROFILE_COUNT; ++i) {
         char text[32];
-        std::snprintf(text, sizeof text, i == s->active_profile ? "%d ●" : "%d", i + 1);
+        std::snprintf(text, sizeof text, i == s->active_profile ? "%d *" : "%d", i + 1);
         gtk_button_set_label(GTK_BUTTON(s->profile_buttons[i]), text);
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->profile_buttons[i]), i == s->edit_profile);
     }
@@ -617,17 +616,17 @@ bool load_profile(app_state *s)
     while (gtk_events_pending())
         gtk_main_iteration();
 
-    int r = rossat_read_settings(s->dev, static_cast<uint8_t>(s->edit_profile), &s->settings);
-    if (r == ROSSAT_OK)
-        r = rossat_read_buttons(s->dev, static_cast<uint8_t>(s->edit_profile), &s->button_data);
+    int r = rockcat_read_settings(s->dev, static_cast<uint8_t>(s->edit_profile), &s->settings);
+    if (r == ROCKCAT_OK)
+        r = rockcat_read_buttons(s->dev, static_cast<uint8_t>(s->edit_profile), &s->button_data);
 
     if (gw)
         gdk_window_set_cursor(gw, nullptr);
     if (busy)
         g_object_unref(busy);
 
-    if (r != ROSSAT_OK) {
-        if (r == ROSSAT_ERR_IO)
+    if (r != ROCKCAT_OK) {
+        if (r == ROCKCAT_ERR_IO)
             disconnect(s, "Device disconnected");
         else
             report_error(s, "Reading profile failed", r);
@@ -637,7 +636,7 @@ bool load_profile(app_state *s)
     fill(s);
     update_tdcu_label(s);
     char msg[96];
-    std::snprintf(msg, sizeof msg, "Connected — editing profile %d", s->edit_profile + 1);
+    std::snprintf(msg, sizeof msg, "Connected, editing profile %d", s->edit_profile + 1);
     set_status(s, msg, "connected");
     return true;
 }
@@ -648,26 +647,26 @@ void connect_device(app_state *s)
 {
     if (s->dev)
         return;
-    int r = rossat_open(nullptr, &s->dev);
-    if (r != ROSSAT_OK) {
+    int r = rockcat_open(nullptr, &s->dev);
+    if (r != ROCKCAT_OK) {
         s->dev = nullptr;
         gtk_label_set_text(GTK_LABEL(s->device_label), "NO DEVICE");
-        set_status(s, r == ROSSAT_ERR_NO_DEVICE ? "Plug in a ROCCAT Kone AIMO Remastered"
-                                                : rossat_strerror(r),
-                   r == ROSSAT_ERR_NO_DEVICE ? nullptr : "error");
+        set_status(s, r == ROCKCAT_ERR_NO_DEVICE ? "Plug in a ROCCAT Kone AIMO Remastered"
+                                                : rockcat_strerror(r),
+                   r == ROCKCAT_ERR_NO_DEVICE ? nullptr : "error");
         set_controls_sensitive(s, false);
         if (!s->hotplug_source)
             s->hotplug_source = g_timeout_add_seconds(2, hotplug_tick, s);
         return;
     }
-    rossat_get_info(s->dev, &s->info);
+    rockcat_get_info(s->dev, &s->info);
     char fw[16], title[128];
-    rossat_get_firmware_version(s->dev, fw, sizeof fw);
-    std::snprintf(title, sizeof title, "%s   ·   FW %s", s->info.name, fw);
+    rockcat_get_firmware_version(s->dev, fw, sizeof fw);
+    std::snprintf(title, sizeof title, "%s   |   FW %s", s->info.name, fw);
     gtk_label_set_text(GTK_LABEL(s->device_label), title);
 
     uint8_t active = 0;
-    if (rossat_get_active_profile(s->dev, &active, nullptr) == ROSSAT_OK && active < ROSSAT_PROFILE_COUNT)
+    if (rockcat_get_active_profile(s->dev, &active, nullptr) == ROCKCAT_OK && active < ROCKCAT_PROFILE_COUNT)
         s->active_profile = active;
     s->edit_profile = s->active_profile;
     update_profile_buttons(s);
@@ -682,7 +681,7 @@ void connect_device(app_state *s)
 void disconnect(app_state *s, const char *why)
 {
     if (s->dev)
-        rossat_close(s->dev);
+        rockcat_close(s->dev);
     s->dev = nullptr;
     s->loaded = false;
     gtk_label_set_text(GTK_LABEL(s->device_label), "NO DEVICE");
@@ -699,7 +698,7 @@ gboolean hotplug_tick(gpointer data)
         s->hotplug_source = 0;
         return G_SOURCE_REMOVE;
     }
-    if (rossat_enumerate(nullptr, 0) > 0) {
+    if (rockcat_enumerate(nullptr, 0) > 0) {
         s->hotplug_source = 0;
         connect_device(s);
         return G_SOURCE_REMOVE;
@@ -709,20 +708,20 @@ gboolean hotplug_tick(gpointer data)
 
 void write_text_macros(app_state *s)
 {
-    for (int i = 0; i < ROSSAT_BUTTON_COUNT; ++i) {
-        if (combo_type(s->buttons[i].combo) != ROSSAT_BT_MACRO)
+    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
+        if (combo_type(s->buttons[i].combo) != ROCKCAT_BT_MACRO)
             continue;
         const char *text = gtk_entry_get_text(GTK_ENTRY(s->buttons[i].text));
         if (!text || !*text)
             continue; // keep whatever macro is stored
-        static rossat_macro m;
+        static rockcat_macro m;
         std::memset(&m, 0, sizeof m);
         m.profile = static_cast<uint8_t>(s->edit_profile);
         m.button = static_cast<uint8_t>(i);
         m.loop = 1;
-        std::snprintf(m.set_name, sizeof m.set_name, "rossat");
+        std::snprintf(m.set_name, sizeof m.set_name, "rockcat");
         std::snprintf(m.name, sizeof m.name, "button %d", i + 1);
-        for (const char *p = text; *p && m.count + 4 <= ROSSAT_MACRO_KEYSTROKES; ++p) {
+        for (const char *p = text; *p && m.count + 4 <= ROCKCAT_MACRO_KEYSTROKES; ++p) {
             uint8_t usage = 0;
             bool shift = false;
             char ch = *p;
@@ -735,13 +734,13 @@ void write_text_macros(app_state *s)
             else if (ch == ',') usage = 0x36;
             else if (ch == '-') usage = 0x2d;
             else continue;
-            if (shift) m.keys[m.count++] = {0xe1, ROSSAT_KEY_PRESS, 20};
-            m.keys[m.count++] = {usage, ROSSAT_KEY_PRESS, 20};
-            m.keys[m.count++] = {usage, ROSSAT_KEY_RELEASE, 20};
-            if (shift) m.keys[m.count++] = {0xe1, ROSSAT_KEY_RELEASE, 20};
+            if (shift) m.keys[m.count++] = {0xe1, ROCKCAT_KEY_PRESS, 20};
+            m.keys[m.count++] = {usage, ROCKCAT_KEY_PRESS, 20};
+            m.keys[m.count++] = {usage, ROCKCAT_KEY_RELEASE, 20};
+            if (shift) m.keys[m.count++] = {0xe1, ROCKCAT_KEY_RELEASE, 20};
         }
-        int r = rossat_write_macro(s->dev, &m);
-        if (r != ROSSAT_OK)
+        int r = rockcat_write_macro(s->dev, &m);
+        if (r != ROCKCAT_OK)
             report_error(s, "Writing macro failed", r);
     }
 }
@@ -752,14 +751,14 @@ void on_apply(GtkButton *, gpointer data)
     if (!s->dev || !s->loaded)
         return;
     collect(s);
-    set_status(s, "Writing to device…", nullptr);
+    set_status(s, "Writing to device...", nullptr);
     while (gtk_events_pending())
         gtk_main_iteration();
-    int r = rossat_write_settings(s->dev, &s->settings);
-    if (r == ROSSAT_OK)
-        r = rossat_write_buttons(s->dev, &s->button_data);
-    if (r != ROSSAT_OK) {
-        if (r == ROSSAT_ERR_IO)
+    int r = rockcat_write_settings(s->dev, &s->settings);
+    if (r == ROCKCAT_OK)
+        r = rockcat_write_buttons(s->dev, &s->button_data);
+    if (r != ROCKCAT_OK) {
+        if (r == ROCKCAT_ERR_IO)
             disconnect(s, "Device disconnected");
         else
             report_error(s, "Writing failed", r);
@@ -767,7 +766,7 @@ void on_apply(GtkButton *, gpointer data)
     }
     write_text_macros(s);
     if (s->engine)
-        rossat_engine_reload(s->engine);
+        rockcat_engine_reload(s->engine);
     char msg[64];
     std::snprintf(msg, sizeof msg, "Profile %d saved to the mouse", s->edit_profile + 1);
     set_status(s, msg, "connected");
@@ -789,15 +788,15 @@ void on_activate_profile(GtkButton *, gpointer data)
     auto *s = static_cast<app_state *>(data);
     if (!s->dev)
         return;
-    int r = rossat_set_active_profile(s->dev, static_cast<uint8_t>(s->edit_profile));
-    if (r != ROSSAT_OK) {
+    int r = rockcat_set_active_profile(s->dev, static_cast<uint8_t>(s->edit_profile));
+    if (r != ROCKCAT_OK) {
         report_error(s, "Switching profile failed", r);
         return;
     }
     s->active_profile = s->edit_profile;
     update_profile_buttons(s);
     if (s->engine)
-        rossat_engine_reload(s->engine);
+        rockcat_engine_reload(s->engine);
     char msg[64];
     std::snprintf(msg, sizeof msg, "Profile %d is now active", s->active_profile + 1);
     set_status(s, msg, "connected");
@@ -847,7 +846,7 @@ void on_dpi_lock_toggled(GtkToggleButton *b, gpointer data)
 
 GtkWidget *dpi_spin(void)
 {
-    GtkWidget *sp = gtk_spin_button_new_with_range(ROSSAT_DPI_MIN, ROSSAT_DPI_MAX, ROSSAT_DPI_STEP);
+    GtkWidget *sp = gtk_spin_button_new_with_range(ROCKCAT_DPI_MIN, ROCKCAT_DPI_MAX, ROCKCAT_DPI_STEP);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(sp), TRUE);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(sp), TRUE);
     gtk_entry_set_width_chars(GTK_ENTRY(sp), 6);
@@ -867,9 +866,9 @@ GtkWidget *build_settings_page(app_state *s)
     gtk_grid_set_row_spacing(GTK_GRID(grid), 6);
     const char *heads[] = {"LEVEL", "ON", "ACTIVE", "DPI X", "DPI Y"};
     for (int c = 0; c < 5; ++c)
-        gtk_grid_attach(GTK_GRID(grid), label(heads[c], "rs-hint"), c, 0, 1, 1);
+        gtk_grid_attach(GTK_GRID(grid), label(heads[c], "rc-hint"), c, 0, 1, 1);
     GSList *group = nullptr;
-    for (int i = 0; i < ROSSAT_DPI_LEVELS; ++i) {
+    for (int i = 0; i < ROCKCAT_DPI_LEVELS; ++i) {
         char t[8];
         std::snprintf(t, sizeof t, "%d", i + 1);
         dpi_row &r = s->dpi[i];
@@ -880,7 +879,7 @@ GtkWidget *build_settings_page(app_state *s)
         r.y = dpi_spin();
         g_object_set_data(G_OBJECT(r.x), "level", GINT_TO_POINTER(i));
         g_signal_connect(r.x, "value-changed", G_CALLBACK(on_dpi_x_changed), s);
-        gtk_grid_attach(GTK_GRID(grid), label(t, "rs-value"), 0, i + 1, 1, 1);
+        gtk_grid_attach(GTK_GRID(grid), label(t, "rc-value"), 0, i + 1, 1, 1);
         gtk_grid_attach(GTK_GRID(grid), r.enabled, 1, i + 1, 1, 1);
         gtk_grid_attach(GTK_GRID(grid), r.active, 2, i + 1, 1, 1);
         gtk_grid_attach(GTK_GRID(grid), r.x, 3, i + 1, 1, 1);
@@ -888,10 +887,10 @@ GtkWidget *build_settings_page(app_state *s)
     }
     s->dpi_lock = gtk_check_button_new_with_label("Same DPI for X and Y");
     g_signal_connect(s->dpi_lock, "toggled", G_CALLBACK(on_dpi_lock_toggled), s);
-    gtk_grid_attach(GTK_GRID(grid), s->dpi_lock, 0, ROSSAT_DPI_LEVELS + 1, 5, 1);
+    gtk_grid_attach(GTK_GRID(grid), s->dpi_lock, 0, ROCKCAT_DPI_LEVELS + 1, 5, 1);
     gtk_grid_attach(GTK_GRID(grid),
-                    label("100 – 16000 DPI in steps of 50. The DPI up/down buttons cycle through enabled levels.", "rs-hint"),
-                    0, ROSSAT_DPI_LEVELS + 2, 5, 1);
+                    label("100 - 16000 DPI in steps of 50. The DPI up/down buttons cycle through enabled levels.", "rc-hint"),
+                    0, ROCKCAT_DPI_LEVELS + 2, 5, 1);
     s->dpi_panel = box_panel("DPI SWITCHER", grid);
     gtk_grid_attach(GTK_GRID(page), s->dpi_panel, 0, 0, 1, 2);
 
@@ -916,9 +915,9 @@ GtkWidget *build_settings_page(app_state *s)
     gtk_widget_set_tooltip_text(s->pref_start_min, "Start without opening the window (same as --minimized)");
     gtk_box_pack_start(GTK_BOX(abox), s->pref_tray, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(abox), s->pref_start_min, FALSE, FALSE, 0);
-#ifndef ROSSAT_HAVE_TRAY
+#ifndef ROCKCAT_HAVE_TRAY
     gtk_widget_set_sensitive(abox, FALSE);
-    gtk_box_pack_start(GTK_BOX(abox), label("Built without system tray support (libayatana-appindicator3)", "rs-hint"),
+    gtk_box_pack_start(GTK_BOX(abox), label("Built without system tray support (libayatana-appindicator3)", "rc-hint"),
                        FALSE, FALSE, 0);
 #endif
     gtk_grid_attach(GTK_GRID(page), box_panel("APPLICATION", abox), 1, 1, 1, 1);
@@ -944,11 +943,11 @@ gboolean on_button_row_focus(GtkWidget *w, GdkEvent *, gpointer data)
 GtkWidget *button_combo(app_state *s, int idx)
 {
     GtkWidget *combo = gtk_combo_box_text_new();
-    for (int i = 0; i < rossat_button_type_count(); ++i) {
-        int t = rossat_button_type_at(i);
+    for (int i = 0; i < rockcat_button_type_count(); ++i) {
+        int t = rockcat_button_type_at(i);
         char id[8];
         std::snprintf(id, sizeof id, "%d", t);
-        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), id, rossat_button_type_name(static_cast<uint8_t>(t)));
+        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), id, rockcat_button_type_name(static_cast<uint8_t>(t)));
     }
     g_object_set_data(G_OBJECT(combo), "button", GINT_TO_POINTER(idx));
     g_signal_connect(combo, "changed", G_CALLBACK(on_button_combo_changed), s);
@@ -961,16 +960,16 @@ GtkWidget *button_combo(app_state *s, int idx)
 void on_reset_buttons(GtkButton *, gpointer data)
 {
     auto *s = static_cast<app_state *>(data);
-    rossat_buttons_default(static_cast<uint8_t>(s->edit_profile), &s->button_data);
+    rockcat_buttons_default(static_cast<uint8_t>(s->edit_profile), &s->button_data);
     s->updating = true;
-    for (int i = 0; i < ROSSAT_BUTTON_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i) {
         ensure_combo_id(s->buttons[i].combo, s->button_data.buttons[i].type);
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->buttons[i].p1), 0);
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(s->buttons[i].p2), 0);
         update_button_row_sensitivity(s, i);
     }
     s->updating = false;
-    set_status(s, "Factory layout loaded — press APPLY to write it", nullptr);
+    set_status(s, "Factory layout loaded, press APPLY to write it", nullptr);
     schedule_auto_apply(s);
 }
 
@@ -987,13 +986,13 @@ GtkWidget *build_buttons_page(app_state *s)
     GtkWidget *grid = gtk_grid_new();
     gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
     gtk_grid_set_row_spacing(GTK_GRID(grid), 4);
-    gtk_grid_attach(GTK_GRID(grid), label("BUTTON", "rs-hint"), 0, 0, 1, 1);
-    gtk_grid_attach(GTK_GRID(grid), label("STANDARD FUNCTION", "rs-hint"), 1, 0, 1, 1);
-    gtk_grid_attach(GTK_GRID(grid), label("EASY-SHIFT[+] FUNCTION", "rs-hint"), 2, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label("BUTTON", "rc-hint"), 0, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label("STANDARD FUNCTION", "rc-hint"), 1, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), label("EASY-SHIFT[+] FUNCTION", "rc-hint"), 2, 0, 1, 1);
 
     for (int i = 0; i < HALF; ++i) {
         char t[64];
-        std::snprintf(t, sizeof t, "%d  %s", i + 1, rossat_button_name(i));
+        std::snprintf(t, sizeof t, "%d  %s", i + 1, rockcat_button_name(i));
         gtk_grid_attach(GTK_GRID(grid), label(t), 0, i + 1, 1, 1);
         for (int layer = 0; layer < 2; ++layer) {
             int idx = i + layer * HALF;
@@ -1022,7 +1021,7 @@ GtkWidget *build_buttons_page(app_state *s)
     g_signal_connect(reset, "clicked", G_CALLBACK(on_reset_buttons), s);
     GtkWidget *hint = label("Shortcut: type a key combination such as ctrl+c or alt+f4. "
                             "Macro: type text to store it as a keystroke macro on APPLY. "
-                            "The Easy-Shift[+] column is active while the thumb Easy-Shift button is held.", "rs-hint");
+                            "The Easy-Shift[+] column is active while the thumb Easy-Shift button is held.", "rc-hint");
     gtk_label_set_line_wrap(GTK_LABEL(hint), TRUE);
     gtk_grid_attach(GTK_GRID(grid), hint, 0, HALF + 1, 3, 1);
     gtk_grid_attach(GTK_GRID(grid), reset, 0, HALF + 2, 1, 1);
@@ -1061,7 +1060,7 @@ uint8_t current_effect(app_state *s)
     return e < 0 ? 0 : static_cast<uint8_t>(e);
 }
 
-void preview_settings(app_state *s, rossat_settings *out)
+void preview_settings(app_state *s, rockcat_settings *out)
 {
     *out = s->settings;
     out->effect_speed = static_cast<uint8_t>(gtk_range_get_value(GTK_RANGE(s->speed)));
@@ -1069,7 +1068,7 @@ void preview_settings(app_state *s, rossat_settings *out)
     int th = combo_type(s->theme);
     out->color_theme = static_cast<uint8_t>(0x80 | (th < 0 ? 0 : th));
     out->led_enable_mask = 0;
-    for (int i = 0; i < ROSSAT_LED_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
         GdkRGBA rgba;
         gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(s->led_color[i]), &rgba);
         out->leds[i] = from_rgba(rgba);
@@ -1088,23 +1087,23 @@ gboolean preview_tick(gpointer data)
 
 bool engine_rendered(app_state *s)
 {
-    return rossat_effect_is_software(current_effect(s)) ||
+    return rockcat_effect_is_software(current_effect(s)) ||
            gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->render_engine));
 }
 
 void update_effect_ui(app_state *s)
 {
-    bool only_engine = rossat_effect_is_software(current_effect(s));
+    bool only_engine = rockcat_effect_is_software(current_effect(s));
     if (only_engine && !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->render_engine)))
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->render_engine), TRUE);
     gtk_widget_set_sensitive(s->render_engine, !only_engine);
     bool software = engine_rendered(s);
-    bool aimo = current_effect(s) == ROSSAT_EFFECT_AIMO;
+    bool aimo = current_effect(s) == ROCKCAT_EFFECT_AIMO;
     gtk_label_set_text(GTK_LABEL(s->shift_hint),
-                       software ? "Shown by the rossat engine while Easy-Shift[+] is held."
+                       software ? "Shown by the rockcat engine while Easy-Shift[+] is held."
                                 : "This effect is drawn by the mouse, which always shows its built-in light blue "
                                   "(#059cfa, hard-coded in the firmware). Turning this on switches the profile to "
-                                  "\"Render with rossat engine\".");
+                                  "\"Render with rockcat engine\".");
     gtk_widget_set_sensitive(s->theme, aimo);
     gtk_widget_set_sensitive(s->colors_panel, !aimo);
     if (software && !s->preview_source)
@@ -1136,9 +1135,9 @@ gboolean on_draw_swatch(GtkWidget *w, cairo_t *cr, gpointer data)
     for (int i = 0; i < 3; ++i)
         if (s->theme_swatches[i] == w)
             slot = i;
-    rossat_color c[3];
+    rockcat_color c[3];
     int th = combo_type(s->theme);
-    rossat_aimo_theme(th < 0 ? 0 : th, c);
+    rockcat_aimo_theme(th < 0 ? 0 : th, c);
     double W = gtk_widget_get_allocated_width(w), H = gtk_widget_get_allocated_height(w);
     rounded_rect(cr, 1, 1, W - 2, H - 2, 3);
     cairo_set_source_rgb(cr, c[slot].r / 255.0, c[slot].g / 255.0, c[slot].b / 255.0);
@@ -1155,21 +1154,21 @@ void set_engine_label(app_state *s)
 {
     if (!s->engine) {
         gtk_label_set_text(GTK_LABEL(s->engine_label),
-                           s->engine_busy ? "Lighting engine: handled by `rossat-cli engine` / the rossat-engine service"
+                           s->engine_busy ? "Lighting engine: handled by `rockcat-cli engine` / the rockcat-engine service"
                                           : "Lighting engine: not running");
         return;
     }
-    rossat_engine_status st;
-    rossat_engine_get_status(s->engine, &st);
+    rockcat_engine_status st;
+    rockcat_engine_get_status(s->engine, &st);
     char msg[160];
-    if (st.last_error != ROSSAT_OK)
-        std::snprintf(msg, sizeof msg, "Lighting engine: %s", rossat_strerror(st.last_error));
+    if (st.last_error != ROCKCAT_OK)
+        std::snprintf(msg, sizeof msg, "Lighting engine: %s", rockcat_strerror(st.last_error));
     else if (st.profile == 0xff)
         std::snprintf(msg, sizeof msg, "Lighting engine: starting\u2026");
     else {
-        const char *n = rossat_effect_name(st.effect);
+        const char *n = rockcat_effect_name(st.effect);
         std::snprintf(msg, sizeof msg, "Active profile %d: %s, %s", st.profile + 1, n ? n : "?",
-                      st.rendering ? "drawn by rossat" : "drawn by the mouse");
+                      st.rendering ? "drawn by rockcat" : "drawn by the mouse");
     }
     gtk_label_set_text(GTK_LABEL(s->engine_label), msg);
 }
@@ -1181,10 +1180,10 @@ void start_engine(app_state *s)
 {
     if (s->engine)
         return;
-    int r = rossat_engine_start(nullptr, ROSSAT_ENGINE_AUTO, &s->engine);
-    if (r != ROSSAT_OK)
+    int r = rockcat_engine_start(nullptr, ROCKCAT_ENGINE_AUTO, &s->engine);
+    if (r != ROCKCAT_OK)
         s->engine = nullptr;
-    s->engine_busy = r == ROSSAT_ERR_BUSY;
+    s->engine_busy = r == ROCKCAT_ERR_BUSY;
     set_engine_label(s);
 }
 
@@ -1234,12 +1233,12 @@ GtkWidget *build_illumination_page(app_state *s)
     gtk_grid_set_row_spacing(GTK_GRID(eg), 8);
     s->effect = gtk_combo_box_text_new();
     for (int e = 0; e < 256; ++e) {
-        const char *name = rossat_effect_name(static_cast<uint8_t>(e));
+        const char *name = rockcat_effect_name(static_cast<uint8_t>(e));
         if (!name)
             continue;
         char id[8], text[64];
         std::snprintf(id, sizeof id, "%d", e);
-        std::snprintf(text, sizeof text, rossat_effect_is_software(static_cast<uint8_t>(e)) ? "%s  (engine)" : "%s", name);
+        std::snprintf(text, sizeof text, rockcat_effect_is_software(static_cast<uint8_t>(e)) ? "%s  (engine)" : "%s", name);
         gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(s->effect), id, text);
     }
     g_signal_connect(s->effect, "changed", G_CALLBACK(on_effect_changed), s);
@@ -1247,7 +1246,7 @@ GtkWidget *build_illumination_page(app_state *s)
     s->brightness = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0, 255, 1);
     gtk_widget_set_hexpand(s->speed, TRUE);
     g_signal_connect(s->brightness, "value-changed", G_CALLBACK(on_light_changed), s);
-    s->render_engine = gtk_check_button_new_with_label("Render with rossat engine");
+    s->render_engine = gtk_check_button_new_with_label("Render with rockcat engine");
     gtk_widget_set_tooltip_text(s->render_engine,
                                 "The PC draws the effect (the mouse stores AIMO). Needed for a custom "
                                 "Easy-Shift[+] colour; requires the engine to run.");
@@ -1262,7 +1261,7 @@ GtkWidget *build_illumination_page(app_state *s)
     gtk_grid_attach(GTK_GRID(eg), label("BRIGHTNESS"), 0, 2, 1, 1);
     gtk_grid_attach(GTK_GRID(eg), s->brightness, 1, 2, 1, 1);
     s->theme = gtk_combo_box_text_new();
-    for (int i = 0; i < ROSSAT_AIMO_THEMES; ++i) {
+    for (int i = 0; i < ROCKCAT_AIMO_THEMES; ++i) {
         char id[8], text[32];
         std::snprintf(id, sizeof id, "%d", i);
         std::snprintf(text, sizeof text, "Theme %d", i + 1);
@@ -1280,14 +1279,14 @@ GtkWidget *build_illumination_page(app_state *s)
     gtk_grid_attach(GTK_GRID(eg), label("AIMO THEME"), 0, 3, 1, 1);
     gtk_grid_attach(GTK_GRID(eg), tb, 1, 3, 1, 1);
 
-    s->engine_label = label("", "rs-hint");
+    s->engine_label = label("", "rc-hint");
     gtk_label_set_line_wrap(GTK_LABEL(s->engine_label), TRUE);
     gtk_label_set_max_width_chars(GTK_LABEL(s->engine_label), 60);
     gtk_grid_attach(GTK_GRID(eg), s->engine_label, 1, 4, 1, 1);
-    GtkWidget *ehint = label("\"Render with rossat engine\" lets the PC draw the effect (always on for effects "
-                             "marked engine). rossat-swarm does this while it is open or in the tray; without "
-                             "the GUI use `rossat-cli engine` or the rossat-engine user service. "
-                             "AIMO uses the colour theme instead of the per-LED colours.", "rs-hint");
+    GtkWidget *ehint = label("\"Render with rockcat engine\" lets the PC draw the effect (always on for effects "
+                             "marked engine). rockcat-swarm does this while it is open or in the tray; without "
+                             "the GUI use `rockcat-cli engine` or the rockcat-engine user service. "
+                             "AIMO uses the colour theme instead of the per-LED colours.", "rc-hint");
     gtk_label_set_line_wrap(GTK_LABEL(ehint), TRUE);
     gtk_label_set_max_width_chars(GTK_LABEL(ehint), 60);
     gtk_grid_attach(GTK_GRID(eg), ehint, 0, 5, 2, 1);
@@ -1297,14 +1296,14 @@ GtkWidget *build_illumination_page(app_state *s)
     GtkWidget *cg = gtk_grid_new();
     gtk_grid_set_column_spacing(GTK_GRID(cg), 10);
     gtk_grid_set_row_spacing(GTK_GRID(cg), 4);
-    for (int i = 0; i < ROSSAT_LED_COUNT; ++i) {
+    for (int i = 0; i < ROCKCAT_LED_COUNT; ++i) {
         int col = (i % 2) * 3, row = i / 2;
         char t[40];
-        std::snprintf(t, sizeof t, "%d  %s", i + 1, rossat_led_name(i));
+        std::snprintf(t, sizeof t, "%d  %s", i + 1, rockcat_led_name(i));
         s->led_enable[i] = gtk_check_button_new();
         s->led_color[i] = gtk_color_button_new();
         gtk_color_chooser_set_use_alpha(GTK_COLOR_CHOOSER(s->led_color[i]), TRUE);
-        add_class(s->led_color[i], "rs-swatch");
+        add_class(s->led_color[i], "rc-swatch");
         g_signal_connect(s->led_color[i], "color-set", G_CALLBACK(on_light_changed), s);
         g_signal_connect(s->led_enable[i], "toggled", G_CALLBACK(on_light_changed), s);
         gtk_grid_attach(GTK_GRID(cg), s->led_enable[i], col, row, 1, 1);
@@ -1338,7 +1337,7 @@ GtkWidget *build_illumination_page(app_state *s)
     g_signal_connect(s->shift_enable, "notify::active", G_CALLBACK(on_shift_toggled), s);
     s->shift_color = gtk_color_button_new();
     gtk_color_chooser_set_use_alpha(GTK_COLOR_CHOOSER(s->shift_color), TRUE);
-    add_class(s->shift_color, "rs-swatch");
+    add_class(s->shift_color, "rc-swatch");
     s->shift_style = gtk_combo_box_text_new();
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(s->shift_style), "Solid");
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(s->shift_style), "Pulse");
@@ -1348,7 +1347,7 @@ GtkWidget *build_illumination_page(app_state *s)
     gtk_box_pack_start(GTK_BOX(srow), s->shift_color, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(srow), s->shift_style, FALSE, FALSE, 0);
     gtk_grid_attach(GTK_GRID(sg), srow, 0, 0, 1, 1);
-    s->shift_hint = label("", "rs-hint");
+    s->shift_hint = label("", "rc-hint");
     gtk_label_set_line_wrap(GTK_LABEL(s->shift_hint), TRUE);
     gtk_label_set_max_width_chars(GTK_LABEL(s->shift_hint), 60);
     gtk_grid_attach(GTK_GRID(sg), s->shift_hint, 0, 1, 1, 1);
@@ -1362,9 +1361,9 @@ void update_tdcu_label(app_state *s)
 {
     if (!s->dev)
         return;
-    rossat_tdcu t;
+    rockcat_tdcu t;
     char msg[128];
-    if (rossat_read_tdcu(s->dev, &t) == ROSSAT_OK)
+    if (rockcat_read_tdcu(s->dev, &t) == ROCKCAT_OK)
         std::snprintf(msg, sizeof msg, t.mode == 2 ? "Calibrated for your surface (value 0x%04x)"
                                                    : "Factory calibration (value 0x%04x)", t.value);
     else
@@ -1393,12 +1392,12 @@ gboolean calib_tick(gpointer data)
     if (c->ticks < 10) // give the sensor a moment to enter calibration
         return G_SOURCE_CONTINUE;
     int finished = 0;
-    int r = rossat_calibration_poll(c->app->dev, &finished);
-    if (r != ROSSAT_OK || c->ticks > 600) {
+    int r = rockcat_calibration_poll(c->app->dev, &finished);
+    if (r != ROCKCAT_OK || c->ticks > 600) {
         c->timer = 0;
         c->running = false;
-        rossat_calibration_finish(c->app->dev, 0);
-        calib_set_text(c, r != ROSSAT_OK ? "Calibration failed. Try again on a clean, even surface."
+        rockcat_calibration_finish(c->app->dev, 0);
+        calib_set_text(c, r != ROCKCAT_OK ? "Calibration failed. Try again on a clean, even surface."
                                          : "Calibration timed out and was discarded.");
         gtk_widget_set_sensitive(c->start, TRUE);
         return G_SOURCE_REMOVE;
@@ -1416,9 +1415,9 @@ gboolean calib_tick(gpointer data)
 void on_calib_start(GtkButton *, gpointer data)
 {
     auto *c = static_cast<calib_state *>(data);
-    int r = rossat_calibration_start(c->app->dev);
-    if (r != ROSSAT_OK) {
-        calib_set_text(c, rossat_strerror(r));
+    int r = rockcat_calibration_start(c->app->dev);
+    if (r != ROCKCAT_OK) {
+        calib_set_text(c, rockcat_strerror(r));
         return;
     }
     c->running = true;
@@ -1430,9 +1429,9 @@ void on_calib_start(GtkButton *, gpointer data)
 
 void calib_finish(calib_state *c, bool save)
 {
-    int r = rossat_calibration_finish(c->app->dev, save ? 1 : 0);
+    int r = rockcat_calibration_finish(c->app->dev, save ? 1 : 0);
     c->running = false;
-    if (r != ROSSAT_OK)
+    if (r != ROCKCAT_OK)
         report_error(c->app, "Calibration", r);
     else
         set_status(c->app, save ? "Sensor calibration saved" : "Sensor calibration discarded", "connected");
@@ -1448,7 +1447,7 @@ void on_calib_destroy(GtkWidget *, gpointer data)
     if (c->timer)
         g_source_remove(c->timer);
     if (c->running && c->app->dev) // closed mid-way: keep the old calibration
-        rossat_calibration_finish(c->app->dev, 0);
+        rockcat_calibration_finish(c->app->dev, 0);
     update_tdcu_label(c->app);
     delete c;
 }
@@ -1465,11 +1464,11 @@ void on_calibrate(GtkButton *, gpointer data)
     gtk_window_set_transient_for(GTK_WINDOW(c->dialog), GTK_WINDOW(s->window));
     gtk_window_set_modal(GTK_WINDOW(c->dialog), TRUE);
     gtk_window_set_default_size(GTK_WINDOW(c->dialog), 460, -1);
-    add_class(c->dialog, "rossat");
+    add_class(c->dialog, "rockcat");
     GtkWidget *area = gtk_dialog_get_content_area(GTK_DIALOG(c->dialog));
     gtk_container_set_border_width(GTK_CONTAINER(area), 16);
     gtk_box_set_spacing(GTK_BOX(area), 12);
-    gtk_box_pack_start(GTK_BOX(area), label("TRACKING & DISTANCE CONTROL UNIT", "rs-box-title"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(area), label("TRACKING & DISTANCE CONTROL UNIT", "rc-box-title"), FALSE, FALSE, 0);
     c->text = label("Put the mouse on the surface you play on. Press START, then keep moving the mouse "
                     "in large circles and figure-eights until calibration completes (about 10\u201320 s).");
     gtk_label_set_line_wrap(GTK_LABEL(c->text), TRUE);
@@ -1504,19 +1503,19 @@ GtkWidget *build_advanced_page(app_state *s)
     GtkWidget *ab = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     s->angle_snapping = gtk_switch_new();
     gtk_box_pack_start(GTK_BOX(ab), s->angle_snapping, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(ab), label("Straighten nearly horizontal / vertical movements", "rs-hint"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(ab), label("Straighten nearly horizontal / vertical movements", "rc-hint"), FALSE, FALSE, 0);
     gtk_grid_attach(GTK_GRID(page), box_panel("ANGLE SNAPPING", ab), 0, 0, 1, 1);
 
     GtkWidget *db = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     s->debounce = gtk_spin_button_new_with_range(0, 30, 1);
     gtk_box_pack_start(GTK_BOX(db), s->debounce, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(db), label("ms  (factory: 8)", "rs-hint"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(db), label("ms  (factory: 8)", "rc-hint"), FALSE, FALSE, 0);
     gtk_grid_attach(GTK_GRID(page), box_panel("DEBOUNCE TIME", db), 1, 0, 1, 1);
 
     GtkWidget *cb = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     s->calib_button = gtk_button_new_with_label("CALIBRATE SENSOR\u2026");
     g_signal_connect(s->calib_button, "clicked", G_CALLBACK(on_calibrate), s);
-    s->tdcu_label = label("", "rs-hint");
+    s->tdcu_label = label("", "rc-hint");
     gtk_box_pack_start(GTK_BOX(cb), s->calib_button, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(cb), s->tdcu_label, FALSE, FALSE, 0);
     gtk_grid_attach(GTK_GRID(page), box_panel("SENSOR CALIBRATION (TDCU)", cb), 0, 2, 2, 1);
@@ -1546,7 +1545,7 @@ void hide_window(app_state *s)
     tray_sync(s);
 }
 
-#ifdef ROSSAT_HAVE_TRAY
+#ifdef ROCKCAT_HAVE_TRAY
 void on_tray_show(GtkMenuItem *, gpointer data)
 {
     auto *s = static_cast<app_state *>(data);
@@ -1566,7 +1565,7 @@ void on_tray_quit(GtkMenuItem *, gpointer data)
 
 void tray_sync(app_state *s)
 {
-#ifdef ROSSAT_HAVE_TRAY
+#ifdef ROCKCAT_HAVE_TRAY
     if (!s->tray_enabled) {
         if (s->indicator)
             app_indicator_set_status(s->indicator, APP_INDICATOR_STATUS_PASSIVE);
@@ -1575,19 +1574,19 @@ void tray_sync(app_state *s)
     if (!s->indicator) {
         // The tray host loads icons by name from a directory, so put the
         // bundled SVG where it can find it (works without installation too).
-        std::string icon_dir = std::string(g_get_user_cache_dir()) + "/rossat/icons";
+        std::string icon_dir = std::string(g_get_user_cache_dir()) + "/rockcat/icons";
         g_mkdir_with_parents(icon_dir.c_str(), 0755);
-        if (GBytes *svg = g_resources_lookup_data("/org/rossat/swarm/rossat-swarm.svg", G_RESOURCE_LOOKUP_FLAGS_NONE, nullptr)) {
+        if (GBytes *svg = g_resources_lookup_data("/org/rockcat/swarm/rockcat-swarm.svg", G_RESOURCE_LOOKUP_FLAGS_NONE, nullptr)) {
             gsize len = 0;
             const char *data = static_cast<const char *>(g_bytes_get_data(svg, &len));
-            g_file_set_contents((icon_dir + "/rossat-swarm-tray.svg").c_str(), data, static_cast<gssize>(len), nullptr);
+            g_file_set_contents((icon_dir + "/rockcat-swarm-tray.svg").c_str(), data, static_cast<gssize>(len), nullptr);
             g_bytes_unref(svg);
         }
-        s->indicator = app_indicator_new_with_path("rossat-swarm", "rossat-swarm-tray", APP_INDICATOR_CATEGORY_HARDWARE,
+        s->indicator = app_indicator_new_with_path("rockcat-swarm", "rockcat-swarm-tray", APP_INDICATOR_CATEGORY_HARDWARE,
                                                    icon_dir.c_str());
-        app_indicator_set_title(s->indicator, "Rossat Swarm");
+        app_indicator_set_title(s->indicator, "Rockcat Swarm");
         GtkWidget *menu = gtk_menu_new();
-        s->tray_show_item = gtk_menu_item_new_with_label("Show Rossat Swarm");
+        s->tray_show_item = gtk_menu_item_new_with_label("Show Rockcat Swarm");
         g_signal_connect(s->tray_show_item, "activate", G_CALLBACK(on_tray_show), s);
         GtkWidget *quit = gtk_menu_item_new_with_label("Quit");
         g_signal_connect(quit, "activate", G_CALLBACK(on_tray_quit), s);
@@ -1601,7 +1600,7 @@ void tray_sync(app_state *s)
     }
     app_indicator_set_status(s->indicator, APP_INDICATOR_STATUS_ACTIVE);
     gtk_menu_item_set_label(GTK_MENU_ITEM(s->tray_show_item),
-                            gtk_widget_get_visible(s->window) ? "Hide Rossat Swarm" : "Show Rossat Swarm");
+                            gtk_widget_get_visible(s->window) ? "Hide Rockcat Swarm" : "Show Rockcat Swarm");
 #else
     (void)s;
 #endif
@@ -1680,10 +1679,10 @@ void on_any_notify(GObject *, GParamSpec *, gpointer data)
 }
 
 // Connects every editing widget below `w` to the auto-apply debouncer.
-// Widgets tagged "rs-no-autoapply" (app preferences, engine switch) are skipped.
+// Widgets tagged "rc-no-autoapply" (app preferences, engine switch) are skipped.
 void hook_auto_apply(app_state *s, GtkWidget *w)
 {
-    if (g_object_get_data(G_OBJECT(w), "rs-no-autoapply"))
+    if (g_object_get_data(G_OBJECT(w), "rc-no-autoapply"))
         return;
     if (GTK_IS_SPIN_BUTTON(w))
         g_signal_connect(w, "value-changed", G_CALLBACK(on_any_change), s);
@@ -1729,10 +1728,10 @@ void on_destroy(GtkWidget *, gpointer data)
     if (s->auto_apply_source)
         g_source_remove(s->auto_apply_source);
     if (s->engine)
-        rossat_engine_stop(s->engine);
+        rockcat_engine_stop(s->engine);
     if (s->dev)
-        rossat_close(s->dev);
-#ifdef ROSSAT_HAVE_TRAY
+        rockcat_close(s->dev);
+#ifdef ROCKCAT_HAVE_TRAY
     if (s->indicator)
         g_object_unref(s->indicator);
 #endif
@@ -1741,29 +1740,29 @@ void on_destroy(GtkWidget *, gpointer data)
 
 } // namespace
 
-GtkWidget *rossat_window_new(GtkApplication *app, bool force_minimized)
+GtkWidget *rockcat_window_new(GtkApplication *app, bool force_minimized)
 {
     auto *s = new app_state;
     s->window = gtk_application_window_new(app);
     g_signal_connect(s->window, "delete-event", G_CALLBACK(on_delete), s);
-    gtk_window_set_title(GTK_WINDOW(s->window), "Rossat Swarm");
-    if (GdkPixbuf *icon = gdk_pixbuf_new_from_resource_at_scale("/org/rossat/swarm/rossat-swarm.svg", 256, 256, TRUE, nullptr)) {
+    gtk_window_set_title(GTK_WINDOW(s->window), "Rockcat Swarm");
+    if (GdkPixbuf *icon = gdk_pixbuf_new_from_resource_at_scale("/org/rockcat/swarm/rockcat-swarm.svg", 256, 256, TRUE, nullptr)) {
         gtk_window_set_icon(GTK_WINDOW(s->window), icon);
         g_object_unref(icon);
     }
     gtk_window_set_default_size(GTK_WINDOW(s->window), 1180, 760);
-    add_class(s->window, "rossat");
+    add_class(s->window, "rockcat");
     g_signal_connect(s->window, "destroy", G_CALLBACK(on_destroy), s);
-    g_object_set_data(G_OBJECT(s->window), "rossat-state", s);
+    g_object_set_data(G_OBJECT(s->window), "rockcat-state", s);
 
     GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(s->window), root);
 
     // header
     GtkWidget *header = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 18);
-    add_class(header, "rs-header");
+    add_class(header, "rc-header");
     GtkWidget *logo_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-    GdkPixbuf *logo = gdk_pixbuf_new_from_resource_at_scale("/org/rossat/swarm/rossat-swarm.svg", 44, 44, TRUE, nullptr);
+    GdkPixbuf *logo = gdk_pixbuf_new_from_resource_at_scale("/org/rockcat/swarm/rockcat-swarm.svg", 44, 44, TRUE, nullptr);
     if (logo) {
         GtkWidget *img = gtk_image_new_from_pixbuf(logo);
         gtk_widget_set_valign(img, GTK_ALIGN_CENTER);
@@ -1771,14 +1770,14 @@ GtkWidget *rossat_window_new(GtkApplication *app, bool force_minimized)
         g_object_unref(logo);
     }
     GtkWidget *brand = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_box_pack_start(GTK_BOX(brand), label("ROSSAT", "rs-brand"), FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(brand), label("SWARM", "rs-brand-sub"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(brand), label("ROCKCAT", "rc-brand"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(brand), label("SWARM", "rc-brand-sub"), FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(logo_box), brand, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(header), logo_box, FALSE, FALSE, 0);
     GtkWidget *dev = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
-    s->device_label = label("NO DEVICE", "rs-device-name");
+    s->device_label = label("NO DEVICE", "rc-device-name");
     gtk_label_set_ellipsize(GTK_LABEL(s->device_label), PANGO_ELLIPSIZE_END);
-    s->status_label = label("", "rs-status");
+    s->status_label = label("", "rc-status");
     gtk_box_pack_start(GTK_BOX(dev), s->device_label, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(dev), s->status_label, FALSE, FALSE, 0);
     gtk_widget_set_valign(dev, GTK_ALIGN_CENTER);
@@ -1787,7 +1786,7 @@ GtkWidget *rossat_window_new(GtkApplication *app, bool force_minimized)
 
     // pages
     s->notebook = gtk_notebook_new();
-    add_class(s->notebook, "rs-tabs");
+    add_class(s->notebook, "rc-tabs");
     // pages scroll, so the window can be made smaller than its content
     auto scrolled = [](GtkWidget *page) {
         GtkWidget *sw = gtk_scrolled_window_new(nullptr, nullptr);
@@ -1810,15 +1809,15 @@ GtkWidget *rossat_window_new(GtkApplication *app, bool force_minimized)
     gtk_flow_box_set_min_children_per_line(GTK_FLOW_BOX(footer), 1);
     gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(footer), 2);
     gtk_flow_box_set_row_spacing(GTK_FLOW_BOX(footer), 6);
-    add_class(footer, "rs-footer");
+    add_class(footer, "rc-footer");
     GtkWidget *left = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     GtkWidget *right = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     gtk_widget_set_halign(left, GTK_ALIGN_START);
     gtk_widget_set_halign(right, GTK_ALIGN_END);
-    gtk_box_pack_start(GTK_BOX(left), label("PROFILE", "rs-box-title"), FALSE, FALSE, 4);
-    for (int i = 0; i < ROSSAT_PROFILE_COUNT; ++i) {
+    gtk_box_pack_start(GTK_BOX(left), label("PROFILE", "rc-box-title"), FALSE, FALSE, 4);
+    for (int i = 0; i < ROCKCAT_PROFILE_COUNT; ++i) {
         GtkWidget *b = gtk_toggle_button_new_with_label("");
-        add_class(b, "rs-profile");
+        add_class(b, "rc-profile");
         g_object_set_data(G_OBJECT(b), "profile", GINT_TO_POINTER(i));
         g_signal_connect(b, "toggled", G_CALLBACK(on_profile_toggled), s);
         s->profile_buttons[i] = b;
@@ -1839,7 +1838,7 @@ GtkWidget *rossat_window_new(GtkApplication *app, bool force_minimized)
     gtk_widget_set_valign(s->auto_apply, GTK_ALIGN_CENTER);
     gtk_widget_set_tooltip_text(s->auto_apply, "Write every change to the mouse automatically");
     GtkWidget *aa = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
-    gtk_box_pack_start(GTK_BOX(aa), label("AUTO APPLY", "rs-hint"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(aa), label("AUTO APPLY", "rc-hint"), FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(aa), s->auto_apply, FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(right), s->apply_button, FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(right), s->reload_button, FALSE, FALSE, 0);
@@ -1854,7 +1853,7 @@ GtkWidget *rossat_window_new(GtkApplication *app, bool force_minimized)
 
     // auto apply: hook every editing widget except app-level switches
     for (GtkWidget *w : {s->pref_tray, s->pref_start_min, s->group_color})
-        g_object_set_data(G_OBJECT(w), "rs-no-autoapply", GINT_TO_POINTER(1));
+        g_object_set_data(G_OBJECT(w), "rc-no-autoapply", GINT_TO_POINTER(1));
     hook_auto_apply(s, s->notebook);
 
     // restore application preferences
@@ -1868,7 +1867,7 @@ GtkWidget *rossat_window_new(GtkApplication *app, bool force_minimized)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->pref_tray), prefs.tray);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->pref_start_min), prefs.start_minimized);
     gtk_widget_set_sensitive(s->pref_start_min, prefs.tray);
-#ifdef ROSSAT_HAVE_TRAY
+#ifdef ROCKCAT_HAVE_TRAY
     s->tray_enabled = prefs.tray || force_minimized;
 #endif
     s->updating = false;
@@ -1882,13 +1881,13 @@ GtkWidget *rossat_window_new(GtkApplication *app, bool force_minimized)
         show_window(s);
     else
         tray_sync(s);
-    g_object_set_data(G_OBJECT(s->window), "rossat-hidden", GINT_TO_POINTER(start_hidden));
+    g_object_set_data(G_OBJECT(s->window), "rockcat-hidden", GINT_TO_POINTER(start_hidden));
     return s->window;
 }
 
-void rossat_window_show_page(GtkWidget *window, const char *page)
+void rockcat_window_show_page(GtkWidget *window, const char *page)
 {
-    auto *s = static_cast<app_state *>(g_object_get_data(G_OBJECT(window), "rossat-state"));
+    auto *s = static_cast<app_state *>(g_object_get_data(G_OBJECT(window), "rockcat-state"));
     if (!s || !page)
         return;
     const char *names[] = {"settings", "buttons", "illumination", "advanced"};
