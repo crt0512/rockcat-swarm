@@ -21,21 +21,35 @@ pkg_check_modules(HIDAPI REQUIRED IMPORTED_TARGET hidapi-hidraw>=0.14)
 
 # ---- library -------------------------------------------------------------
 find_package(Threads REQUIRED)
-add_library(rockcat SHARED
+# the sources get compiled once into an object library, the shared lib is made from that
+# and the tests that need to reach past the public api link the objects directly
+add_library(rockcat-objs OBJECT
   src/lib/rockcat.cpp
   src/lib/names.cpp
   src/lib/engine.cpp
-  src/lib/config.cpp)
+  src/lib/config.cpp
+  src/lib/transport_hid.cpp
+  src/lib/capture.cpp
+  src/lib/devices.cpp
+  src/lib/profile.cpp
+  src/lib/families/kone_aimo.cpp)
+target_include_directories(rockcat-objs PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+target_compile_definitions(rockcat-objs PRIVATE ROCKCAT_BUILDING_SHARED)
+target_compile_options(rockcat-objs PRIVATE -Wall -Wextra)
+set_target_properties(rockcat-objs PROPERTIES
+  POSITION_INDEPENDENT_CODE ON
+  CXX_VISIBILITY_PRESET hidden
+  VISIBILITY_INLINES_HIDDEN ON)
+target_link_libraries(rockcat-objs PRIVATE PkgConfig::HIDAPI Threads::Threads)
+
+add_library(rockcat SHARED $<TARGET_OBJECTS:rockcat-objs>)
 target_include_directories(rockcat PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_compile_definitions(rockcat PRIVATE ROCKCAT_BUILDING_SHARED)
-target_compile_options(rockcat PRIVATE -Wall -Wextra)
 set_target_properties(rockcat PROPERTIES
   VERSION ${PROJECT_VERSION}
-  SOVERSION ${PROJECT_VERSION_MAJOR}
-  CXX_VISIBILITY_PRESET hidden
-  VISIBILITY_INLINES_HIDDEN ON)
+  SOVERSION ${PROJECT_VERSION_MAJOR})
 target_link_libraries(rockcat PRIVATE PkgConfig::HIDAPI Threads::Threads)
 
 install(TARGETS rockcat EXPORT rockcatTargets
@@ -103,6 +117,18 @@ if(ROCKCAT_BUILD_TESTS)
   foreach(case move both fresh)
     add_test(NAME config-${case} COMMAND rockcat-test-config ${case})
   endforeach()
+  add_executable(rockcat-test-replay tests/test_replay.cpp $<TARGET_OBJECTS:rockcat-objs>)
+  target_include_directories(rockcat-test-replay PRIVATE include src/lib)
+  target_link_libraries(rockcat-test-replay PRIVATE PkgConfig::HIDAPI Threads::Threads)
+  set(KONE_CAPTURE ${CMAKE_CURRENT_SOURCE_DIR}/tests/captures/kone-aimo-remastered-synthetic.cap)
+  add_test(NAME replay-kone COMMAND rockcat-test-replay check ${KONE_CAPTURE})
+  add_test(NAME replay-diverge COMMAND rockcat-test-replay diverge ${KONE_CAPTURE})
+  add_test(NAME profile-api COMMAND rockcat-test-replay profile)
+  file(GLOB CAPTURES ${CMAKE_CURRENT_SOURCE_DIR}/tests/captures/*.cap)
+  foreach(cap ${CAPTURES})
+    get_filename_component(cap_name ${cap} NAME_WE)
+    add_test(NAME capture-readable-${cap_name} COMMAND rockcat-test-replay parse ${cap})
+  endforeach()
 endif()
 
 # ---- packaging (`make deb`) -------------------------------------------------
@@ -115,7 +141,7 @@ if(ROCKCAT_PACKAGE STREQUAL "deb")
 endif()
 set(CPACK_PACKAGE_NAME rockcat-swarm)
 set(CPACK_PACKAGE_VERSION ${ROCKCAT_PACKAGE_VERSION})
-set(CPACK_PACKAGE_CONTACT "crt0512 <crt0512@users.noreply.github.com>")
+set(CPACK_PACKAGE_CONTACT "crt <crt@512mb.net>")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "open replacement for ROCCAT Swarm (GUI, CLI, library)")
 set(CPACK_PACKAGE_DESCRIPTION "Profiles, DPI, buttons, macros and lighting for ROCCAT mice and keyboards.")
 set(CPACK_PACKAGING_INSTALL_PREFIX /usr)

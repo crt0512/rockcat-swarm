@@ -8,6 +8,7 @@ copy of the Swarm installer.
 |---|---|
 | `allmods.py SETTINGS.xml OUT.json` | ask Swarm's update server which module exists for every PID in `settings.xml` |
 | `mkmods.py OUT.json MODULES.md` | render that answer as the module checklist |
+| `getmods.py OUT.json DESTDIR` | download every module (and the Swarm installer) the server still hands out, skips what is already there |
 | `qrc.py PE OUTDIR TREE NAMES DATA` | dump Qt resources (`qRegisterResourceData` arguments) from a PE file |
 | `qm.py FILE.qm` | dump a Qt translation file as JSON |
 | `qini.py FILE` | decode `@ByteArray(...)` values in a QSettings ini (e.g. `default.dat`) |

@@ -134,7 +134,7 @@ int ring_pos(int led)
 int set_led_mode_fast(rockcat_device *dev, bool host)
 {
     const uint8_t buf[6] = {0x0e, 6, 1, static_cast<uint8_t>(host ? 1 : 0), static_cast<uint8_t>(host ? 0xff : 0), 0xff};
-    return hid_send_feature_report(dev->hid, buf, sizeof buf) < 0 ? ROCKCAT_ERR_IO : ROCKCAT_OK;
+    return dev->io->set_feature(buf, sizeof buf);
 }
 
 } // namespace
@@ -365,7 +365,7 @@ void run(rockcat_engine *e)
             if (left <= 0)
                 break;
             unsigned char in[64];
-            int n = hid_read_timeout(dev->hid, in, sizeof in, left);
+            int n = dev->io->read(in, sizeof in, left);
             if (n < 0) {
                 fail(ROCKCAT_ERR_IO);
                 break;
@@ -432,7 +432,7 @@ void run(rockcat_engine *e)
         if (rendering && clock_type::now() - last_mode_check > std::chrono::seconds(1)) {
             last_mode_check = clock_type::now();
             uint8_t mode[6] = {0x0e};
-            if (hid_get_feature_report(dev->hid, mode, sizeof mode) == static_cast<int>(sizeof mode) && mode[3] == 0) {
+            if (dev->io->get_feature(mode, sizeof mode) == static_cast<int>(sizeof mode) && mode[3] == 0) {
                 if (set_led_mode_fast(dev, true) != ROCKCAT_OK) {
                     fail(ROCKCAT_ERR_IO);
                     continue;

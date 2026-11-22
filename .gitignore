@@ -11,3 +11,4 @@ compile_commands.json
 /aur/*/rockcat-swarm/
 /aur/*/*.tar.*
 DEV/
+.vscode/

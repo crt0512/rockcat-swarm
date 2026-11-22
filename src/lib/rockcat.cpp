@@ -9,11 +9,10 @@
 #include "internal.h"
 
 #include <algorithm>
-#include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
-#include <thread>
 #include <vector>
 
 namespace {
@@ -39,139 +38,85 @@ constexpr size_t MACRO_HEADER_ID    = 0x0e;  // first byte of the macro blob
 constexpr size_t MACRO_KEYS_OFFSET  = 0x50;
 constexpr size_t MACRO_CSUM_OFFSET  = 2000;
 
-// Swarm sleeps 150 ms before the first status poll and gives up after 100
-// busy answers.
-constexpr int STATUS_FIRST_DELAY_MS = 150;
-constexpr int STATUS_POLL_DELAY_MS  = 50;
-constexpr int STATUS_MAX_POLLS      = 100;
-
-struct supported_model {
-    uint16_t pid;
-    const char *name;
-};
-
-constexpr supported_model MODELS[] = {
-    {ROCKCAT_PID_KONE_AIMO_REMASTERED, "ROCCAT Kone AIMO Remastered"},
-};
-
 bool g_initialised = false;
 
-const supported_model *find_model(uint16_t vid, uint16_t pid)
+const char *env(const char *name)
 {
-    if (vid != ROCKCAT_VID)
-        return nullptr;
-    for (const auto &m : MODELS)
-        if (m.pid == pid)
-            return &m;
-    return nullptr;
+    const char *v = std::getenv(name);
+    return v && *v ? v : nullptr;
 }
 
-void sleep_ms(int ms)
+rockcat_device_info to_info(const hid_node &n, const char *name)
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+    rockcat_device_info info;
+    std::memset(&info, 0, sizeof info);
+    std::snprintf(info.path, sizeof info.path, "%s", n.path.c_str());
+    info.vendor_id = n.vid;
+    info.product_id = n.pid;
+    info.release = n.release;
+    info.interface_number = n.interface_number;
+    std::snprintf(info.name, sizeof info.name, "%s", name);
+    std::snprintf(info.serial, sizeof info.serial, "%s", n.serial.c_str());
+    return info;
 }
 
-void copy_wide(char *dst, size_t dst_len, const wchar_t *src)
+// every hidraw node of a ROCCAT device, supported or not. with ROCKCAT_REPLAY set the recording is the only device there is
+std::vector<rockcat_device_info> scan_raw()
 {
-    size_t i = 0;
-    if (src)
-        for (; src[i] && i + 1 < dst_len; ++i)
-            dst[i] = src[i] < 0x80 ? static_cast<char>(src[i]) : '?';
-    dst[i] = '\0';
-}
-
-// Returns true if the HID report descriptor declares the given report id.
-// Global item "Report ID" is encoded as 0x85 <id>.
-bool descriptor_has_report(const unsigned char *desc, int len, uint8_t id)
-{
-    int i = 0;
-    while (i < len) {
-        unsigned char prefix = desc[i];
-        if (prefix == 0xfe) { // long item
-            if (i + 1 >= len)
-                break;
-            i += 3 + desc[i + 1];
-            continue;
-        }
-        int size = prefix & 0x03;
-        if (size == 3)
-            size = 4;
-        if ((prefix & 0xfc) == 0x84 && size == 1 && i + 1 < len && desc[i + 1] == id)
-            return true;
-        i += 1 + size;
+    std::vector<rockcat_device_info> found;
+    if (const char *file = env("ROCKCAT_REPLAY")) {
+        rockcat_device_info info;
+        if (transport_replay(file, &info))
+            found.push_back(info);
+        return found;
     }
-    return false;
-}
-
-bool is_control_interface(const hid_device_info *d)
-{
-    hid_device *h = hid_open_path(d->path);
-    if (!h)
-        return false;
-    unsigned char desc[HID_API_MAX_REPORT_DESCRIPTOR_SIZE];
-    int len = hid_get_report_descriptor(h, desc, sizeof desc);
-    hid_close(h);
-    return len > 0 && descriptor_has_report(desc, len, REPORT_SETTINGS);
-}
-
-void fill_info(rockcat_device_info *info, const hid_device_info *d, const supported_model *m)
-{
-    std::memset(info, 0, sizeof *info);
-    std::snprintf(info->path, sizeof info->path, "%s", d->path);
-    info->vendor_id = d->vendor_id;
-    info->product_id = d->product_id;
-    info->release = d->release_number;
-    info->interface_number = d->interface_number;
-    std::snprintf(info->name, sizeof info->name, "%s", m->name);
-    copy_wide(info->serial, sizeof info->serial, d->serial_number);
+    for (const hid_node &n : hid_nodes(ROCKCAT_VID))
+        found.push_back(to_info(n, n.product.c_str()));
+    return found;
 }
 
 // Collects the control interface of every supported device. When the report
 // descriptor cannot be read the device's interface 0 is used as fallback.
 std::vector<rockcat_device_info> scan()
 {
-    std::vector<rockcat_device_info> found;
-    std::vector<const hid_device_info *> fallback;
-
-    hid_device_info *all = hid_enumerate(ROCKCAT_VID, 0);
-    for (hid_device_info *d = all; d; d = d->next) {
-        const supported_model *m = find_model(d->vendor_id, d->product_id);
+    std::vector<rockcat_device_info> found, fallback;
+    bool replay = env("ROCKCAT_REPLAY") != nullptr;
+    for (rockcat_device_info info : scan_raw()) {
+        const device_desc *m = device_find(info.vendor_id, info.product_id);
         if (!m)
             continue;
-        // hidraw lists one entry per top-level collection of the same node
-        bool seen = false;
-        for (const auto &i : found)
-            seen = seen || std::strcmp(i.path, d->path) == 0;
-        for (const hid_device_info *f : fallback)
-            seen = seen || std::strcmp(f->path, d->path) == 0;
-        if (seen)
-            continue;
-        if (is_control_interface(d)) {
-            rockcat_device_info info;
-            fill_info(&info, d, m);
+        std::snprintf(info.name, sizeof info.name, "%s", m->name);
+        std::vector<uint8_t> ids;
+        if (!replay)
+            ids = hid_report_ids(info.path);
+        if (replay || std::find(ids.begin(), ids.end(), REPORT_SETTINGS) != ids.end())
             found.push_back(info);
-        } else if (d->interface_number == 0) {
-            fallback.push_back(d);
-        }
+        else if (info.interface_number == 0)
+            fallback.push_back(info);
     }
-    if (found.empty())
-        for (const hid_device_info *d : fallback) {
-            rockcat_device_info info;
-            fill_info(&info, d, find_model(d->vendor_id, d->product_id));
-            found.push_back(info);
-        }
-    hid_free_enumeration(all);
-    return found;
+    return found.empty() ? fallback : found;
+}
+
+// real node, or the recording when ROCKCAT_REPLAY is set. ROCKCAT_CAPTURE writes everything that happens into a file
+std::unique_ptr<transport> open_transport(rockcat_device_info &info)
+{
+    if (const char *file = env("ROCKCAT_REPLAY"))
+        return transport_replay(file, nullptr);
+    std::unique_ptr<transport> io = transport_open_hid(info.path);
+    if (io)
+        if (const char *file = env("ROCKCAT_CAPTURE"))
+            io = transport_record(std::move(io), file, info);
+    return io;
 }
 
 int get_raw(rockcat_device *dev, uint8_t *buf, size_t len)
 {
-    if (!dev || !dev->hid || !buf || len == 0)
+    if (!dev || !dev->io || !buf || len == 0)
         return ROCKCAT_ERR_ARGUMENT;
     uint8_t id = buf[0];
-    int r = hid_get_feature_report(dev->hid, buf, len);
+    int r = dev->io->get_feature(buf, len);
     if (r < 0)
-        return ROCKCAT_ERR_IO;
+        return r;
     if (buf[0] != id)
         return ROCKCAT_ERR_PROTOCOL;
     return ROCKCAT_OK;
@@ -179,14 +124,15 @@ int get_raw(rockcat_device *dev, uint8_t *buf, size_t len)
 
 int wait_ready(rockcat_device *dev)
 {
-    sleep_ms(STATUS_FIRST_DELAY_MS);
-    for (int i = 0; i < STATUS_MAX_POLLS; ++i) {
+    dev->io->sleep_ms(dev->wait.first_delay_ms);
+    for (int i = 0; i < dev->wait.max_polls; ++i) {
         uint8_t status[3] = {REPORT_CONTROL, 0, 0};
-        if (hid_get_feature_report(dev->hid, status, sizeof status) < 0)
-            return ROCKCAT_ERR_IO;
+        int r = dev->io->get_feature(status, sizeof status);
+        if (r < 0)
+            return r;
         switch (status[1]) {
         case 3: // busy
-            sleep_ms(STATUS_POLL_DELAY_MS);
+            dev->io->sleep_ms(dev->wait.poll_delay_ms);
             continue;
         case 2:
             return ROCKCAT_ERR_REJECTED;
@@ -199,10 +145,11 @@ int wait_ready(rockcat_device *dev)
 
 int set_raw(rockcat_device *dev, const uint8_t *buf, size_t len, bool wait)
 {
-    if (!dev || !dev->hid || !buf || len == 0)
+    if (!dev || !dev->io || !buf || len == 0)
         return ROCKCAT_ERR_ARGUMENT;
-    if (hid_send_feature_report(dev->hid, buf, len) < 0)
-        return ROCKCAT_ERR_IO;
+    int r = dev->io->set_feature(buf, len);
+    if (r < 0)
+        return r;
     return wait ? wait_ready(dev) : ROCKCAT_OK;
 }
 
@@ -235,6 +182,17 @@ int ensure_init()
 
 } // namespace
 
+rockcat_device *device_from_transport(std::unique_ptr<transport> io, const rockcat_device_info &info)
+{
+    if (!io)
+        return nullptr;
+    auto *dev = new rockcat_device;
+    dev->io = std::move(io);
+    dev->info = info;
+    dev->desc = device_find(info.vendor_id, info.product_id);
+    return dev;
+}
+
 extern "C" {
 
 const char *rockcat_version(void)
@@ -257,6 +215,7 @@ const char *rockcat_strerror(int error)
     case ROCKCAT_ERR_CHECKSUM:  return "checksum mismatch in data read from device";
     case ROCKCAT_ERR_ARGUMENT:  return "invalid argument";
     case ROCKCAT_ERR_PROTOCOL:  return "unexpected answer from device";
+    case ROCKCAT_ERR_UNSUPPORTED: return "this device has no such thing";
     default:                   return "unknown error";
     }
 }
@@ -265,7 +224,7 @@ int rockcat_init(void)
 {
     if (g_initialised)
         return ROCKCAT_OK;
-    if (hid_init() != 0)
+    if (hid_backend_init() != ROCKCAT_OK)
         return ROCKCAT_ERR_INIT;
     g_initialised = true;
     return ROCKCAT_OK;
@@ -274,7 +233,7 @@ int rockcat_init(void)
 void rockcat_exit(void)
 {
     if (g_initialised)
-        hid_exit();
+        hid_backend_exit();
     g_initialised = false;
 }
 
@@ -308,22 +267,60 @@ int rockcat_open(const char *path, rockcat_device **out)
     if (!chosen)
         return ROCKCAT_ERR_NO_DEVICE;
 
-    hid_device *h = hid_open_path(chosen->path);
-    if (!h)
-        return ROCKCAT_ERR_ACCESS;
-    auto *dev = new rockcat_device;
-    dev->hid = h;
-    dev->info = *chosen;
-    *out = dev;
-    return ROCKCAT_OK;
+    rockcat_device_info info = *chosen;
+    *out = device_from_transport(open_transport(info), info);
+    return *out ? ROCKCAT_OK : ROCKCAT_ERR_ACCESS;
+}
+
+int rockcat_enumerate_raw(rockcat_device_info *out, int max)
+{
+    int r = ensure_init();
+    if (r != ROCKCAT_OK)
+        return r;
+    auto found = scan_raw();
+    for (int i = 0; i < static_cast<int>(found.size()) && i < max && out; ++i)
+        out[i] = found[i];
+    return static_cast<int>(found.size());
+}
+
+int rockcat_open_raw(const char *path, rockcat_device **out)
+{
+    if (!out || (!path && !env("ROCKCAT_REPLAY")))
+        return ROCKCAT_ERR_ARGUMENT;
+    *out = nullptr;
+    int r = ensure_init();
+    if (r != ROCKCAT_OK)
+        return r;
+    for (rockcat_device_info info : scan_raw())
+        if (!path || std::strcmp(path, info.path) == 0) {
+            *out = device_from_transport(open_transport(info), info);
+            return *out ? ROCKCAT_OK : ROCKCAT_ERR_ACCESS;
+        }
+    return ROCKCAT_ERR_NO_DEVICE;
+}
+
+int rockcat_report_ids(const char *path, uint8_t *ids, int max)
+{
+    if (!path)
+        return ROCKCAT_ERR_ARGUMENT;
+    int r = ensure_init();
+    if (r != ROCKCAT_OK)
+        return r;
+    std::vector<uint8_t> found = hid_report_ids(path);
+    for (int i = 0; i < static_cast<int>(found.size()) && i < max && ids; ++i)
+        ids[i] = found[i];
+    return static_cast<int>(found.size());
+}
+
+int rockcat_replay_verdict(rockcat_device *dev, int finished)
+{
+    if (!dev || !dev->io)
+        return ROCKCAT_ERR_ARGUMENT;
+    return dev->io->verdict(finished != 0);
 }
 
 void rockcat_close(rockcat_device *dev)
 {
-    if (!dev)
-        return;
-    if (dev->hid)
-        hid_close(dev->hid);
     delete dev;
 }
 
@@ -367,6 +364,25 @@ int rockcat_feature_get(rockcat_device *dev, uint8_t *buf, size_t len)
 int rockcat_feature_set(rockcat_device *dev, const uint8_t *buf, size_t len)
 {
     return set_raw(dev, buf, len, true);
+}
+
+int rockcat_feature_send(rockcat_device *dev, const uint8_t *buf, size_t len)
+{
+    return set_raw(dev, buf, len, false);
+}
+
+int rockcat_feature_read(rockcat_device *dev, uint8_t *buf, size_t len)
+{
+    if (!dev || !dev->io || !buf || len == 0)
+        return ROCKCAT_ERR_ARGUMENT;
+    return dev->io->get_feature(buf, len);
+}
+
+int rockcat_read(rockcat_device *dev, uint8_t *buf, size_t len, int timeout_ms)
+{
+    if (!dev || !dev->io || !buf || len == 0)
+        return ROCKCAT_ERR_ARGUMENT;
+    return dev->io->read(buf, len, timeout_ms);
 }
 
 /* ---- profiles ---------------------------------------------------------- */
@@ -697,11 +713,12 @@ int rockcat_calibration_start(rockcat_device *dev)
 
 int rockcat_calibration_poll(rockcat_device *dev, int *finished)
 {
-    if (!dev || !dev->hid || !finished)
+    if (!dev || !dev->io || !finished)
         return ROCKCAT_ERR_ARGUMENT;
     uint8_t status[3] = {REPORT_CONTROL, 0, 0};
-    if (hid_get_feature_report(dev->hid, status, sizeof status) < 0)
-        return ROCKCAT_ERR_IO;
+    int r = dev->io->get_feature(status, sizeof status);
+    if (r < 0)
+        return r;
     if (status[1] == 2)
         return ROCKCAT_ERR_REJECTED;
     *finished = status[1] != 3;

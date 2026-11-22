@@ -152,6 +152,16 @@ rockcat-cli direct '#00ff00'             # host controlled colour, `direct off` 
 rockcat-cli dump                         # raw hex of the reports
 ```
 
+For devices that arent supported yet theres a raw mode that talks reports directly, and everything can be recorded:
+
+```bash
+rockcat-cli raw list                     # every ROCCAT hidraw node and the report ids it has
+rockcat-cli --device /dev/hidraw4 raw get 0f 8   # read feature report 0f, 8 bytes
+rockcat-cli capture mine.cap info        # run a command and write down everything that went over the wire
+```
+
+How recordings work and how to make one of YOUR device (please do, thats how devices get supported): [docs/CAPTURES.md](docs/CAPTURES.md).
+
 `rockcat-cli --help` lists every key, `rockcat-cli types` lists the button functions. Profiles, dpi levels, buttons and leds count from 1 on the command line, like normal people count.
 
 ## GUI and tray
@@ -196,11 +206,15 @@ Only one engine runs at a time, the gui tells you when the service already has i
 
 rockcat_device *dev;
 if (rockcat_open(NULL, &dev) == ROCKCAT_OK) {
-    rockcat_settings s;
-    rockcat_read_settings(dev, 0, &s);      /* profile 1 */
-    s.dpi_x[0] = s.dpi_y[0] = 1200;
-    s.leds[ROCKCAT_LED_WHEEL] = (rockcat_color){255, 255, 0, 0};
-    rockcat_write_settings(dev, &s);        /* unknown bytes are preserved */
+    const rockcat_caps *caps = rockcat_get_caps(dev);   /* how many leds, buttons, dpi levels this thing has */
+    rockcat_profile *p;
+    if (rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK) {
+        rockcat_profile_set_dpi(p, 0, 1200, 1200, 1);
+        for (int led = 0; led < caps->led_count; ++led)
+            rockcat_profile_set_led(p, led, (rockcat_color){255, 255, 0, 0}, 1);
+        rockcat_profile_write(dev, p);                  /* only sends what changed, unknown bytes are preserved */
+        rockcat_profile_free(p);
+    }
     rockcat_close(dev);
 }
 rockcat_exit();
@@ -208,12 +222,12 @@ rockcat_exit();
 
 Link it with `pkg-config --cflags --libs rockcat`, or from CMake with `find_package(rockcat)` and `target_link_libraries(app rockcat::rockcat)`. Every call returns `ROCKCAT_OK` or a negative `rockcat_error`, `rockcat_strerror()` turns that into text.
 
-> Note : this api is going to change a LOT. It was written around exactly one mouse (11 leds and 24 buttons baked into the structs) and has to learn about keyboards. Dont build anything serious on it yet.
+> Note : the header is in the middle of moving house. The profile api above (ask the device what it has, read a profile, change it, write it back) is where everything is going. The older structs with 11 leds and 24 buttons baked in are still in there because the cli, the gui and the lighting engine still use them, and they get deleted once those have moved. Build on the new one.
 
 ## Known meh
 
 - one supported device. working on it.
-- nobody working on this fork owns a Kone AIMO Remastered, allbeit its the only device that works rn (yes, really). Changes to its code are guarded by the offline tests only. If you own one and something broke, please open an issue.
+- nobody working on this fork owns a Kone AIMO Remastered, allbeit its the only device that works rn (yes, really). Changes to its code are guarded by the offline tests and a recording made against a simulated mouse, not a real one. If you own one: a real recording would be very prem, see [docs/CAPTURES.md](docs/CAPTURES.md). And if something broke, please open an issue.
 - not on the AUR. The PKGBUILDs in `aur/` are there but not pushed, nobody here has an arch machine to test them on. Use `make arch` on your own box instead. The old `rossat-swarm-bin` / `rossat-swarm-git` AUR packages are upstreams and still install the old thing.
 - firmware updates are not implemented.
 - the AIMO animation is our own take on Swarms (same themes, led groups and activity reaction), not a byte exact copy of `aimo.dll`.
@@ -235,8 +249,11 @@ src/cli/                    rockcat-cli
 src/gui/                    rockcat-swarm (GTK3)
 data/                       icon, css, udev rule, desktop file, user service, pkg-config template
 docs/PROTOCOL.md            reverse engineered protocol and firmware notes
+docs/CAPTURES.md            how recordings work
 tools/re/                   scripts used for the reverse engineering
-tests/                      offline codec tests (no device needed)
+tools/capture/              read only scripts that record what a device has stored
+tests/                      offline tests (no device needed)
+tests/captures/             the recordings the tests replay
 aur/                        PKGBUILDs
 .github/workflows/          build + test and a .deb on every push, release tarball per tag
 Makefile                    make, make test, make install, make deb, make arch

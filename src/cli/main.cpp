@@ -61,6 +61,17 @@ void usage(FILE *f)
         "  backup FILE                  save settings + buttons of all 5 profiles\n"
         "  restore FILE                 write a backup back to the mouse\n"
         "\n"
+        "For devices that arent supported yet, and for finding out how they talk:\n"
+        "  raw list                     every ROCCAT hidraw node with the report ids it declares\n"
+        "  raw get ID LEN               read feature report ID (hex), LEN bytes (needs --device)\n"
+        "  raw set BYTES...             send a feature report (hex bytes), then wait for the ready status\n"
+        "  raw send BYTES...            same but without asking the device how it feels about it\n"
+        "  raw wait                     poll the status report (04) until the device stops being busy\n"
+        "  raw read [MS]                print input reports for MS milliseconds (default 1000)\n"
+        "  capture FILE COMMAND...      run COMMAND and append everything that went over the wire to FILE\n"
+        "\n"
+        "ROCKCAT_REPLAY=FILE makes every command talk to a recording instead of hardware.\n"
+        "\n"
         "Profiles, DPI levels and buttons are numbered from 1.\n",
         g_prog, ROCKCAT_DPI_MIN, ROCKCAT_DPI_MAX, ROCKCAT_DPI_STEP);
 }
@@ -288,6 +299,105 @@ uint8_t resolve_profile(rockcat_device *dev, const options &o)
     uint8_t p = 0;
     check(rockcat_get_active_profile(dev, &p, nullptr), "read active profile");
     return p;
+}
+
+void print_hex(const uint8_t *buf, size_t len)
+{
+    for (size_t i = 0; i < len; ++i)
+        std::printf("%s%02x", i ? " " : "", buf[i]);
+    std::printf("\n");
+}
+
+std::vector<uint8_t> parse_bytes(const std::vector<std::string> &args, size_t from)
+{
+    std::vector<uint8_t> out;
+    for (size_t i = from; i < args.size(); ++i) {
+        char *end = nullptr;
+        long v = std::strtol(args[i].c_str(), &end, 16);
+        if (args[i].empty() || *end || v < 0 || v > 255)
+            fail("'%s' is not a hex byte", args[i].c_str());
+        out.push_back(static_cast<uint8_t>(v));
+    }
+    if (out.empty())
+        fail("need at least the report id");
+    return out;
+}
+
+// straight to the reports, no model check and no safety net. this is how devices get figured out before they are supported
+int cmd_raw(const options &o)
+{
+    std::string sub = o.args.empty() ? "" : o.args[0];
+    if (sub == "list") {
+        rockcat_device_info infos[32];
+        int n = rockcat_enumerate_raw(infos, 32);
+        if (n < 0)
+            die("enumerate", n);
+        for (int i = 0; i < n && i < 32; ++i) {
+            std::printf("%s  %04x:%04x  if%d  %s\n   reports:", infos[i].path, infos[i].vendor_id, infos[i].product_id,
+                        infos[i].interface_number, infos[i].name);
+            uint8_t ids[64];
+            int k = rockcat_report_ids(infos[i].path, ids, 64);
+            for (int j = 0; j < k && j < 64; ++j)
+                std::printf(" %02x", ids[j]);
+            std::printf(k > 0 ? "\n" : " (none declared or not readable)\n");
+        }
+        if (n == 0)
+            std::printf("no ROCCAT hidraw nodes around. plugged in? udev rule installed?\n");
+        return n > 0 ? 0 : 1;
+    }
+    if (sub != "get" && sub != "set" && sub != "send" && sub != "wait" && sub != "read")
+        fail("raw wants one of: list, get, set, send, wait, read");
+    if (!o.device && !std::getenv("ROCKCAT_REPLAY"))
+        fail("raw %s needs --device /dev/hidrawN (see 'raw list'), guessing which node you meant is how keyboards get bricked", sub.c_str());
+    rockcat_device *dev = nullptr;
+    check(rockcat_open_raw(o.device, &dev), "open");
+    int rc = 0;
+    if (sub == "get") {
+        if (o.args.size() != 3)
+            fail("usage: raw get ID LEN");
+        long id = std::strtol(o.args[1].c_str(), nullptr, 16), len = parse_long(o.args[2], "length");
+        if (id < 0 || id > 255 || len < 1 || len > 4096)
+            fail("id is one hex byte, length 1-4096");
+        std::vector<uint8_t> buf(static_cast<size_t>(len), 0);
+        buf[0] = static_cast<uint8_t>(id);
+        int n = rockcat_feature_read(dev, buf.data(), buf.size());
+        if (n < 0)
+            die("get feature", n);
+        print_hex(buf.data(), static_cast<size_t>(n));
+    } else if (sub == "set" || sub == "send") {
+        std::vector<uint8_t> buf = parse_bytes(o.args, 1);
+        check(sub == "set" ? rockcat_feature_set(dev, buf.data(), buf.size()) : rockcat_feature_send(dev, buf.data(), buf.size()), "set feature");
+    } else if (sub == "wait") {
+        // same loop the library runs after a write: 1 = ready, 2 = didnt like it, 3 = busy
+        for (int i = 0;; ++i) {
+            uint8_t st[3] = {0x04, 0, 0};
+            int n = rockcat_feature_read(dev, st, sizeof st);
+            if (n < 0)
+                die("status", n);
+            if (st[1] != 3 || i >= 100) {
+                print_hex(st, static_cast<size_t>(n));
+                rc = st[1] == 1 ? 0 : 1;
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    } else {
+        long ms = o.args.size() > 1 ? parse_long(o.args[1], "milliseconds") : 1000;
+        auto end = std::chrono::steady_clock::now() + std::chrono::milliseconds(ms);
+        for (;;) {
+            long left = static_cast<long>(std::chrono::duration_cast<std::chrono::milliseconds>(end - std::chrono::steady_clock::now()).count());
+            if (left <= 0)
+                break;
+            uint8_t buf[256];
+            int n = rockcat_read(dev, buf, sizeof buf, static_cast<int>(left));
+            if (n < 0)
+                die("read", n);
+            if (n > 0)
+                print_hex(buf, static_cast<size_t>(n));
+        }
+    }
+    rockcat_close(dev);
+    return rc;
 }
 
 int cmd_list()
@@ -884,7 +994,15 @@ int main(int argc, char **argv)
     g_prog = argv[0] && std::strrchr(argv[0], '/') ? std::strrchr(argv[0], '/') + 1 : "rockcat-cli";
     options o;
     std::string cmd;
-    for (int i = 1; i < argc; ++i) {
+    int first = 1;
+    if (argc > 1 && std::strcmp(argv[1], "capture") == 0) {
+        if (argc < 4)
+            fail("usage: capture FILE COMMAND...");
+        // the library appends, so several captures into the same file make one long recording
+        setenv("ROCKCAT_CAPTURE", argv[2], 1);
+        first = 3;
+    }
+    for (int i = first; i < argc; ++i) {
         std::string a = argv[i];
         if (a == "-h" || a == "--help") {
             usage(stdout);
@@ -932,6 +1050,7 @@ int main(int argc, char **argv)
     else if (cmd == "shift-light") rc = cmd_shift_light(o);
     else if (cmd == "engine") rc = cmd_engine(o);
     else if (cmd == "restore") rc = cmd_restore(o);
+    else if (cmd == "raw") rc = cmd_raw(o);
     else {
         std::fprintf(stderr, "%s: unknown command '%s'\n\n", g_prog, cmd.c_str());
         usage(stderr);

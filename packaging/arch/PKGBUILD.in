@@ -1,4 +1,4 @@
-# Maintainer: crt0512
+# Maintainer: crt <crt@512mb.net>
 # packs up the checkout its called from, `make arch` fills in the @...@ bits. the PKGBUILDs for the AUR live in aur/
 pkgname=rockcat-swarm
 pkgver=@VERSION@
