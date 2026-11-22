@@ -53,34 +53,60 @@ sudo pacman -S cmake hidapi gtk3 libayatana-appindicator
 Debian and friends:
 
 ```bash
-sudo apt install cmake libhidapi-dev libgtk-3-dev libayatana-appindicator3-dev
+sudo apt install build-essential cmake pkg-config libhidapi-dev libgtk-3-dev libayatana-appindicator3-dev
 ```
 
 Gentoo or whatever you use: you know what to do.
 
+Theres a Makefile so nobody has to remember the cmake incantations:
+
 ```bash
-cmake -S . -B build
+make
 ```
 
 ```bash
-cmake --build build
+sudo make install
 ```
 
-```bash
-sudo cmake --install build
-```
-
-If you dont want all of it: `-DROCKCAT_BUILD_GUI=OFF`, `-DROCKCAT_BUILD_CLI=OFF`, `-DROCKCAT_BUILD_TESTS=OFF`.
+`make install` only installs what `make` built before, it doesnt build as root. `PREFIX=/usr` and `DESTDIR=...` work the way you expect, `make uninstall` takes it all out again and `make help` lists the rest.
 
 The tests dont need a mouse:
 
 ```bash
-ctest --test-dir build
+make test
 ```
+
+If you would rather talk to cmake yourself thats fine too, the Makefile doesnt do anything magic. The switches are `-DROCKCAT_BUILD_GUI=OFF`, `-DROCKCAT_BUILD_CLI=OFF` and `-DROCKCAT_BUILD_TESTS=OFF`.
 
 ### Packages
 
-There are PKGBUILDs in [`aur/`](aur) (`rockcat-swarm-bin` and `rockcat-swarm-git`) and a release workflow that builds an x86_64 tarball per tag. Neither is published under the new name yet, see [Known meh](#known-meh). Build it from source for now.
+Installing through the package manager is nicer than `make install` because it can be removed cleanly again and the udev rule gets reloaded for you. Both of these drop the package into `dist/`.
+
+Debian, Ubuntu and whatever else eats `.deb`:
+
+```bash
+make deb
+```
+
+```bash
+sudo apt install ./dist/rockcat-swarm_*.deb
+```
+
+Arch (needs `makepkg`, which you have):
+
+```bash
+make arch
+```
+
+```bash
+sudo pacman -U dist/rockcat-swarm-*.pkg.tar.zst
+```
+
+> Note : every push also builds the `.deb` on github, its attached to the workflow run under Actions and to the release when a version gets tagged. Handy if you dont feel like compiling.
+
+> Note : `make arch` also runs on debian if `makepkg` and `libarchive-tools` are installed, thats how the package gets test built here. Wether a package built that way behaves on a real arch box is untested, build it on arch if you can.
+
+There are also PKGBUILDs for the AUR in [`aur/`](aur) but they are not published, see [Known meh](#known-meh).
 
 ## Permissions
 
@@ -188,7 +214,7 @@ Link it with `pkg-config --cflags --libs rockcat`, or from CMake with `find_pack
 
 - one supported device. working on it.
 - nobody working on this fork owns a Kone AIMO Remastered, allbeit its the only device that works rn (yes, really). Changes to its code are guarded by the offline tests only. If you own one and something broke, please open an issue.
-- no packages yet under the new name. The PKGBUILDs in `aur/` are renamed but not pushed to the AUR, and the fork has no release tarball. The old `rossat-swarm-bin` / `rossat-swarm-git` AUR packages are upstreams and still install the old thing.
+- not on the AUR. The PKGBUILDs in `aur/` are there but not pushed, nobody here has an arch machine to test them on. Use `make arch` on your own box instead. The old `rossat-swarm-bin` / `rossat-swarm-git` AUR packages are upstreams and still install the old thing.
 - firmware updates are not implemented.
 - the AIMO animation is our own take on Swarms (same themes, led groups and activity reaction), not a byte exact copy of `aimo.dll`.
 - Swarms "sensitivity" slider was the windows pointer speed and not a mouse setting, so its not here. Your desktop has a slider for that.
@@ -212,7 +238,9 @@ docs/PROTOCOL.md            reverse engineered protocol and firmware notes
 tools/re/                   scripts used for the reverse engineering
 tests/                      offline codec tests (no device needed)
 aur/                        PKGBUILDs
-.github/workflows/          build + test on push, release tarball per tag
+.github/workflows/          build + test and a .deb on every push, release tarball per tag
+Makefile                    make, make test, make install, make deb, make arch
+packaging/                  what make deb and make arch need (postinst, PKGBUILD template)
 MODULES.md                  all Swarm device modules, with support checkboxes
 icon.svg                    icon source drawing (data/rockcat-swarm.svg adds the accent colours)
 ```

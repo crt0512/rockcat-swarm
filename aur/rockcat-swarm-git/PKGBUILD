@@ -35,7 +35,5 @@ check() {
 
 package() {
   DESTDIR="${pkgdir}" cmake --install build
-  install -Dm644 "${_pkgname}/README.md" "${pkgdir}/usr/share/doc/${_pkgname}/README.md"
-  install -Dm644 "${_pkgname}/docs/PROTOCOL.md" "${pkgdir}/usr/share/doc/${_pkgname}/PROTOCOL.md"
   install -Dm644 "${_pkgname}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

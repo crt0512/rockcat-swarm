@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+# without this the udev rule only kicks in after a replug or a reboot and people think the app is broken
+if [ "$1" = "configure" ] && command -v udevadm >/dev/null 2>&1; then
+    udevadm control --reload-rules || true
+    udevadm trigger --subsystem-match=hidraw || true
+fi

@@ -47,9 +47,6 @@ jobs:
       - name: Package
         run: |
           DESTDIR="$PWD/stage" cmake --install build
-          install -Dm644 README.md stage/usr/share/doc/rockcat-swarm/README.md
-          install -Dm644 docs/PROTOCOL.md stage/usr/share/doc/rockcat-swarm/PROTOCOL.md
-          install -Dm644 LICENSE stage/usr/share/doc/rockcat-swarm/LICENSE
           tar -C stage -czf "${{ steps.version.outputs.archive }}" usr
           sha256sum "${{ steps.version.outputs.archive }}" > "${{ steps.version.outputs.archive }}.sha256"
           tar -tzf "${{ steps.version.outputs.archive }}"

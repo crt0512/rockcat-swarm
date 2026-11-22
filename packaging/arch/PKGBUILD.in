@@ -1,0 +1,31 @@
+# Maintainer: crt0512
+# packs up the checkout its called from, `make arch` fills in the @...@ bits. the PKGBUILDs for the AUR live in aur/
+pkgname=rockcat-swarm
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc="Open re-implementation of ROCCAT Swarm (GUI, CLI, library) for ROCCAT mice and keyboards"
+arch=('x86_64' 'aarch64')
+url="https://github.com/crt0512/rockcat-swarm"
+license=('GPL-3.0-only')
+depends=('glibc' 'gcc-libs' 'hidapi' 'gtk3' 'glib2' 'cairo' 'gdk-pixbuf2' 'libayatana-appindicator')
+makedepends=('cmake' 'pkgconf')
+conflicts=('rockcat-swarm-bin' 'rockcat-swarm-git' 'rossat-swarm-bin' 'rossat-swarm-git')
+install=rockcat-swarm.install
+_src="@SRCDIR@"
+
+build() {
+  cmake -S "${_src}" -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib
+  cmake --build build
+}
+
+check() {
+  ctest --test-dir build --output-on-failure
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

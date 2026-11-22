@@ -13,6 +13,9 @@ option(ROCKCAT_BUILD_CLI "Build the command line tool" ON)
 option(ROCKCAT_BUILD_TESTS "Build offline unit tests" ON)
 
 include(GNUInstallDirs)
+# otherwise the folders in a package inherit whatever umask the person building it happens to have
+set(CMAKE_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS
+  OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(HIDAPI REQUIRED IMPORTED_TARGET hidapi-hidraw>=0.14)
 
@@ -47,6 +50,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rockcat.pc DESTINATION ${CMAKE_INSTALL
 install(FILES data/70-rockcat.rules DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/udev/rules.d)
 configure_file(data/rockcat-engine.service.in rockcat-engine.service @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rockcat-engine.service DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/user)
+
+install(FILES README.md docs/PROTOCOL.md LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
 # ---- CLI -----------------------------------------------------------------
 if(ROCKCAT_BUILD_CLI)
@@ -99,3 +104,35 @@ if(ROCKCAT_BUILD_TESTS)
     add_test(NAME config-${case} COMMAND rockcat-test-config ${case})
   endforeach()
 endif()
+
+# ---- packaging (`make deb`) -------------------------------------------------
+# ROCKCAT_PACKAGE_VERSION lets the Makefile glue the git revision on for dev builds
+if(NOT ROCKCAT_PACKAGE_VERSION)
+  set(ROCKCAT_PACKAGE_VERSION ${PROJECT_VERSION})
+endif()
+if(ROCKCAT_PACKAGE STREQUAL "deb")
+  install(FILES packaging/deb/copyright DESTINATION ${CMAKE_INSTALL_DOCDIR})
+endif()
+set(CPACK_PACKAGE_NAME rockcat-swarm)
+set(CPACK_PACKAGE_VERSION ${ROCKCAT_PACKAGE_VERSION})
+set(CPACK_PACKAGE_CONTACT "crt0512 <crt0512@users.noreply.github.com>")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "open replacement for ROCCAT Swarm (GUI, CLI, library)")
+set(CPACK_PACKAGE_DESCRIPTION "Profiles, DPI, buttons, macros and lighting for ROCCAT mice and keyboards.")
+set(CPACK_PACKAGING_INSTALL_PREFIX /usr)
+set(CPACK_STRIP_FILES ON)
+set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+set(CPACK_DEBIAN_PACKAGE_RELEASE 1)
+set(CPACK_DEBIAN_PACKAGE_SECTION utils)
+set(CPACK_DEBIAN_PACKAGE_PRIORITY optional)
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/crt0512/rockcat-swarm")
+# dependencies come from what the binaries actually link against, nobody has to keep a list in sync
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS ${CMAKE_BINARY_DIR})
+set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS ON)
+# control files get 644/755 no matter what umask the checkout was made with
+set(CPACK_DEBIAN_PACKAGE_CONTROL_STRICT_PERMISSION TRUE)
+# our own postinst stops cpack from writing one that runs ldconfig, the trigger does that job instead
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
+  ${CMAKE_CURRENT_SOURCE_DIR}/packaging/deb/postinst
+  ${CMAKE_CURRENT_SOURCE_DIR}/packaging/deb/triggers)
+include(CPack)
