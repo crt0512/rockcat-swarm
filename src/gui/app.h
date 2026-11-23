@@ -24,8 +24,6 @@ namespace gui {
 
 // every device so far has five profiles. the rest (dpi levels, leds, buttons...) the pages ask the device for
 constexpr int N_PROFILES = 5;
-// the two drawings in mouse_view.cpp are of a Kone AIMO and only get shown for one, these are ITS numbers
-constexpr int KONE_LEDS = 11, KONE_BUTTONS = 12;
 // the button and lighting pages of a mouse: the picture takes whatever room is left next to a column of this width.
 // the same width on both pages, so the mouse has the same size and place on both and still grows with the window
 constexpr int MOUSE_VIEW_HEIGHT = 400, MOUSE_SIDE_WIDTH = 700;
@@ -232,13 +230,7 @@ rockcat_color from_rgba(const GdkRGBA &c);
 std::string prefs_path();
 gui_prefs load_prefs();
 void save_prefs(const gui_prefs &p);
-void mouse_path(cairo_t *cr);
-void set_led_source(cairo_t *cr, const rockcat_color &c, bool on, double extra_alpha = 1.0);
 void rounded_rect(cairo_t *cr, double x, double y, double w, double h, double r);
-void draw_mouse_body(cairo_t *cr);
-void scale_to_widget(GtkWidget *w, cairo_t *cr);
-gboolean on_draw_lighting(GtkWidget *w, cairo_t *cr, gpointer data);
-gboolean on_draw_buttons(GtkWidget *w, cairo_t *cr, gpointer data);
 int combo_type(GtkWidget *combo);
 void collect(app_state *s);
 void ensure_combo_id(GtkWidget *combo, int value);

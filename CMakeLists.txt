@@ -132,7 +132,6 @@ if(ROCKCAT_BUILD_GUI)
     src/gui/tray.cpp
     src/gui/util.cpp
     src/gui/assets.cpp
-    src/gui/mouse_view.cpp
     src/gui/device_view.cpp
     src/gui/keyboard_view.cpp
     src/gui/pages/settings.cpp

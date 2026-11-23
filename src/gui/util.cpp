@@ -104,4 +104,14 @@ rockcat_color from_rgba(const GdkRGBA &c)
     return rockcat_color{cv(c.alpha), cv(c.red), cv(c.green), cv(c.blue)};
 }
 
+void rounded_rect(cairo_t *cr, double x, double y, double w, double h, double r)
+{
+    cairo_new_sub_path(cr);
+    cairo_arc(cr, x + w - r, y + r, r, -M_PI / 2, 0);
+    cairo_arc(cr, x + w - r, y + h - r, r, 0, M_PI / 2);
+    cairo_arc(cr, x + r, y + h - r, r, M_PI / 2, M_PI);
+    cairo_arc(cr, x + r, y + r, r, M_PI, 3 * M_PI / 2);
+    cairo_close_path(cr);
+}
+
 } // namespace gui

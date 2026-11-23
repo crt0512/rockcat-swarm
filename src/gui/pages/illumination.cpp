@@ -432,14 +432,8 @@ GtkWidget *build_illumination_page(app_state *s)
     GtkWidget *page = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 14);
     gtk_container_set_border_width(GTK_CONTAINER(page), 16);
 
-    // the preview is a drawing of a Kone AIMO, so only a Kone AIMO gets it
-    if (is_kone(s)) {
-        s->mouse_light = gtk_drawing_area_new();
-        gtk_widget_set_size_request(s->mouse_light, 230, 340);
-        g_signal_connect(s->mouse_light, "draw", G_CALLBACK(on_draw_lighting), s);
-        gtk_box_pack_start(GTK_BOX(page), s->mouse_light, FALSE, FALSE, 0);
-    } else if (s->view && !is_keyboard(s)) {
-        // everybody else: ROCCATs picture of the device with its lights in the colours picked on the right
+    if (s->view && !is_keyboard(s)) {
+        // the picture of the mouse with its lights in the colours picked on the right
         s->mouse_light = gtk_drawing_area_new();
         int w = 0, h = 0;
         // same size and place as on the button page
@@ -718,12 +712,21 @@ GtkWidget *build_illumination_page(app_state *s)
     }
 
     // next to a picture the settings keep one width (the picture gets the rest), alone they spread out
-    const bool picture = s->mouse_light && !is_kone(s);
+    const bool picture = s->mouse_light && s->view;
     if (picture) {
         gtk_widget_set_size_request(right, MOUSE_SIDE_WIDTH, -1);
         gtk_widget_set_hexpand(right, FALSE);
+        // the mouse stays put and only the settings scroll next to it, same as the keyboards. with the whole page scrolling
+        // the picture got stretched over all of it and a long column (the Kone with its eleven colours) cut its butt off
+        GtkWidget *scroll = gtk_scrolled_window_new(nullptr, nullptr);
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+        gtk_scrolled_window_set_propagate_natural_width(GTK_SCROLLED_WINDOW(scroll), TRUE);
+        gtk_widget_set_hexpand(scroll, FALSE);
+        gtk_container_add(GTK_CONTAINER(scroll), right);
+        gtk_box_pack_start(GTK_BOX(page), scroll, FALSE, TRUE, 0);
+    } else {
+        gtk_box_pack_start(GTK_BOX(page), right, TRUE, TRUE, 0);
     }
-    gtk_box_pack_start(GTK_BOX(page), right, !picture, TRUE, 0);
     if (s->kb_view) {
         // keyboards: the board on the left, the settings in a column next to it
         GtkWidget *all = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 14);

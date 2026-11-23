@@ -232,7 +232,7 @@ void draw_view_lights(app_state *s, cairo_t *cr, bool animate)
 // the illumination page needs a clock while the effect moves, and none while it stands still
 void update_view_preview(app_state *s)
 {
-    if (!s->view || !s->mouse_light || is_kone(s))
+    if (!s->view || !s->mouse_light)
         return;
     int effect = s->effect ? static_cast<int>(current_effect(s)) : static_cast<int>(ROCKCAT_EFFECT_FULLY_LIT);
     bool moving = (effect != ROCKCAT_EFFECT_FULLY_LIT && effect != ROCKCAT_EFFECT_OFF) ||

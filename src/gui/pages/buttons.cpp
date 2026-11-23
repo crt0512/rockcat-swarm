@@ -107,18 +107,11 @@ GtkWidget *build_buttons_page(app_state *s)
     GtkWidget *page = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 14);
     gtk_container_set_border_width(GTK_CONTAINER(page), 16);
 
-    // the drawing next to the list is of a Kone AIMO, so only a Kone AIMO gets it
-    if (is_kone(s)) {
-        s->mouse_buttons = gtk_drawing_area_new();
-        gtk_widget_set_size_request(s->mouse_buttons, 230, 340);
-        g_signal_connect(s->mouse_buttons, "draw", G_CALLBACK(on_draw_buttons), s);
-        gtk_box_pack_start(GTK_BOX(page), s->mouse_buttons, FALSE, FALSE, 0);
-    }
     const int inputs = n_inputs(s), layers = n_layers(s);
     s->buttons.assign(static_cast<size_t>(inputs * layers), button_row{});
     s->button_names.assign(static_cast<size_t>(inputs), nullptr);
     // every other mouse gets ROCCATs picture of it with a marker on every button, if the build has one
-    if (s->view && !is_kone(s)) {
+    if (s->view) {
         s->mouse_buttons = gtk_drawing_area_new();
         int w = 0, h = 0;
         // one size, the same on the button and the lighting page, so the mouse stays put when switching between them
@@ -139,7 +132,7 @@ GtkWidget *build_buttons_page(app_state *s)
     for (int i = 0; i < inputs; ++i)
         order[static_cast<size_t>(i)] = i;
     auto number = [s](int input) { int n = view_button_number(s->view, input); return n ? n : input + 1; };
-    if (s->view && !is_kone(s))
+    if (s->view)
         std::stable_sort(order.begin(), order.end(), [&](int a, int b) { return number(a) < number(b); });
 
     GtkWidget *grid = gtk_grid_new();
@@ -153,7 +146,7 @@ GtkWidget *build_buttons_page(app_state *s)
     for (int line = 0; line < inputs; ++line) {
         const int i = order[static_cast<size_t>(line)];
         char t[64];
-        std::snprintf(t, sizeof t, "%d  %s", is_kone(s) ? i + 1 : number(i), rockcat_input_label(s->caps, i));
+        std::snprintf(t, sizeof t, "%d  %s", number(i), rockcat_input_label(s->caps, i));
         GtkWidget *name = label(t);
         add_class(name, "rc-row-name");
         s->button_names[static_cast<size_t>(i)] = name;
