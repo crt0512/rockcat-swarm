@@ -48,7 +48,7 @@ Then add a line to the table above, and run `tools/assets/placeholders.py` so th
 
 ## Why webp
 
-The table says `.png` because thats what came out of Swarm, and the originals are kept that way outside of git (in `DEV/roccat-assets-original/`, where all the tools above write to). What ends up in this folder and in the build is webp, made by `tools/assets/to-webp.py` (lossy quality 80 by default, the see-through part always lossless). The pngs made the binary about 50 MB, the webp about 9. After adding or changing pictures:
+The table says `.png` because thats what came out of Swarm, and the originals are kept that way outside of git (in `DEV/roccat-assets-original/`, where all the tools above write to). What ends up in this folder and in the build is webp, made by `tools/assets/to-webp.py` (lossy quality 90 by default, the see-through part always lossless). The pngs made the binary about 50 MB, the webp about 10. After adding or changing pictures:
 
 ```bash
 tools/assets/to-webp.py            # or -q 90, or --lossless
