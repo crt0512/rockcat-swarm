@@ -11,6 +11,8 @@ endif()
 option(ROCKCAT_BUILD_GUI "Build the GTK3 GUI" ON)
 option(ROCKCAT_BUILD_CLI "Build the command line tool" ON)
 option(ROCKCAT_BUILD_TESTS "Build offline unit tests" ON)
+# the device pictures are ROCCATs and not ours to license, see assets/roccat/ATTRIBUTION.md. OFF swaps in our own placeholder drawings
+option(ROCKCAT_ROCCAT_ASSETS "Ship the original ROCCAT device artwork" ON)
 
 include(GNUInstallDirs)
 # otherwise the folders in a package inherit whatever umask the person building it happens to have
@@ -23,6 +25,8 @@ pkg_check_modules(HIDAPI REQUIRED IMPORTED_TARGET hidapi-hidraw>=0.14)
 find_package(Threads REQUIRED)
 # the sources get compiled once into an object library, the shared lib is made from that
 # and the tests that need to reach past the public api link the objects directly
+# every device family is a file (or a few) in src/lib/families/, a new one gets picked up without touching this
+file(GLOB ROCKCAT_FAMILY_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/families/*.cpp)
 add_library(rockcat-objs OBJECT
   src/lib/rockcat.cpp
   src/lib/names.cpp
@@ -33,7 +37,11 @@ add_library(rockcat-objs OBJECT
   src/lib/sim.cpp
   src/lib/devices.cpp
   src/lib/profile.cpp
-  src/lib/families/kone_aimo.cpp)
+  src/lib/reports.cpp
+  src/lib/backup.cpp
+  src/lib/keyboards.cpp
+  src/lib/kb_effects.cpp
+  ${ROCKCAT_FAMILY_SOURCES})
 target_include_directories(rockcat-objs PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_compile_definitions(rockcat-objs PRIVATE ROCKCAT_BUILDING_SHARED)
@@ -66,7 +74,8 @@ install(FILES data/70-rockcat.rules DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/udev
 configure_file(data/rockcat-engine.service.in rockcat-engine.service @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rockcat-engine.service DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/user)
 
-install(FILES README.md docs/PROTOCOL.md LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES README.md docs/CAPTURES.md LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(DIRECTORY docs/protocol DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
 # ---- CLI -----------------------------------------------------------------
 if(ROCKCAT_BUILD_CLI)
@@ -86,12 +95,53 @@ if(ROCKCAT_BUILD_GUI)
     OUTPUT ${GRESOURCE_C}
     COMMAND ${GLIB_COMPILE_RESOURCES} --target=${GRESOURCE_C} --generate-source
             --sourcedir=${CMAKE_CURRENT_SOURCE_DIR}/data ${GRESOURCE_XML}
-    DEPENDS ${GRESOURCE_XML} data/rockcat.css data/rockcat-swarm.svg
+    DEPENDS ${GRESOURCE_XML} data/rockcat.css data/rockcat-swarm.svg data/rc-bug.svg
+    VERBATIM)
+  # device pictures come from one of two folders with identical file names, the gui never knows which one it got
+  if(ROCKCAT_ROCCAT_ASSETS)
+    set(ASSET_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/roccat)
+  else()
+    set(ASSET_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/free)
+  endif()
+  # device icons, per mouse its picture with light masks and marker positions (views/), per keyboard the board, its keycaps and prints
+  file(GLOB ASSET_FILES RELATIVE ${ASSET_DIR} CONFIGURE_DEPENDS ${ASSET_DIR}/devices/*.png ${ASSET_DIR}/views/*/*.png ${ASSET_DIR}/views/*/*.ini ${ASSET_DIR}/keyboards/*/*.png)
+  set(ASSET_XML ${CMAKE_CURRENT_BINARY_DIR}/rockcat-assets.gresource.xml)
+  set(ASSET_C ${CMAKE_CURRENT_BINARY_DIR}/rockcat-assets.c)
+  set(ASSET_ENTRIES "")
+  set(ASSET_DEPENDS "")
+  foreach(f ${ASSET_FILES})
+    string(APPEND ASSET_ENTRIES "    <file>${f}</file>\n")
+    list(APPEND ASSET_DEPENDS ${ASSET_DIR}/${f})
+  endforeach()
+  file(WRITE ${ASSET_XML} "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<gresources>\n  <gresource prefix=\"/org/rockcat/swarm/assets\">\n${ASSET_ENTRIES}  </gresource>\n</gresources>\n")
+  add_custom_command(
+    OUTPUT ${ASSET_C}
+    COMMAND ${GLIB_COMPILE_RESOURCES} --target=${ASSET_C} --generate-source --c-name rockcat_assets
+            --sourcedir=${ASSET_DIR} ${ASSET_XML}
+    DEPENDS ${ASSET_XML} ${ASSET_DEPENDS}
     VERBATIM)
   add_executable(rockcat-swarm
     src/gui/main.cpp
-    src/gui/window.cpp
-    ${GRESOURCE_C})
+    src/gui/shell.cpp
+    src/gui/device.cpp
+    src/gui/sync.cpp
+    src/gui/prefs.cpp
+    src/gui/files.cpp
+    src/gui/tray.cpp
+    src/gui/util.cpp
+    src/gui/mouse_view.cpp
+    src/gui/device_view.cpp
+    src/gui/keyboard_view.cpp
+    src/gui/pages/settings.cpp
+    src/gui/pages/buttons.cpp
+    src/gui/pages/keys.cpp
+    src/gui/pages/illumination.cpp
+    src/gui/pages/advanced.cpp
+    ${GRESOURCE_C}
+    ${ASSET_C})
+  if(ROCKCAT_ROCCAT_ASSETS)
+    target_compile_definitions(rockcat-swarm PRIVATE ROCKCAT_ROCCAT_ASSETS)
+  endif()
   target_link_libraries(rockcat-swarm PRIVATE rockcat PkgConfig::GTK3)
   # System tray via StatusNotifierItem (works on Wayland bars like waybar)
   pkg_check_modules(APPINDICATOR IMPORTED_TARGET ayatana-appindicator3-0.1)
@@ -127,9 +177,15 @@ if(ROCKCAT_BUILD_TESTS)
   add_test(NAME replay-diverge COMMAND rockcat-test-replay diverge ${KONE_CAPTURE})
   add_test(NAME profile-api COMMAND rockcat-test-replay profile)
   add_test(NAME events COMMAND rockcat-test-replay events)
+  add_test(NAME keyboard-tables COMMAND rockcat-test-replay keyboard)
+  add_test(NAME kova2016 COMMAND rockcat-test-replay kova ${CMAKE_CURRENT_SOURCE_DIR}/tests/captures/kova2016-gray-readonly.cap)
+  add_test(NAME keyboard-engine COMMAND rockcat-test-replay kb-engine)
+  add_test(NAME ryos-mk-fx COMMAND rockcat-test-replay ryos ${CMAKE_CURRENT_SOURCE_DIR}/tests/captures/ryos-mk-fx-readonly.cap)
   add_test(NAME render COMMAND rockcat-test-replay render ${CMAKE_CURRENT_SOURCE_DIR}/tests/render_golden.txt)
   if(ROCKCAT_BUILD_CLI)
     add_test(NAME cli-golden COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/cli_golden.sh $<TARGET_FILE:rockcat-cli>)
+    # the rule file in data/ is generated from the device table, this goes red when somebody adds a device and forgets it
+    add_test(NAME udev-rules COMMAND sh -c "$<TARGET_FILE:rockcat-cli> udev-rules | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/data/70-rockcat.rules -")
   endif()
   file(GLOB CAPTURES ${CMAKE_CURRENT_SOURCE_DIR}/tests/captures/*.cap)
   foreach(cap ${CAPTURES})

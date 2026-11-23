@@ -16,6 +16,9 @@
 
 namespace {
 
+// just a sanity limit so garbage doesnt end up as a section name, no device has anywhere near this many
+constexpr int MAX_PROFILES = 32;
+
 using ini = std::map<std::string, std::map<std::string, std::string>>;
 
 std::string config_base()
@@ -103,7 +106,7 @@ extern "C" const char *rockcat_config_dir(void)
 
 extern "C" int rockcat_shift_lighting_load(uint16_t pid, uint8_t profile, rockcat_shift_lighting *out)
 {
-    if (!out || profile >= ROCKCAT_PROFILE_COUNT)
+    if (!out || profile >= MAX_PROFILES)
         return ROCKCAT_ERR_ARGUMENT;
     // default: off, solid ROCCAT blue
     *out = rockcat_shift_lighting{0, ROCKCAT_SHIFT_SOLID, rockcat_color{255, 0x65, 0xc3, 0xf7}};
@@ -132,7 +135,7 @@ extern "C" int rockcat_shift_lighting_load(uint16_t pid, uint8_t profile, rockca
 
 extern "C" int rockcat_shift_lighting_save(uint16_t pid, uint8_t profile, const rockcat_shift_lighting *in)
 {
-    if (!in || profile >= ROCKCAT_PROFILE_COUNT)
+    if (!in || profile >= MAX_PROFILES)
         return ROCKCAT_ERR_ARGUMENT;
     std::string path = config_path(pid);
     ini data = read_ini(path);
@@ -146,9 +149,37 @@ extern "C" int rockcat_shift_lighting_save(uint16_t pid, uint8_t profile, const 
     return write_ini(path, data) ? ROCKCAT_OK : ROCKCAT_ERR_IO;
 }
 
+// anything else somebody wants to remember per device and profile. "" when its not there
+std::string config_get(uint16_t pid, uint8_t profile, const std::string &key)
+{
+    ini data = read_ini(config_path(pid));
+    auto sec = data.find(section_name(profile));
+    if (sec == data.end())
+        return "";
+    auto it = sec->second.find(key);
+    return it == sec->second.end() ? "" : it->second;
+}
+
+bool config_set(uint16_t pid, uint8_t profile, const std::string &key, const std::string &value)
+{
+    std::string path = config_path(pid);
+    ini data = read_ini(path);
+    data[section_name(profile)][key] = value;
+    return write_ini(path, data);
+}
+
+// when the settings of that device were last written, so somebody who cached them knows when to look again. 0 = never
+long long config_stamp(uint16_t pid)
+{
+    struct stat st;
+    if (::stat(config_path(pid).c_str(), &st) != 0)
+        return 0;
+    return static_cast<long long>(st.st_mtim.tv_sec) * 1000000000LL + st.st_mtim.tv_nsec;
+}
+
 extern "C" int rockcat_engine_effect_load(uint16_t pid, uint8_t profile, uint8_t *effect)
 {
-    if (!effect || profile >= ROCKCAT_PROFILE_COUNT)
+    if (!effect || profile >= MAX_PROFILES)
         return ROCKCAT_ERR_ARGUMENT;
     *effect = ROCKCAT_EFFECT_AIMO;
     ini data = read_ini(config_path(pid));
@@ -163,7 +194,7 @@ extern "C" int rockcat_engine_effect_load(uint16_t pid, uint8_t profile, uint8_t
 
 extern "C" int rockcat_engine_effect_save(uint16_t pid, uint8_t profile, uint8_t effect)
 {
-    if (profile >= ROCKCAT_PROFILE_COUNT)
+    if (profile >= MAX_PROFILES)
         return ROCKCAT_ERR_ARGUMENT;
     std::string path = config_path(pid);
     ini data = read_ini(path);

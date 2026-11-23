@@ -26,7 +26,7 @@ endif
 # pacman has no idea whats installed on a non arch box, so it doesnt get asked there
 MAKEPKG_FLAGS ?= $(if $(wildcard /etc/arch-release),,--nodeps)
 
-.PHONY: all test check run install uninstall clean distclean deb arch pkg packages help
+.PHONY: all test check run install uninstall clean distclean deb arch pkg packages udev-rules help
 
 all:
 > cmake -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -DCMAKE_INSTALL_PREFIX=$(PREFIX)
@@ -79,6 +79,10 @@ arch pkg:
 
 packages: deb arch
 
+# after adding a device to the table. the test suite complains if you forget
+udev-rules: all
+> $(BUILD_DIR)/rockcat-cli udev-rules > data/70-rockcat.rules
+
 help:
 > @echo "make              build into $(BUILD_DIR)/"
 > @echo "make test         build + run the offline tests"
@@ -90,5 +94,6 @@ help:
 > @echo "make deb          $(DIST_DIR)/rockcat-swarm_$(PKGVERSION)-1_<arch>.deb"
 > @echo "make arch         $(DIST_DIR)/rockcat-swarm-$(PKGVERSION)-1-<arch>.pkg.tar.zst"
 > @echo "make packages     both of them"
+> @echo "make udev-rules   regenerate data/70-rockcat.rules from the device table"
 > @echo
 > @echo "knobs: PREFIX, DESTDIR, BUILD_DIR, BUILD_TYPE, DIST_DIR, JOBS"

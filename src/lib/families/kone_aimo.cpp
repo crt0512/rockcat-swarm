@@ -342,5 +342,8 @@ const led_geo KONE_AIMO_LEDS[ROCKCAT_LED_COUNT] = {
     {-1, 1.0, 2, 5}, {1, 1.0, 2, 6},
 };
 
-const family_ops KONE_AIMO_FAMILY = {new_profile,  direct_begin, direct_frame,     direct_end,  direct_switch_fast,
-                                     direct_active, decode_event, input_label,      rockcat_led_name, layer_label};
+const family_ops KONE_AIMO_FAMILY = {kone_firmware_version, kone_get_active_profile, kone_set_active_profile,
+                                     new_profile,           direct_begin,            direct_frame,
+                                     direct_end,            direct_switch_fast,      direct_active,
+                                     decode_event,          input_label,             rockcat_led_name,
+                                     layer_label};

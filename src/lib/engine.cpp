@@ -7,11 +7,14 @@
 // [0e 06 01 00 00 ff] gives control back to the firmware effect.
 
 #include "internal.h"
+#include "kb_effects.h"
+#include "keyboards.h"
 
 #include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <mutex>
@@ -106,6 +109,11 @@ light_params params_of(const rockcat_profile &p)
     // a device without one of these keeps the default from above
     p.get_int(ROCKCAT_SET_BRIGHTNESS, &lp.brightness);
     p.get_int(ROCKCAT_SET_EFFECT_SPEED, &lp.speed);
+    // the renderer thinks in the 1 to 11 of the Kone AIMO, a device that counts 0 to 3 gets stretched onto that
+    const rockcat_caps &c = p.desc->caps;
+    if (c.effect_speed_max > c.effect_speed_min && (c.effect_speed_min != 1 || c.effect_speed_max != 11))
+        lp.speed = 1 + (std::min(std::max(lp.speed, c.effect_speed_min), c.effect_speed_max) - c.effect_speed_min) * 10 /
+                           (c.effect_speed_max - c.effect_speed_min);
     p.get_int(ROCKCAT_SET_COLOR_THEME, &lp.theme);
     return lp;
 }
@@ -253,16 +261,18 @@ struct rockcat_engine {
     std::mutex status_mutex;
     rockcat_engine_status status{};
     std::vector<rockcat_color> frame; // last one sent, same lock as status
+    bool keyboard = false;            // which of the two workers this one is
 };
 
 namespace {
 
 using clock_type = std::chrono::steady_clock;
 
-int acquire_lock()
+// one engine per device and user. name = "" is the one for mice, which is also what the user service holds
+int acquire_lock(const std::string &name = "")
 {
     const char *dir = std::getenv("XDG_RUNTIME_DIR");
-    std::string path = std::string(dir && *dir ? dir : "/tmp") + "/rockcat-engine.lock";
+    std::string path = std::string(dir && *dir ? dir : "/tmp") + "/rockcat-engine" + (name.empty() ? "" : "-" + name) + ".lock";
     int fd = ::open(path.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0600);
     if (fd < 0)
         return -1;
@@ -319,7 +329,24 @@ void run(rockcat_engine *e)
 
     while (!e->stop) {
         if (!dev) {
-            int r = rockcat_open(e->path.empty() ? nullptr : e->path.c_str(), &dev);
+            // without a path: the first device that lets the pc drive its leds, a Kova next to a Kone must not steal the engine
+            std::string path = e->path;
+            if (path.empty()) {
+                rockcat_device_info infos[16];
+                int n = std::min(rockcat_enumerate(infos, 16), 16);
+                for (int i = 0; i < n && path.empty(); ++i) {
+                    const device_desc *d = device_find(infos[i].vendor_id, infos[i].product_id);
+                    // mice only for now: the effects in here are written for a handful of leds, not for 120 keys
+                    if (d && d->family == &KONE_AIMO_FAMILY && (d->caps.features & ROCKCAT_HAS_DIRECT_LIGHT))
+                        path = infos[i].path;
+                }
+            }
+            int r = path.empty() ? ROCKCAT_ERR_NO_DEVICE : rockcat_open(path.c_str(), &dev);
+            if (r == ROCKCAT_OK && (dev->desc->family != &KONE_AIMO_FAMILY || !(dev->desc->caps.features & ROCKCAT_HAS_DIRECT_LIGHT))) {
+                rockcat_close(dev);
+                dev = nullptr;
+                r = ROCKCAT_ERR_UNSUPPORTED;
+            }
             if (r != ROCKCAT_OK) {
                 fail(r);
                 for (int i = 0; i < 20 && !e->stop; ++i)
@@ -521,6 +548,280 @@ void run(rockcat_engine *e)
     set_status(e, st);
 }
 
+/* ---- the keyboard worker ------------------------------------------------- */
+
+// the plain worker, for everything that is not a Kone AIMO: a keyboard with 120 keys that sit somewhere and get
+// pressed, or a mouse with two lights. it follows the active profile and draws the effects the device cant
+// (kb_effects.cpp has them). with any other effect it keeps its hands off and the device shows its own profile
+void run_keyboard(rockcat_engine *e)
+{
+    rockcat_engine_status st{};
+    st.running = 1;
+    st.profile = 0xff;
+    rockcat_device *dev = nullptr;
+    rockcat_profile *prof = nullptr;
+    kb_board board;
+    kb_fx *fx = kb_fx_new();
+    std::vector<rockcat_color> frame, sent;
+    // the Easy-Shift light layer of the active profile, and whether Easy-Shift is down right now
+    std::vector<rockcat_color> shift_colors;
+    int shift_on = 0, shift_effect = ROCKCAT_EFFECT_FULLY_LIT;
+    // an effect on the Easy-Shift layer runs on its own board, its colours are the layers
+    kb_fx *shift_fx = kb_fx_new();
+    kb_board shift_board;
+    bool shift_down = false;
+    int effect = ROCKCAT_EFFECT_OFF;
+    long long stamp = 0;
+    bool rendering = false, shift_taken = false;
+    const auto start = clock_type::now();
+    auto last_check = start - std::chrono::seconds(10);
+    auto last_look = start;
+    auto last_frame = start, last_sent = start;
+
+    auto seconds = [&] { return std::chrono::duration<double>(clock_type::now() - start).count(); };
+    auto nap = [&](int ms) {
+        for (int i = 0; i < ms / 50 && !e->stop; ++i)
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    };
+    auto drop = [&](int err) {
+        st.last_error = err;
+        st.rendering = 0;
+        st.profile = 0xff;
+        rendering = false;
+        shift_taken = shift_down = false;
+        rockcat_profile_free(prof);
+        prof = nullptr;
+        if (dev)
+            rockcat_close(dev);
+        dev = nullptr;
+        set_status(e, st);
+    };
+    // which effect the profile wants (the one kept on the pc if the keyboard only has the carrier) and its settings.
+    // no talking to the keyboard in here, so this is cheap enough to do whenever the config file changes
+    auto look = [&] {
+        int by_engine = 0;
+        rockcat_profile_get_effect(prof, &effect, &by_engine);
+        stamp = config_stamp(dev->desc->pid);
+        kb_fx_setup(fx, effect, kb_fx_options(dev->desc->pid, static_cast<uint8_t>(st.profile), effect));
+        st.effect = static_cast<uint8_t>(effect);
+        shift_colors.assign(static_cast<size_t>(board.leds), rockcat_color{0, 0, 0, 0});
+        rockcat_shift_layer_get(dev->desc->pid, static_cast<uint8_t>(st.profile), &shift_on, shift_colors.data(), board.leds);
+        // only keyboards tell when Easy-Shift goes down
+        shift_on = shift_on && dev->desc->keyboard;
+        shift_effect = rockcat_shift_layer_effect(dev->desc->pid, static_cast<uint8_t>(st.profile));
+        shift_board = board;
+        for (int i = 0; i < board.leds; ++i) {
+            const rockcat_color &c = shift_colors[static_cast<size_t>(i)];
+            shift_board.base[static_cast<size_t>(i)] = c.a ? rockcat_color{255, c.r, c.g, c.b} : rockcat_color{255, 0, 0, 0};
+        }
+        const uint8_t slot = static_cast<uint8_t>(st.profile | ROCKCAT_SHIFT_LAYER);
+        kb_fx_setup(shift_fx, shift_effect, kb_fx_options(dev->desc->pid, slot, shift_effect));
+        return effect >= 0 && effect < 32 && ((dev->desc->caps.software_effects >> effect) & 1);
+    };
+
+    while (!e->stop) {
+        if (!dev) {
+            int r = rockcat_open(e->path.c_str(), &dev);
+            if (r == ROCKCAT_OK && (!dev->desc || dev->desc->family == &KONE_AIMO_FAMILY || !(dev->desc->caps.features & ROCKCAT_HAS_DIRECT_LIGHT))) {
+                rockcat_close(dev);
+                dev = nullptr;
+                r = ROCKCAT_ERR_UNSUPPORTED;
+            }
+            if (r != ROCKCAT_OK) {
+                drop(r);
+                nap(2000);
+                continue;
+            }
+            board = kb_board{};
+            board.leds = dev->desc->caps.led_count;
+            board.x.assign(static_cast<size_t>(board.leds), -1);
+            board.y.assign(static_cast<size_t>(board.leds), -1);
+            // a device without a key table (a mouse) just has its lights in a row
+            for (int i = 0; i < board.leds && !dev->desc->keyboard; ++i) {
+                board.x[static_cast<size_t>(i)] = board.leds > 1 ? static_cast<double>(i) / (board.leds - 1) : 0.5;
+                board.y[static_cast<size_t>(i)] = 0.5;
+            }
+            if (const keyboard_layout *kb = dev->desc->keyboard) {
+                // every layout the tables have, so a key that only exists on one of them has its place too.
+                // 0 to 1 is from the leftmost key to the rightmost and from the top row to the bottom one
+                double x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+                for (int pass = 0; pass < 2; ++pass)
+                    for (int r2 = 0; r2 < kb->region_count; ++r2)
+                        for (int i = 0; i < kb->regions[r2].count; ++i) {
+                            const rockcat_key &k = kb->regions[r2].keys[i];
+                            if (k.led < 0 || k.led >= board.leds)
+                                continue;
+                            double cx = k.x + k.w / 2.0, cy = k.y + k.h / 2.0;
+                            if (pass == 0) {
+                                x0 = std::min(x0, cx);
+                                x1 = std::max(x1, cx);
+                                y0 = std::min(y0, cy);
+                                y1 = std::max(y1, cy);
+                            } else if (board.x[static_cast<size_t>(k.led)] < 0) {
+                                board.x[static_cast<size_t>(k.led)] = (cx - x0) / std::max(1.0, x1 - x0);
+                                board.y[static_cast<size_t>(k.led)] = (cy - y0) / std::max(1.0, y1 - y0);
+                            }
+                        }
+                if (x1 > x0)
+                    board.aspect = (y1 - y0) / (x1 - x0);
+            }
+            st.last_error = ROCKCAT_OK;
+            e->reload = true;
+        }
+
+        // which profile is active and what does it want. asked again every two seconds (somebody may have switched it
+        // with a key or with the cli) and at once when somebody says so
+        auto now = clock_type::now();
+        bool asked = e->reload.exchange(false);
+        if (asked || now - last_check > std::chrono::seconds(2)) {
+            last_check = now;
+            uint8_t active = 0;
+            int r = rockcat_get_active_profile(dev, &active, nullptr);
+            if (r != ROCKCAT_OK) {
+                drop(r);
+                continue;
+            }
+            if (asked || active != st.profile || !prof) {
+                rockcat_profile *p = nullptr;
+                r = rockcat_profile_read(dev, active, &p);
+                if (r != ROCKCAT_OK) {
+                    drop(r);
+                    continue;
+                }
+                rockcat_profile_free(prof);
+                prof = p;
+                st.profile = active;
+                int brightness = 255;
+                rockcat_profile_get_int(prof, ROCKCAT_SET_BRIGHTNESS, &brightness);
+                board.level = brightness / 255.0;
+                board.base.assign(static_cast<size_t>(board.leds), rockcat_color{255, 0, 0, 0});
+                for (int i = 0; i < board.leds; ++i) {
+                    int on = 0;
+                    rockcat_color c{};
+                    if (rockcat_profile_get_led(prof, i, &c, &on) == ROCKCAT_OK && on)
+                        board.base[static_cast<size_t>(i)] = c;
+                }
+                bool ours = look();
+                // always said again, also when nothing changed: a profile write or the gui may have taken the leds
+                // back to the keyboard (or left them with the pc) in the meantime
+                r = ours ? rockcat_direct_begin(dev) : rockcat_direct_end(dev);
+                if (r != ROCKCAT_OK) {
+                    drop(r);
+                    continue;
+                }
+                rendering = ours;
+                sent.clear(); // whatever the device shows now, the next frame goes out
+                shift_taken = false; // (and an Easy-Shift layer that was showing is gone with that)
+            }
+        }
+        // the settings of the effects live in a file on the pc. when that changes (somebody moved a slider in the gui)
+        // they get read again, a few times a second is plenty
+        if (prof && now - last_look > std::chrono::milliseconds(200)) {
+            last_look = now;
+            if (config_stamp(dev->desc->pid) != stamp) {
+                bool ours = look();
+                if (ours != rendering) {
+                    int r = ours ? rockcat_direct_begin(dev) : rockcat_direct_end(dev);
+                    if (r != ROCKCAT_OK) {
+                        drop(r);
+                        continue;
+                    }
+                    rendering = ours;
+                    sent.clear(); // whatever the device shows now, the next frame goes out
+                    shift_taken = false; // (and an Easy-Shift layer that was showing is gone with that)
+                }
+            }
+        }
+
+        // what the device has to say. while drawing its only a quick look: on a keyboard a frame takes long enough by
+        // itself, a device that swallows a frame in no time gets the rest of a thirtieth of a second spent here
+        rockcat_event ev;
+        int spare = 33 - static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(clock_type::now() - last_frame).count());
+        int got = rockcat_poll_event(dev, &ev, rendering || shift_taken ? std::max(1, spare) : shift_on ? 30 : 150);
+        bool gone = false;
+        while (got != 0) {
+            if (got < 0) {
+                gone = true;
+                break;
+            }
+            if (ev.type == ROCKCAT_EVENT_KEY) {
+                kb_fx_key(fx, board, ev.value, ev.pressed != 0, seconds());
+                kb_fx_key(shift_fx, shift_board, ev.value, ev.pressed != 0, seconds());
+            }
+            else if (ev.type == ROCKCAT_EVENT_EASYSHIFT)
+                shift_down = ev.pressed != 0;
+            else if (ev.type == ROCKCAT_EVENT_CHANGED)
+                e->reload = true;
+            got = rockcat_poll_event(dev, &ev, 1);
+        }
+        if (gone) {
+            drop(ROCKCAT_ERR_IO);
+            nap(1000);
+            continue;
+        }
+        // Easy-Shift held with a light layer: the pc takes the leds for as long as it is held, also from an effect the
+        // keyboard draws itself, and gives them back when it is let go
+        const bool showing_shift = shift_on && shift_down;
+        if (showing_shift != shift_taken) {
+            int r = ROCKCAT_OK;
+            if (showing_shift && !rendering)
+                r = rockcat_direct_begin(dev);
+            else if (!showing_shift && !rendering)
+                r = rockcat_direct_end(dev);
+            if (r != ROCKCAT_OK) {
+                drop(r);
+                continue;
+            }
+            shift_taken = showing_shift;
+            sent.clear();
+        }
+        st.rendering = rendering || showing_shift;
+        if (!rendering && !showing_shift) {
+            set_status(e, st);
+            continue;
+        }
+
+        const double dt = std::chrono::duration<double>(clock_type::now() - last_frame).count();
+        last_frame = clock_type::now();
+        frame.assign(static_cast<size_t>(board.leds), rockcat_color{255, 0, 0, 0});
+        kb_fx_render(fx, board, seconds(), std::min(dt, 0.25), frame.data());
+        const bool shift_moves = shift_effect >= 0 && shift_effect < 32 && ((dev->desc->caps.software_effects >> shift_effect) & 1);
+        if (showing_shift && shift_moves) {
+            frame.assign(static_cast<size_t>(board.leds), rockcat_color{255, 0, 0, 0});
+            kb_fx_render(shift_fx, shift_board, seconds(), std::min(dt, 0.25), frame.data());
+        } else if (showing_shift) {
+            for (int i = 0; i < board.leds; ++i)
+                frame[static_cast<size_t>(i)] = shift_board.base[static_cast<size_t>(i)];
+        }
+        // a picture that did not change is not sent again (a heatmap nobody types on, a slow colour flow between two
+        // steps): less for the device to chew on. once a second it goes out regardless, in case something else
+        // painted over it
+        bool same = sent.size() == frame.size() && std::memcmp(sent.data(), frame.data(), frame.size() * sizeof frame[0]) == 0;
+        if (!same || last_frame - last_sent > std::chrono::seconds(1)) {
+            int r = rockcat_direct_frame(dev, frame.data(), board.leds);
+            if (r != ROCKCAT_OK) {
+                drop(r);
+                continue;
+            }
+            sent = frame;
+            last_sent = last_frame;
+        }
+        {
+            std::lock_guard<std::mutex> g(e->status_mutex);
+            e->status = st;
+            e->frame = frame;
+        }
+    }
+    if (dev) {
+        if (rendering || shift_taken)
+            rockcat_direct_end(dev);
+        rockcat_close(dev);
+    }
+    rockcat_profile_free(prof);
+    kb_fx_free(fx);
+    kb_fx_free(shift_fx);
+}
+
 } // namespace
 
 extern "C" int rockcat_engine_start(const char *path, rockcat_engine_mode mode, rockcat_engine **out)
@@ -531,16 +832,34 @@ extern "C" int rockcat_engine_start(const char *path, rockcat_engine_mode mode, 
     int r = rockcat_init();
     if (r != ROCKCAT_OK)
         return r;
-    int fd = acquire_lock();
+    // the Kone AIMO has a worker of its own (the first one there was, with everything that mouse needs). every other
+    // device gets the plain one and a lock of its own, so they can all run next to each other
+    bool keyboard = false;
+    std::string lock;
+    if (path && *path) {
+        rockcat_device_info infos[16];
+        int n = std::min(std::max(rockcat_enumerate(infos, 16), 0), 16);
+        for (int i = 0; i < n; ++i) {
+            const device_desc *d = device_find(infos[i].vendor_id, infos[i].product_id);
+            if (d && std::strcmp(infos[i].path, path) == 0 && d->family != &KONE_AIMO_FAMILY) {
+                char pid[8];
+                std::snprintf(pid, sizeof pid, "%04x", infos[i].product_id);
+                keyboard = true;
+                lock = pid;
+            }
+        }
+    }
+    int fd = acquire_lock(lock);
     if (fd < 0)
         return ROCKCAT_ERR_BUSY;
     auto *e = new rockcat_engine;
     e->path = path ? path : "";
     e->mode = mode;
     e->lock_fd = fd;
+    e->keyboard = keyboard;
     e->status.running = 1;
     e->status.profile = 0xff;
-    e->worker = std::thread(run, e);
+    e->worker = std::thread(keyboard ? run_keyboard : run, e);
     *out = e;
     return ROCKCAT_OK;
 }

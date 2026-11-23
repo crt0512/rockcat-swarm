@@ -12,3 +12,4 @@ compile_commands.json
 /aur/*/*.tar.*
 DEV/
 .vscode/
+.mcp.json

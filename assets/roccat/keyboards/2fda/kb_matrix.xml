@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RYOS_MK_FX>
+	<REGION value="1" key_count="113"><!--DE-->
+		<KEY name="Esc" index="1" x="77" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F1" index="2" x="128" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="320" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F2" index="14" x="154" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="384" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F3" index="3" x="179" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="447" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F4" index="15" x="204" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="510" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F5" index="4" x="242" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="605" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F6" index="16" x="267" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="668" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F7" index="5" x="293" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="731" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F8" index="17" x="318" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="795" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F9" index="6" x="356" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="890" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F10" index="7" x="381" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="953" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F11" index="8" x="407" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1016" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F12" index="20" x="432" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1079" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Print" index="9" x="465" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Scroll" index="21" x="491" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Break" index="33" x="516" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="177" t_w="61" t_h="61"/>
+		
+		<KEY name="M1" index="0" x="43" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="`" index="12" x="77" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="1" index="13" x="103" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="257" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="2" index="25" x="128" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="320" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="3" index="26" x="154" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="384" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="4" index="27" x="179" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="447" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="5" index="39" x="204" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="510" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="6" index="28" x="229" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="573" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="7" index="40" x="255" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="637" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="8" index="29" x="280" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="700" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="9" index="41" x="305" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="763" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="0" index="18" x="331" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="826" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="_" index="30" x="356" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="890" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="=" index="19" x="381" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="953" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Back" index="44" x="407" y="106" w="49" h="25" polygon="4" regular_polygon="1" t_x="1016" t_y="266" t_w="124" t_h="61"/>
+		<KEY name="Ins" index="45" x="465" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Home" index="57" x="491" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Pg_up" index="69" x="516" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Num" index="10" x="550" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="/" index="22" x="576" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1440" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="*" index="11" x="601" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="-" index="23" x="626" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1566" t_y="266" t_w="61" t_h="61"/>
+		
+		<KEY name="M2" index="24" x="43" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="109" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Tab" index="36" x="77" y="132" w="38" h="24" polygon="4" regular_polygon="1" t_x="194" t_y="329" t_w="92" t_h="61"/>
+		<KEY name="Q" index="37" x="116" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="289" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="W" index="49" x="141" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="352" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="E" index="38" x="166" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="415" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="R" index="50" x="191" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="478" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="T" index="51" x="217" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="542" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Z" index="52" x="242" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="605" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="U" index="64" x="267" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="668" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="I" index="53" x="293" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="731" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="O" index="42" x="318" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="795" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="P" index="54" x="343" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="858" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="[" index="31" x="368" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="921" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="]" index="43" x="394" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="984" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Enter" index="68" x="419" y="132" w="37" h="50" polygon="12" regular_polygon="0" t_x="1070" t_y="355" t_w="61" t_h="61">
+			<POLYGON x1="419" y1="133" x2="420" y2="132" x3="454" y3="132" x4="456" y4="133" x5="456" y5="181" x6="453" y6="182" x7="427" y7="182" x8="425" y8="179" x9="425" y9="158" x10="422" y10="155" x11="420" y11="155" x12="419" y12="154"/>
+		</KEY>
+		<KEY name="Del" index="81" x="465" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1165" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="End" index="93" x="491" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1228" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Pg_down" index="105" x="516" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1291" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_7" index="34" x="550" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1376" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_8" index="46" x="576" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1440" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_9" index="35" x="601" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1503" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_+" index="47" x="626" y="132" w="25" h="50" polygon="4" regular_polygon="1" t_x="1566" t_y="329" t_w="61" t_h="124"/>
+		
+		<KEY name="M3" index="48" x="43" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Left+" index="60" x="77" y="157" w="44" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="392" t_w="108" t_h="61"/>
+		<KEY name="A" index="61" x="122" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="305" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="S" index="73" x="147" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="368" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="D" index="62" x="172" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="431" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="F" index="74" x="198" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="494" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="G" index="63" x="223" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="558" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="H" index="75" x="248" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="621" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="J" index="76" x="274" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="684" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="K" index="65" x="299" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="747" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="L" index="66" x="324" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="811" t_y="392" t_w="61" t_h="61"/>
+		<KEY name=";" index="78" x="349" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="874" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="'" index="55" x="374" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="937" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="U" index="67" x="400" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1000" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_4" index="58" x="550" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_5" index="70" x="576" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1440" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_6" index="59" x="601" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="392" t_w="61" t_h="61"/>
+		
+		<KEY name="M4" index="72" x="43" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="109" t_y="455" t_w="61" t_h="61"/>
+		<KEY name="L_Shift" index="84" x="77" y="183" w="30" h="24" polygon="4" regular_polygon="1" t_x="194" t_y="456" t_w="77" t_h="61"/>
+		<KEY name=">" index="85" x="109" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="273" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Y" index="97" x="135" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="336" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="X" index="86" x="160" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="399" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="C" index="98" x="185" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="463" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="V" index="87" x="210" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="526" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="B" index="99" x="236" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="589" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="N" index="88" x="261" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="652" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="M" index="77" x="286" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="716" t_y="456" t_w="61" t_h="61"/>
+		<KEY name=";" index="89" x="312" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="779" t_y="456" t_w="61" t_h="61"/>
+		<KEY name=":" index="90" x="337" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="842" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="-" index="79" x="362" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="905" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="R_Shift" index="80" x="387" y="183" w="69" h="24" polygon="4" regular_polygon="1" t_x="969" t_y="456" t_w="171" t_h="61"/>
+		<KEY name="Up" index="117" x="491" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="1228" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_1" index="82" x="550" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="1376" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_2" index="94" x="576" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="1440" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_3" index="83" x="601" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="1503" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="R_Enter" index="95" x="626" y="183" w="25" h="50" polygon="4" regular_polygon="1" t_x="1566" t_y="456" t_w="61" t_h="124"/>
+		
+		<KEY name="M5" index="96" x="43" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="517" t_w="61" t_h="61"/>
+		<KEY name="L_Ctrl" index="108" x="77" y="208" w="38" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="519" t_w="92" t_h="61"/>
+		<KEY name="L_Win" index="109" x="116" y="208" w="24" h="25" polygon="4" regular_polygon="1" t_x="289" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="L_Alt" index="110" x="141" y="208" w="30" h="25" polygon="4" regular_polygon="1" t_x="352" t_y="519" t_w="77" t_h="61"/>
+		<KEY name="Space" index="112" x="172" y="208" w="164" h="25" polygon="4" regular_polygon="1" t_x="431" t_y="519" t_w="409" t_h="61"/>
+		<KEY name="R_Alt" index="114" x="337" y="208" w="30" h="25" polygon="4" regular_polygon="1" t_x="842" t_y="519" t_w="77" t_h="61"/>
+		<KEY name="Fn" index="115" x="368" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="921" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Menu" index="103" x="394" y="208" w="24" h="25" polygon="4" regular_polygon="1" t_x="984" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="R_Ctrl" index="92" x="420" y="208" w="36" h="25" polygon="4" regular_polygon="1" t_x="1048" t_y="519" t_w="92" t_h="61"/>
+		<KEY name="Left" index="104" x="465" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Down" index="116" x="491" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Right" index="118" x="516" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Num_0" index="106" x="550" y="208" w="50" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="519" t_w="125" t_h="61"/>
+		<KEY name="Num_." index="107" x="601" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="519" t_w="61" t_h="61"/>
+		
+		<KEY name="T1" index="121" x="213" y="245" w="28" h="21" polygon="6" regular_polygon="0" t_x="533" t_y="613" t_w="67" t_h="53">
+			<!--<POLYGON x1="212" y1="252" x2="219" y2="245" x3="240" y3="245" x4="236" y4="266" x5="228" y5="266"/>-->
+			<POLYGON x1="213" y1="251" x2="219" y2="245" x3="240" y3="245" x4="236" y4="266" x5="228" y5="266" x6="213" y6="253"/>
+		</KEY>
+		<KEY name="T2" index="122" x="237" y="245" w="28" h="21" polygon="4" regular_polygon="0" t_x="593" t_y="613" t_w="69" t_h="53">
+			<POLYGON x1="241" y1="245" x2="260" y2="245" x3="264" y3="266" x4="237" y4="266"/>
+		</KEY>
+		<KEY name="T3" index="123" x="261" y="245" w="28" h="21" polygon="6" regular_polygon="0" t_x="654" t_y="613" t_w="67" t_h="53">
+			<POLYGON x1="261" y1="245" x2="282" y2="245" x3="288" y3="251" x4="288" y4="254" x5="273" y5="266" x6="265" y6="266"/>
+		</KEY>		
+	</REGION>
+	<REGION value="0" key_count="112"><!--US-->
+		<KEY name="Esc" index="1" x="77" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F1" index="2" x="128" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="320" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F2" index="14" x="154" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="384" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F3" index="3" x="179" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="447" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F4" index="15" x="204" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="510" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F5" index="4" x="242" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="605" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F6" index="16" x="267" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="668" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F7" index="5" x="293" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="731" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F8" index="17" x="318" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="795" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F9" index="6" x="356" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="890" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F10" index="7" x="381" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="953" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F11" index="8" x="407" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1016" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F12" index="20" x="432" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1079" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Print" index="9" x="465" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Scroll" index="21" x="491" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Break" index="33" x="516" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="177" t_w="61" t_h="61"/>
+		
+		<KEY name="M1" index="0" x="43" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="`" index="12" x="77" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="1" index="13" x="103" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="257" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="2" index="25" x="128" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="320" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="3" index="26" x="154" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="384" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="4" index="27" x="179" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="447" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="5" index="39" x="204" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="510" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="6" index="28" x="229" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="573" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="7" index="40" x="255" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="637" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="8" index="29" x="280" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="700" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="9" index="41" x="305" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="763" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="0" index="18" x="331" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="826" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="_" index="30" x="356" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="890" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="=" index="19" x="381" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="953" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Back" index="44" x="407" y="106" w="49" h="25" polygon="4" regular_polygon="1" t_x="1016" t_y="266" t_w="124" t_h="61"/>
+		<KEY name="Ins" index="45" x="465" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Home" index="57" x="491" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Pg_up" index="69" x="516" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Num" index="10" x="550" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="/" index="22" x="576" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1440" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="*" index="11" x="601" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="-" index="23" x="626" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1566" t_y="266" t_w="61" t_h="61"/>
+		
+		<KEY name="M2" index="24" x="43" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="109" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Tab" index="36" x="77" y="132" w="38" h="24" polygon="4" regular_polygon="1" t_x="194" t_y="329" t_w="92" t_h="61"/>
+		<KEY name="Q" index="37" x="116" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="289" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="W" index="49" x="141" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="352" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="E" index="38" x="166" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="415" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="R" index="50" x="191" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="478" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="T" index="51" x="217" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="542" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Z" index="52" x="242" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="605" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="U" index="64" x="267" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="668" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="I" index="53" x="293" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="731" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="O" index="42" x="318" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="795" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="P" index="54" x="343" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="858" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="[" index="31" x="368" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="921" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="]" index="43" x="394" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="984" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="\" index="56" x="419" y="132" w="37" h="24" polygon="4" regular_polygon="1" t_x="1048" t_y="329" t_w="93" t_h="61"/>
+		<KEY name="Del" index="81" x="465" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1165" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="End" index="93" x="491" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1228" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Pg_down" index="105" x="516" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1291" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_7" index="34" x="550" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1376" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_8" index="46" x="576" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1440" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_9" index="35" x="601" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1503" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_+" index="47" x="626" y="132" w="25" h="50" polygon="4" regular_polygon="1" t_x="1566" t_y="329" t_w="61" t_h="124"/>
+		
+		<KEY name="M3" index="48" x="43" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Left+" index="60" x="77" y="157" w="44" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="392" t_w="108" t_h="61"/>
+		<KEY name="A" index="61" x="122" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="305" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="S" index="73" x="147" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="368" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="D" index="62" x="172" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="431" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="F" index="74" x="198" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="494" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="G" index="63" x="223" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="558" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="H" index="75" x="248" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="621" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="J" index="76" x="274" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="684" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="K" index="65" x="299" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="747" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="L" index="66" x="324" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="811" t_y="392" t_w="61" t_h="61"/>
+		<KEY name=";" index="78" x="349" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="874" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="'" index="55" x="374" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="937" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Enter" index="68" x="400" y="157" w="56" h="25" polygon="4" regular_polygon="1" t_x="1000" t_y="392" t_w="140" t_h="61"/>		
+		<KEY name="Num_4" index="58" x="550" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_5" index="70" x="576" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1440" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_6" index="59" x="601" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="392" t_w="61" t_h="61"/>
+		
+		<KEY name="M4" index="72" x="43" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="109" t_y="455" t_w="61" t_h="61"/>
+		<KEY name="L_Shift" index="84" x="77" y="183" w="57" h="24" polygon="4" regular_polygon="1" t_x="194" t_y="456" t_w="140" t_h="61"/>		
+		<KEY name="Z" index="97" x="135" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="336" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="X" index="86" x="160" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="399" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="C" index="98" x="185" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="463" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="V" index="87" x="210" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="526" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="B" index="99" x="236" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="589" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="N" index="88" x="261" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="652" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="M" index="77" x="286" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="716" t_y="456" t_w="61" t_h="61"/>
+		<KEY name=";" index="89" x="312" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="779" t_y="456" t_w="61" t_h="61"/>
+		<KEY name=":" index="90" x="337" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="842" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="/" index="79" x="362" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="905" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="R_Shift" index="80" x="387" y="183" w="69" h="24" polygon="4" regular_polygon="1" t_x="969" t_y="456" t_w="171" t_h="61"/>
+		<KEY name="Up" index="117" x="491" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="1228" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_1" index="82" x="550" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="1376" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_2" index="94" x="576" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="1440" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_3" index="83" x="601" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="1503" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="R_Enter" index="95" x="626" y="183" w="25" h="50" polygon="4" regular_polygon="1" t_x="1566" t_y="456" t_w="61" t_h="124"/>
+		
+		<KEY name="M5" index="96" x="43" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="517" t_w="61" t_h="61"/>
+		<KEY name="L_Ctrl" index="108" x="77" y="208" w="38" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="519" t_w="92" t_h="61"/>
+		<KEY name="L_Win" index="109" x="116" y="208" w="24" h="25" polygon="4" regular_polygon="1" t_x="289" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="L_Alt" index="110" x="141" y="208" w="30" h="25" polygon="4" regular_polygon="1" t_x="352" t_y="519" t_w="77" t_h="61"/>
+		<KEY name="Space" index="112" x="172" y="208" w="164" h="25" polygon="4" regular_polygon="1" t_x="431" t_y="519" t_w="409" t_h="61"/>
+		<KEY name="R_Alt" index="114" x="337" y="208" w="30" h="25" polygon="4" regular_polygon="1" t_x="842" t_y="519" t_w="77" t_h="61"/>
+		<KEY name="Fn" index="115" x="368" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="921" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Menu" index="103" x="394" y="208" w="24" h="25" polygon="4" regular_polygon="1" t_x="984" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="R_Ctrl" index="92" x="420" y="208" w="36" h="25" polygon="4" regular_polygon="1" t_x="1048" t_y="519" t_w="92" t_h="61"/>
+		<KEY name="Left" index="104" x="465" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Down" index="116" x="491" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Right" index="118" x="516" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Num_0" index="106" x="550" y="208" w="50" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="519" t_w="125" t_h="61"/>
+		<KEY name="Num_." index="107" x="601" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="519" t_w="61" t_h="61"/>
+		
+		<KEY name="T1" index="121" x="213" y="245" w="28" h="21" polygon="6" regular_polygon="0" t_x="533" t_y="613" t_w="67" t_h="53">
+			<!--<POLYGON x1="212" y1="252" x2="219" y2="245" x3="240" y3="245" x4="236" y4="266" x5="228" y5="266"/>-->
+			<POLYGON x1="213" y1="251" x2="219" y2="245" x3="240" y3="245" x4="236" y4="266" x5="228" y5="266" x6="213" y6="253"/>
+		</KEY>
+		<KEY name="T2" index="122" x="237" y="245" w="28" h="21" polygon="4" regular_polygon="0" t_x="593" t_y="613" t_w="69" t_h="53">
+			<POLYGON x1="241" y1="245" x2="260" y2="245" x3="264" y3="266" x4="237" y4="266"/>
+		</KEY>
+		<KEY name="T3" index="123" x="261" y="245" w="28" h="21" polygon="6" regular_polygon="0" t_x="654" t_y="613" t_w="67" t_h="53">
+			<POLYGON x1="261" y1="245" x2="282" y2="245" x3="288" y3="251" x4="288" y4="254" x5="273" y5="266" x6="265" y6="266"/>
+		</KEY>		
+	</REGION>
+	<REGION value="3" key_count="113"><!--FR-->
+		<KEY name="Esc" index="1" x="77" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F1" index="2" x="128" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="320" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F2" index="14" x="154" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="384" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F3" index="3" x="179" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="447" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F4" index="15" x="204" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="510" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F5" index="4" x="242" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="605" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F6" index="16" x="267" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="668" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F7" index="5" x="293" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="731" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F8" index="17" x="318" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="795" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F9" index="6" x="356" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="890" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F10" index="7" x="381" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="953" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F11" index="8" x="407" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1016" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F12" index="20" x="432" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1079" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Print" index="9" x="465" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Scroll" index="21" x="491" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Break" index="33" x="516" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="177" t_w="61" t_h="61"/>
+		
+		<KEY name="M1" index="0" x="43" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="`" index="12" x="77" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="1" index="13" x="103" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="257" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="2" index="25" x="128" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="320" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="3" index="26" x="154" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="384" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="4" index="27" x="179" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="447" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="5" index="39" x="204" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="510" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="6" index="28" x="229" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="573" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="7" index="40" x="255" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="637" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="8" index="29" x="280" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="700" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="9" index="41" x="305" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="763" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="0" index="18" x="331" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="826" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="_" index="30" x="356" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="890" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="=" index="19" x="381" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="953" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Back" index="44" x="407" y="106" w="49" h="25" polygon="4" regular_polygon="1" t_x="1016" t_y="266" t_w="124" t_h="61"/>
+		<KEY name="Ins" index="45" x="465" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Home" index="57" x="491" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Pg_up" index="69" x="516" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Num" index="10" x="550" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="/" index="22" x="576" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1440" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="*" index="11" x="601" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="-" index="23" x="626" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1566" t_y="266" t_w="61" t_h="61"/>
+		
+		<KEY name="M2" index="24" x="43" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="109" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Tab" index="36" x="77" y="132" w="38" h="24" polygon="4" regular_polygon="1" t_x="194" t_y="329" t_w="92" t_h="61"/>
+		<KEY name="Q" index="37" x="116" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="289" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="W" index="49" x="141" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="352" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="E" index="38" x="166" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="415" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="R" index="50" x="191" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="478" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="T" index="51" x="217" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="542" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Z" index="52" x="242" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="605" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="U" index="64" x="267" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="668" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="I" index="53" x="293" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="731" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="O" index="42" x="318" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="795" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="P" index="54" x="343" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="858" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="[" index="31" x="368" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="921" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="]" index="43" x="394" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="984" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Enter" index="68" x="419" y="132" w="37" h="50" polygon="12" regular_polygon="0" t_x="1070" t_y="355" t_w="61" t_h="61">
+			<POLYGON x1="419" y1="133" x2="420" y2="132" x3="454" y3="132" x4="456" y4="133" x5="456" y5="181" x6="453" y6="182" x7="427" y7="182" x8="425" y8="179" x9="425" y9="158" x10="422" y10="155" x11="420" y11="155" x12="419" y12="154"/>
+		</KEY>
+		<KEY name="Del" index="81" x="465" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1165" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="End" index="93" x="491" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1228" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Pg_down" index="105" x="516" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1291" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_7" index="34" x="550" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1376" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_8" index="46" x="576" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1440" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_9" index="35" x="601" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1503" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_+" index="47" x="626" y="132" w="25" h="50" polygon="4" regular_polygon="1" t_x="1566" t_y="329" t_w="61" t_h="124"/>
+		
+		<KEY name="M3" index="48" x="43" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Left+" index="60" x="77" y="157" w="44" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="392" t_w="108" t_h="61"/>
+		<KEY name="A" index="61" x="122" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="305" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="S" index="73" x="147" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="368" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="D" index="62" x="172" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="431" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="F" index="74" x="198" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="494" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="G" index="63" x="223" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="558" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="H" index="75" x="248" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="621" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="J" index="76" x="274" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="684" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="K" index="65" x="299" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="747" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="L" index="66" x="324" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="811" t_y="392" t_w="61" t_h="61"/>
+		<KEY name=";" index="78" x="349" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="874" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="'" index="55" x="374" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="937" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="U" index="67" x="400" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1000" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_4" index="58" x="550" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_5" index="70" x="576" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1440" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_6" index="59" x="601" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="392" t_w="61" t_h="61"/>
+		
+		<KEY name="M4" index="72" x="43" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="109" t_y="455" t_w="61" t_h="61"/>
+		<KEY name="L_Shift" index="84" x="77" y="183" w="30" h="24" polygon="4" regular_polygon="1" t_x="194" t_y="456" t_w="77" t_h="61"/>
+		<KEY name=">" index="85" x="109" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="273" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Y" index="97" x="135" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="336" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="X" index="86" x="160" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="399" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="C" index="98" x="185" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="463" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="V" index="87" x="210" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="526" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="B" index="99" x="236" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="589" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="N" index="88" x="261" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="652" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="M" index="77" x="286" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="716" t_y="456" t_w="61" t_h="61"/>
+		<KEY name=";" index="89" x="312" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="779" t_y="456" t_w="61" t_h="61"/>
+		<KEY name=":" index="90" x="337" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="842" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="-" index="79" x="362" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="905" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="R_Shift" index="80" x="387" y="183" w="69" h="24" polygon="4" regular_polygon="1" t_x="969" t_y="456" t_w="171" t_h="61"/>
+		<KEY name="Up" index="117" x="491" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="1228" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_1" index="82" x="550" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="1376" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_2" index="94" x="576" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="1440" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_3" index="83" x="601" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="1503" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="R_Enter" index="95" x="626" y="183" w="25" h="50" polygon="4" regular_polygon="1" t_x="1566" t_y="456" t_w="61" t_h="124"/>
+		
+		<KEY name="M5" index="96" x="43" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="517" t_w="61" t_h="61"/>
+		<KEY name="L_Ctrl" index="108" x="77" y="208" w="38" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="519" t_w="92" t_h="61"/>
+		<KEY name="L_Win" index="109" x="116" y="208" w="24" h="25" polygon="4" regular_polygon="1" t_x="289" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="L_Alt" index="110" x="141" y="208" w="30" h="25" polygon="4" regular_polygon="1" t_x="352" t_y="519" t_w="77" t_h="61"/>
+		<KEY name="Space" index="112" x="172" y="208" w="164" h="25" polygon="4" regular_polygon="1" t_x="431" t_y="519" t_w="409" t_h="61"/>
+		<KEY name="R_Alt" index="114" x="337" y="208" w="30" h="25" polygon="4" regular_polygon="1" t_x="842" t_y="519" t_w="77" t_h="61"/>
+		<KEY name="Fn" index="115" x="368" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="921" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Menu" index="103" x="394" y="208" w="24" h="25" polygon="4" regular_polygon="1" t_x="984" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="R_Ctrl" index="92" x="420" y="208" w="36" h="25" polygon="4" regular_polygon="1" t_x="1048" t_y="519" t_w="92" t_h="61"/>
+		<KEY name="Left" index="104" x="465" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Down" index="116" x="491" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Right" index="118" x="516" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Num_0" index="106" x="550" y="208" w="50" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="519" t_w="125" t_h="61"/>
+		<KEY name="Num_." index="107" x="601" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="519" t_w="61" t_h="61"/>
+		
+		<KEY name="T1" index="121" x="213" y="245" w="28" h="21" polygon="6" regular_polygon="0" t_x="533" t_y="613" t_w="67" t_h="53">
+			<!--<POLYGON x1="212" y1="252" x2="219" y2="245" x3="240" y3="245" x4="236" y4="266" x5="228" y5="266"/>-->
+			<POLYGON x1="213" y1="251" x2="219" y2="245" x3="240" y3="245" x4="236" y4="266" x5="228" y5="266" x6="213" y6="253"/>
+		</KEY>
+		<KEY name="T2" index="122" x="237" y="245" w="28" h="21" polygon="4" regular_polygon="0" t_x="593" t_y="613" t_w="69" t_h="53">
+			<POLYGON x1="241" y1="245" x2="260" y2="245" x3="264" y3="266" x4="237" y4="266"/>
+		</KEY>
+		<KEY name="T3" index="123" x="261" y="245" w="28" h="21" polygon="6" regular_polygon="0" t_x="654" t_y="613" t_w="67" t_h="53">
+			<POLYGON x1="261" y1="245" x2="282" y2="245" x3="288" y3="251" x4="288" y4="254" x5="273" y5="266" x6="265" y6="266"/>
+		</KEY>		
+	</REGION>
+	<REGION value="5" key_count="113"><!--NR-->
+		<KEY name="Esc" index="1" x="77" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F1" index="2" x="128" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="320" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F2" index="14" x="154" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="384" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F3" index="3" x="179" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="447" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F4" index="15" x="204" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="510" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F5" index="4" x="242" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="605" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F6" index="16" x="267" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="668" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F7" index="5" x="293" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="731" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F8" index="17" x="318" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="795" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F9" index="6" x="356" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="890" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F10" index="7" x="381" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="953" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F11" index="8" x="407" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1016" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F12" index="20" x="432" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1079" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Print" index="9" x="465" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Scroll" index="21" x="491" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Break" index="33" x="516" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="177" t_w="61" t_h="61"/>
+		
+		<KEY name="M1" index="0" x="43" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="`" index="12" x="77" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="1" index="13" x="103" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="257" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="2" index="25" x="128" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="320" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="3" index="26" x="154" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="384" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="4" index="27" x="179" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="447" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="5" index="39" x="204" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="510" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="6" index="28" x="229" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="573" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="7" index="40" x="255" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="637" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="8" index="29" x="280" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="700" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="9" index="41" x="305" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="763" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="0" index="18" x="331" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="826" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="_" index="30" x="356" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="890" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="=" index="19" x="381" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="953" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Back" index="44" x="407" y="106" w="49" h="25" polygon="4" regular_polygon="1" t_x="1016" t_y="266" t_w="124" t_h="61"/>
+		<KEY name="Ins" index="45" x="465" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Home" index="57" x="491" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Pg_up" index="69" x="516" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Num" index="10" x="550" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="/" index="22" x="576" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1440" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="*" index="11" x="601" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="-" index="23" x="626" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1566" t_y="266" t_w="61" t_h="61"/>
+		
+		<KEY name="M2" index="24" x="43" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="109" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Tab" index="36" x="77" y="132" w="38" h="24" polygon="4" regular_polygon="1" t_x="194" t_y="329" t_w="92" t_h="61"/>
+		<KEY name="Q" index="37" x="116" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="289" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="W" index="49" x="141" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="352" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="E" index="38" x="166" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="415" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="R" index="50" x="191" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="478" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="T" index="51" x="217" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="542" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Z" index="52" x="242" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="605" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="U" index="64" x="267" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="668" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="I" index="53" x="293" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="731" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="O" index="42" x="318" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="795" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="P" index="54" x="343" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="858" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="[" index="31" x="368" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="921" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="]" index="43" x="394" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="984" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Enter" index="68" x="419" y="132" w="37" h="50" polygon="12" regular_polygon="0" t_x="1070" t_y="355" t_w="61" t_h="61">
+			<POLYGON x1="419" y1="133" x2="420" y2="132" x3="454" y3="132" x4="456" y4="133" x5="456" y5="181" x6="453" y6="182" x7="427" y7="182" x8="425" y8="179" x9="425" y9="158" x10="422" y10="155" x11="420" y11="155" x12="419" y12="154"/>
+		</KEY>
+		<KEY name="Del" index="81" x="465" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1165" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="End" index="93" x="491" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1228" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Pg_down" index="105" x="516" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1291" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_7" index="34" x="550" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1376" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_8" index="46" x="576" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1440" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_9" index="35" x="601" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1503" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_+" index="47" x="626" y="132" w="25" h="50" polygon="4" regular_polygon="1" t_x="1566" t_y="329" t_w="61" t_h="124"/>
+		
+		<KEY name="M3" index="48" x="43" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Left+" index="60" x="77" y="157" w="44" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="392" t_w="108" t_h="61"/>
+		<KEY name="A" index="61" x="122" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="305" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="S" index="73" x="147" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="368" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="D" index="62" x="172" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="431" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="F" index="74" x="198" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="494" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="G" index="63" x="223" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="558" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="H" index="75" x="248" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="621" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="J" index="76" x="274" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="684" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="K" index="65" x="299" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="747" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="L" index="66" x="324" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="811" t_y="392" t_w="61" t_h="61"/>
+		<KEY name=";" index="78" x="349" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="874" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="'" index="55" x="374" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="937" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="U" index="67" x="400" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1000" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_4" index="58" x="550" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_5" index="70" x="576" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1440" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_6" index="59" x="601" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="392" t_w="61" t_h="61"/>
+		
+		<KEY name="M4" index="72" x="43" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="109" t_y="455" t_w="61" t_h="61"/>
+		<KEY name="L_Shift" index="84" x="77" y="183" w="30" h="24" polygon="4" regular_polygon="1" t_x="194" t_y="456" t_w="77" t_h="61"/>
+		<KEY name=">" index="85" x="109" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="273" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Y" index="97" x="135" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="336" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="X" index="86" x="160" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="399" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="C" index="98" x="185" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="463" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="V" index="87" x="210" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="526" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="B" index="99" x="236" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="589" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="N" index="88" x="261" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="652" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="M" index="77" x="286" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="716" t_y="456" t_w="61" t_h="61"/>
+		<KEY name=";" index="89" x="312" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="779" t_y="456" t_w="61" t_h="61"/>
+		<KEY name=":" index="90" x="337" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="842" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="-" index="79" x="362" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="905" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="R_Shift" index="80" x="387" y="183" w="69" h="24" polygon="4" regular_polygon="1" t_x="969" t_y="456" t_w="171" t_h="61"/>
+		<KEY name="Up" index="117" x="491" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="1228" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_1" index="82" x="550" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="1376" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_2" index="94" x="576" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="1440" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_3" index="83" x="601" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="1503" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="R_Enter" index="95" x="626" y="183" w="25" h="50" polygon="4" regular_polygon="1" t_x="1566" t_y="456" t_w="61" t_h="124"/>
+		
+		<KEY name="M5" index="96" x="43" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="517" t_w="61" t_h="61"/>
+		<KEY name="L_Ctrl" index="108" x="77" y="208" w="38" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="519" t_w="92" t_h="61"/>
+		<KEY name="L_Win" index="109" x="116" y="208" w="24" h="25" polygon="4" regular_polygon="1" t_x="289" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="L_Alt" index="110" x="141" y="208" w="30" h="25" polygon="4" regular_polygon="1" t_x="352" t_y="519" t_w="77" t_h="61"/>
+		<KEY name="Space" index="112" x="172" y="208" w="164" h="25" polygon="4" regular_polygon="1" t_x="431" t_y="519" t_w="409" t_h="61"/>
+		<KEY name="R_Alt" index="114" x="337" y="208" w="30" h="25" polygon="4" regular_polygon="1" t_x="842" t_y="519" t_w="77" t_h="61"/>
+		<KEY name="Fn" index="115" x="368" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="921" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Menu" index="103" x="394" y="208" w="24" h="25" polygon="4" regular_polygon="1" t_x="984" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="R_Ctrl" index="92" x="420" y="208" w="36" h="25" polygon="4" regular_polygon="1" t_x="1048" t_y="519" t_w="92" t_h="61"/>
+		<KEY name="Left" index="104" x="465" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Down" index="116" x="491" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Right" index="118" x="516" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Num_0" index="106" x="550" y="208" w="50" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="519" t_w="125" t_h="61"/>
+		<KEY name="Num_." index="107" x="601" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="519" t_w="61" t_h="61"/>
+		
+		<KEY name="T1" index="121" x="213" y="245" w="28" h="21" polygon="6" regular_polygon="0" t_x="533" t_y="613" t_w="67" t_h="53">
+			<!--<POLYGON x1="212" y1="252" x2="219" y2="245" x3="240" y3="245" x4="236" y4="266" x5="228" y5="266"/>-->
+			<POLYGON x1="213" y1="251" x2="219" y2="245" x3="240" y3="245" x4="236" y4="266" x5="228" y5="266" x6="213" y6="253"/>
+		</KEY>
+		<KEY name="T2" index="122" x="237" y="245" w="28" h="21" polygon="4" regular_polygon="0" t_x="593" t_y="613" t_w="69" t_h="53">
+			<POLYGON x1="241" y1="245" x2="260" y2="245" x3="264" y3="266" x4="237" y4="266"/>
+		</KEY>
+		<KEY name="T3" index="123" x="261" y="245" w="28" h="21" polygon="6" regular_polygon="0" t_x="654" t_y="613" t_w="67" t_h="53">
+			<POLYGON x1="261" y1="245" x2="282" y2="245" x3="288" y3="251" x4="288" y4="254" x5="273" y5="266" x6="265" y6="266"/>
+		</KEY>		
+	</REGION>
+	<REGION value="13" key_count="112"><!--KR-->
+	</REGION>
+	<REGION value="12" key_count="112"><!--JP-->
+	</REGION>
+	<REGION value="14" key_count="113"><!--CZ-->
+		<KEY name="Esc" index="1" x="77" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F1" index="2" x="128" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="320" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F2" index="14" x="154" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="384" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F3" index="3" x="179" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="447" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F4" index="15" x="204" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="510" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F5" index="4" x="242" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="605" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F6" index="16" x="267" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="668" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F7" index="5" x="293" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="731" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F8" index="17" x="318" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="795" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F9" index="6" x="356" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="890" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F10" index="7" x="381" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="953" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F11" index="8" x="407" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1016" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="F12" index="20" x="432" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1079" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Print" index="9" x="465" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Scroll" index="21" x="491" y="71" w="24" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="177" t_w="61" t_h="61"/>
+		<KEY name="Break" index="33" x="516" y="71" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="177" t_w="61" t_h="61"/>
+		
+		<KEY name="M1" index="0" x="43" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="`" index="12" x="77" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="1" index="13" x="103" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="257" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="2" index="25" x="128" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="320" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="3" index="26" x="154" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="384" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="4" index="27" x="179" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="447" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="5" index="39" x="204" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="510" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="6" index="28" x="229" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="573" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="7" index="40" x="255" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="637" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="8" index="29" x="280" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="700" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="9" index="41" x="305" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="763" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="0" index="18" x="331" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="826" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="_" index="30" x="356" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="890" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="=" index="19" x="381" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="953" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Back" index="44" x="407" y="106" w="49" h="25" polygon="4" regular_polygon="1" t_x="1016" t_y="266" t_w="124" t_h="61"/>
+		<KEY name="Ins" index="45" x="465" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Home" index="57" x="491" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Pg_up" index="69" x="516" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="Num" index="10" x="550" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="/" index="22" x="576" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1440" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="*" index="11" x="601" y="106" w="24" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="266" t_w="61" t_h="61"/>
+		<KEY name="-" index="23" x="626" y="106" w="25" h="25" polygon="4" regular_polygon="1" t_x="1566" t_y="266" t_w="61" t_h="61"/>
+		
+		<KEY name="M2" index="24" x="43" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="109" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Tab" index="36" x="77" y="132" w="38" h="24" polygon="4" regular_polygon="1" t_x="194" t_y="329" t_w="92" t_h="61"/>
+		<KEY name="Q" index="37" x="116" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="289" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="W" index="49" x="141" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="352" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="E" index="38" x="166" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="415" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="R" index="50" x="191" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="478" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="T" index="51" x="217" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="542" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Z" index="52" x="242" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="605" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="U" index="64" x="267" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="668" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="I" index="53" x="293" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="731" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="O" index="42" x="318" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="795" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="P" index="54" x="343" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="858" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="[" index="31" x="368" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="921" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="]" index="43" x="394" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="984" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Enter" index="68" x="419" y="132" w="37" h="50" polygon="12" regular_polygon="0" t_x="1070" t_y="355" t_w="61" t_h="61">
+			<POLYGON x1="419" y1="133" x2="420" y2="132" x3="454" y3="132" x4="456" y4="133" x5="456" y5="181" x6="453" y6="182" x7="427" y7="182" x8="425" y8="179" x9="425" y9="158" x10="422" y10="155" x11="420" y11="155" x12="419" y12="154"/>
+		</KEY>
+		<KEY name="Del" index="81" x="465" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1165" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="End" index="93" x="491" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1228" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Pg_down" index="105" x="516" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1291" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_7" index="34" x="550" y="132" w="25" h="24" polygon="4" regular_polygon="1" t_x="1376" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_8" index="46" x="576" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1440" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_9" index="35" x="601" y="132" w="24" h="24" polygon="4" regular_polygon="1" t_x="1503" t_y="329" t_w="61" t_h="61"/>
+		<KEY name="Num_+" index="47" x="626" y="132" w="25" h="50" polygon="4" regular_polygon="1" t_x="1566" t_y="329" t_w="61" t_h="124"/>
+		
+		<KEY name="M3" index="48" x="43" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Left+" index="60" x="77" y="157" w="44" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="392" t_w="108" t_h="61"/>
+		<KEY name="A" index="61" x="122" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="305" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="S" index="73" x="147" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="368" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="D" index="62" x="172" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="431" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="F" index="74" x="198" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="494" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="G" index="63" x="223" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="558" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="H" index="75" x="248" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="621" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="J" index="76" x="274" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="684" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="K" index="65" x="299" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="747" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="L" index="66" x="324" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="811" t_y="392" t_w="61" t_h="61"/>
+		<KEY name=";" index="78" x="349" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="874" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="'" index="55" x="374" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="937" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="U" index="67" x="400" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1000" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_4" index="58" x="550" y="157" w="25" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_5" index="70" x="576" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1440" t_y="392" t_w="61" t_h="61"/>
+		<KEY name="Num_6" index="59" x="601" y="157" w="24" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="392" t_w="61" t_h="61"/>
+		
+		<KEY name="M4" index="72" x="43" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="109" t_y="455" t_w="61" t_h="61"/>
+		<KEY name="L_Shift" index="84" x="77" y="183" w="30" h="24" polygon="4" regular_polygon="1" t_x="194" t_y="456" t_w="77" t_h="61"/>
+		<KEY name=">" index="85" x="109" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="273" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Y" index="97" x="135" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="336" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="X" index="86" x="160" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="399" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="C" index="98" x="185" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="463" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="V" index="87" x="210" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="526" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="B" index="99" x="236" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="589" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="N" index="88" x="261" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="652" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="M" index="77" x="286" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="716" t_y="456" t_w="61" t_h="61"/>
+		<KEY name=";" index="89" x="312" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="779" t_y="456" t_w="61" t_h="61"/>
+		<KEY name=":" index="90" x="337" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="842" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="-" index="79" x="362" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="905" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="R_Shift" index="80" x="387" y="183" w="69" h="24" polygon="4" regular_polygon="1" t_x="969" t_y="456" t_w="171" t_h="61"/>
+		<KEY name="Up" index="117" x="491" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="1228" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_1" index="82" x="550" y="183" w="25" h="24" polygon="4" regular_polygon="1" t_x="1376" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_2" index="94" x="576" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="1440" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="Num_3" index="83" x="601" y="183" w="24" h="24" polygon="4" regular_polygon="1" t_x="1503" t_y="456" t_w="61" t_h="61"/>
+		<KEY name="R_Enter" index="95" x="626" y="183" w="25" h="50" polygon="4" regular_polygon="1" t_x="1566" t_y="456" t_w="61" t_h="124"/>
+		
+		<KEY name="M5" index="96" x="43" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="109" t_y="517" t_w="61" t_h="61"/>
+		<KEY name="L_Ctrl" index="108" x="77" y="208" w="38" h="25" polygon="4" regular_polygon="1" t_x="194" t_y="519" t_w="92" t_h="61"/>
+		<KEY name="L_Win" index="109" x="116" y="208" w="24" h="25" polygon="4" regular_polygon="1" t_x="289" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="L_Alt" index="110" x="141" y="208" w="30" h="25" polygon="4" regular_polygon="1" t_x="352" t_y="519" t_w="77" t_h="61"/>
+		<KEY name="Space" index="112" x="172" y="208" w="164" h="25" polygon="4" regular_polygon="1" t_x="431" t_y="519" t_w="409" t_h="61"/>
+		<KEY name="R_Alt" index="114" x="337" y="208" w="30" h="25" polygon="4" regular_polygon="1" t_x="842" t_y="519" t_w="77" t_h="61"/>
+		<KEY name="Fn" index="115" x="368" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="921" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Menu" index="103" x="394" y="208" w="24" h="25" polygon="4" regular_polygon="1" t_x="984" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="R_Ctrl" index="92" x="420" y="208" w="36" h="25" polygon="4" regular_polygon="1" t_x="1048" t_y="519" t_w="92" t_h="61"/>
+		<KEY name="Left" index="104" x="465" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1165" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Down" index="116" x="491" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1228" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Right" index="118" x="516" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1291" t_y="519" t_w="61" t_h="61"/>
+		<KEY name="Num_0" index="106" x="550" y="208" w="50" h="25" polygon="4" regular_polygon="1" t_x="1376" t_y="519" t_w="125" t_h="61"/>
+		<KEY name="Num_." index="107" x="601" y="208" w="25" h="25" polygon="4" regular_polygon="1" t_x="1503" t_y="519" t_w="61" t_h="61"/>
+		
+		<KEY name="T1" index="121" x="213" y="245" w="28" h="21" polygon="6" regular_polygon="0" t_x="533" t_y="613" t_w="67" t_h="53">
+			<!--<POLYGON x1="212" y1="252" x2="219" y2="245" x3="240" y3="245" x4="236" y4="266" x5="228" y5="266"/>-->
+			<POLYGON x1="213" y1="251" x2="219" y2="245" x3="240" y3="245" x4="236" y4="266" x5="228" y5="266" x6="213" y6="253"/>
+		</KEY>
+		<KEY name="T2" index="122" x="237" y="245" w="28" h="21" polygon="4" regular_polygon="0" t_x="593" t_y="613" t_w="69" t_h="53">
+			<POLYGON x1="241" y1="245" x2="260" y2="245" x3="264" y3="266" x4="237" y4="266"/>
+		</KEY>
+		<KEY name="T3" index="123" x="261" y="245" w="28" h="21" polygon="6" regular_polygon="0" t_x="654" t_y="613" t_w="67" t_h="53">
+			<POLYGON x1="261" y1="245" x2="282" y2="245" x3="288" y3="251" x4="288" y4="254" x5="273" y5="266" x6="265" y6="266"/>
+		</KEY>		
+	</REGION>
+</RYOS_MK_FX>

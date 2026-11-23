@@ -1,0 +1,293 @@
+{
+ "_about": "corrections a human made by looking at the result (the review rounds in the asset viewer). sort-swarm.py reads this. picture_origin = where the button page picture sits under the markers. buttons_from = take marker positions (and the picture, if this device has none) from another device with the same shell. button_image = use this picture for the button page instead of the one the module ships. views = the button page has more than one picture (top and side), each with its own position and its own markers (a view without the key gets all markers nobody else claimed). markers are always named by the number Swarm prints on them. picture_hides = pictures of the device with parts taken off, and which markers are gone on them. pieces = buttons that are separate pictures laid over a view. button_names = what the numbered buttons are, names_from = same buttons as that other device. exclude = pictures in the module that show another model, they go to unused/. extra_views = pictures from other subfolders to show among the views. view_looks = how the plain pictures get their led layers drawn on, per file name: light, gray, dark, none, or print (only the layers that are a finished picture, like a printed logo). swap_numbers = two markers whose numbers the review said are the wrong way around. note = a line for people looking at the device.",
+ "skip": [
+  "Swarm_Connect"
+ ],
+ "devices": {
+  "Burst_Core": {
+   "buttons_from": "Burst_Pro_Air",
+   "view_looks": {
+    "CM_100.png": "none",
+    "CM_200.png": "none"
+   }
+  },
+  "Burst_Pro": {
+   "buttons_from": "Burst_Pro_Air",
+   "view_looks": {
+    "CM_100.png": "none",
+    "CM_200.png": "none"
+   }
+  },
+  "Burst_Pro_Air": {
+   "picture_origin": [
+    82,
+    -8
+   ],
+   "button_image": "Burst_Pro_Air/lighting/CM_300_with_logo.png",
+   "view_looks": {
+    "CM_300.png": "print"
+   }
+  },
+  "Kain_100_AIMO": {
+   "buttons_from": "Kain_200_AIMO",
+   "view_looks": {
+    "Kain_100_Gray.png": "none",
+    "Kain_120_Gray.png": "none"
+   }
+  },
+  "Kain_120_AIMO": {
+   "buttons_from": "Kain_200_AIMO",
+   "view_looks": {
+    "Kain_100_Gray.png": "none",
+    "Kain_120_Gray.png": "none"
+   }
+  },
+  "Kain_200_AIMO": {
+   "picture_origin": [
+    77,
+    -14
+   ],
+   "view_looks": {
+    "Kain_120_Gray.png": "none"
+   }
+  },
+  "Kiro": {
+   "picture_origin": [
+    82,
+    30
+   ],
+   "button_image": "Kiro/buttons/KIRO_TOP_SIDEGRIPS-BUTTONS.png",
+   "picture_hides": {
+    "KIRO_TOP_SIDEGRIPS-NO-BUTTONS.png": [
+     4,
+     5,
+     7,
+     8
+    ],
+    "KIRO_TOP_SIDEGRIPS-BUTTONS_Left.png": [
+     7,
+     8
+    ],
+    "KIRO_TOP_SIDEGRIPS-BUTTONS_right.png": [
+     4,
+     5
+    ]
+   },
+   "view_looks": {
+    "Kiro_Top.png": "gray"
+   }
+  },
+  "Kone_AIMO": {
+   "button_image": "lighting-base",
+   "picture_origin": [
+    90,
+    0
+   ],
+   "view_looks": {
+    "KoneY10_Black.png": "none"
+   }
+  },
+  "Kone_AIMO_Remastered": {
+   "button_image": "lighting-base",
+   "picture_origin": [
+    90,
+    -2
+   ],
+   "exclude": [
+    "KoneY10_Black.png"
+   ],
+   "extra_views": [
+    "lighting/KoneAimo-16K_BLK.png"
+   ],
+   "view_looks": {
+    "KoneAimo-16K_BLK.png": "none"
+   }
+  },
+  "Kone_Air": {
+   "picture_origin": [
+    74,
+    -17
+   ]
+  },
+  "Kone_EMP": {
+   "picture_origin": [
+    114,
+    -6
+   ],
+   "view_looks": {
+    "KONE_EMP_site.png": "gray"
+   }
+  },
+  "Kone_Pro": {
+   "picture_origin": [
+    18,
+    -20
+   ],
+   "view_looks": {
+    "Kone_Pro.png": "none"
+   }
+  },
+  "Kone_Pro_Air": {
+   "picture_origin": [
+    17,
+    -19
+   ],
+   "view_looks": {
+    "kone_pro.png": "none"
+   }
+  },
+  "Kone_Pure_Owl-Eye": {
+   "picture_origin": [
+    109,
+    -9
+   ],
+   "view_looks": {
+    "KONE_PURE_OWL-EYE_site.png": "gray"
+   }
+  },
+  "Kone_Pure_SE": {
+   "buttons_from": "Kone_Pure_Owl-Eye"
+  },
+  "Kone_Pure_SEL": {
+   "buttons_from": "Kone_Pure_Owl-Eye"
+  },
+  "Kone_Pure_Ultra": {
+   "buttons_from": "Kone_Pure_Owl-Eye"
+  },
+  "Kone_Pure_Ultra_iCafe": {
+   "buttons_from": "Kone_Pure_Owl-Eye"
+  },
+  "Kone_XP": {
+   "picture_origin": [
+    24,
+    -17
+   ]
+  },
+  "Kone_XP_Air": {
+   "button_image": "Kone_XP_Air/lighting/Kone-XP-Air_with_logo.png",
+   "picture_origin": [
+    22,
+    -21
+   ]
+  },
+  "Kova": {
+   "picture_origin": [
+    136,
+    -4
+   ],
+   "button_names": {
+    "1": "Left button",
+    "2": "Right button",
+    "3": "Middle button",
+    "4": "Left forward",
+    "5": "Left backward",
+    "6": "Right forward",
+    "7": "Right backward",
+    "8": "Wheel up",
+    "9": "Wheel down",
+    "10": "Top button",
+    "11": "Left Smart Cast",
+    "12": "Right Smart Cast"
+   },
+   "view_looks": {
+    "Kova_BLK_site.png": "gray",
+    "Kova_GRAY_site.png": "gray",
+    "Kova_WHT_site.png": "gray"
+   }
+  },
+  "Kova_AIMO": {
+   "picture_origin": [
+    126,
+    15
+   ],
+   "names_from": "Kova",
+   "view_looks": {
+    "Kova-Black.png": "none",
+    "Kova-Grey.png": "none",
+    "Kova-White.png": "none"
+   }
+  },
+  "Leadr": {
+   "views": [
+    {
+     "image": "leadr_top_view.png",
+     "origin": [
+      95,
+      39
+     ]
+    },
+    {
+     "image": "leadr_side_view.png",
+     "origin": [
+      105,
+      40
+     ],
+     "markers": [
+      11,
+      12,
+      13,
+      15,
+      16
+     ]
+    }
+   ],
+   "view_looks": {
+    "LEADR_Site.png": "gray"
+   },
+   "swap_numbers": [
+    [
+     10,
+     15
+    ]
+   ],
+   "note": "For people who have this mouse: 1. I am jealous. 2. Please report if I got the button mapping right, info on this mouse is a bit scarce and they got quite expensive through the collector value they gained."
+  },
+  "Nyth": {
+   "views": [
+    {
+     "image": "NYTH_BLK_TOP_VIEW.png",
+     "origin": [
+      98,
+      -1
+     ]
+    },
+    {
+     "image": "Nyth_standard.png",
+     "markers": [],
+     "pieces": {
+      "folder": "buttons/side-grid",
+      "at": [
+       212,
+       36
+      ],
+      "sets": {
+       "12 single buttons": "Single-Button-",
+       "6 double buttons": "Double-button_",
+       "12 blank caps": "Single-blanc_",
+       "3 long blanks": "Quad-blanc_"
+      }
+     }
+    }
+   ],
+   "view_looks": {
+    "Nyth-back_black.png": "gray",
+    "Nyth-back_white.png": "gray"
+   }
+  },
+  "Pure_Air": {
+   "picture_origin": [
+    -22,
+    14
+   ],
+   "view_looks": {
+    "pure_air.png": "dark"
+   }
+  },
+  "Pure_SEL": {
+   "picture_origin": [
+    -59,
+    -14
+   ]
+  }
+ }
+}

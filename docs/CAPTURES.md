@@ -62,6 +62,6 @@ All bytes are hex, everything else is decimal. One transfer per line no matter h
 
 ## Whats in tests/captures
 
-- `kone-aimo-remastered-synthetic.cap`: NOT from a real mouse. Its the library talking to a pretend Kone AIMO Remastered (`tests/kone_sim.h`) that was written from `docs/PROTOCOL.md`. It proves the library keeps sending the same bytes, it does not prove a real mouse likes them. If you own that mouse and want to fix this: `rockcat-cli capture kone.cap backup test.rswb`
+- `kone-aimo-remastered-synthetic.cap`: NOT from a real mouse. Its the library talking to a pretend Kone AIMO Remastered (`tests/kone_sim.h`) that was written from `docs/protocol/kone-aimo.md`. It proves the library keeps sending the same bytes, it does not prove a real mouse likes them. If you own that mouse and want to fix this: `rockcat-cli capture kone.cap backup test.rswb`
 - `kova2016-gray-readonly.cap`: a real Kova 2016 Gray, firmware 1.18, made with `tools/capture/kova2016.sh`
 - `ryos-mk-fx-readonly.cap`: a real Ryos MK FX (swiss layout), made with `tools/capture/ryos-mk-fx.sh`

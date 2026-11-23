@@ -117,6 +117,11 @@ int rockcat_select_effect(uint16_t pid, rockcat_settings *s, uint8_t effect, int
 void rockcat_render_frame(const rockcat_settings *s, uint8_t effect, double t, double activity,
                                       rockcat_color out[ROCKCAT_LED_COUNT]);
 
+/* what the family hooks for "firmware" and "active profile" point at */
+int kone_firmware_version(rockcat_device *dev, char *buf, size_t len);
+int kone_get_active_profile(rockcat_device *dev, uint8_t *profile, uint8_t *count);
+int kone_set_active_profile(rockcat_device *dev, uint8_t profile);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,6 +1,6 @@
 # Reverse-engineering helpers
 
-Scripts used to produce `docs/PROTOCOL.md` and `MODULES.md`. None of ROCCAT's
+Scripts used to produce `docs/protocol/kone-aimo.md` and `MODULES.md`. None of ROCCAT's
 binaries or artwork are part of this repository; point the scripts at your own
 copy of the Swarm installer.
 
@@ -9,6 +9,7 @@ copy of the Swarm installer.
 | `allmods.py SETTINGS.xml OUT.json` | ask Swarm's update server which module exists for every PID in `settings.xml` |
 | `mkmods.py OUT.json MODULES.md` | render that answer as the module checklist |
 | `getmods.py OUT.json DESTDIR` | download every module (and the Swarm installer) the server still hands out, skips what is already there |
+| `qrcfind.py FILE OUTDIR` | same thing without needing any addresses: finds the Qt resources in an exe/dll by itself and writes them out under their real names |
 | `qrc.py PE OUTDIR TREE NAMES DATA` | dump Qt resources (`qRegisterResourceData` arguments) from a PE file |
 | `qm.py FILE.qm` | dump a Qt translation file as JSON |
 | `qini.py FILE` | decode `@ByteArray(...)` values in a QSettings ini (e.g. `default.dat`) |
@@ -38,7 +39,7 @@ analyzeHeadless proj fw -import KONE_AIMO_16K_V1.05.bin -loader BinaryLoader \
     -postScript FwFix.java -postScript DumpAll.java fw_all.c
 ```
 
-Findings are in [docs/PROTOCOL.md](../../docs/PROTOCOL.md#firmware-notes).
+Findings are in [docs/protocol/kone-aimo.md](../../docs/protocol/kone-aimo.md#firmware-notes).
 
 Module downloads (`.../swarm1/download/driver/2/<id>`) answer with a signed
 object-storage URL to a 7z archive containing `data/<ALIAS>/<DLL>.dll`.

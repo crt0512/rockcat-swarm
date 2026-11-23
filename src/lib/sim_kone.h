@@ -1,5 +1,5 @@
 // a pretend Kone AIMO Remastered, good enough to answer what the library asks
-// built from docs/PROTOCOL.md and NOT from a real mouse (nobody here owns one), so it proves the library
+// built from docs/protocol/kone-aimo.md and NOT from a real mouse (nobody here owns one), so it proves the library
 // keeps saying the same things, not that the mouse agrees with them
 // ROCKCAT_SIM=kone-aimo-remastered puts it in place of real hardware for cli and gui. it forgets everything when the program exits
 #pragma once

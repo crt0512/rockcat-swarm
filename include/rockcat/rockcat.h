@@ -7,7 +7,7 @@
  *
  * All protocol knowledge comes from reverse engineering ROCCAT Swarm 1.9482
  * (ROCCAT_Swarm_Monitor.exe and the KONE_AIMO 1.0009 module); see
- * docs/PROTOCOL.md for the report layouts.
+ * docs/protocol/kone-aimo.md for the report layouts.
  *
  * Every function that talks to the device returns ROCKCAT_OK (0) on success or
  * a negative rockcat_error code. Functions are not thread safe for the same
@@ -37,6 +37,10 @@ extern "C" {
 
 #define ROCKCAT_VID                     0x1e7d
 #define ROCKCAT_PID_KONE_AIMO_REMASTERED 0x2e2c
+#define ROCKCAT_PID_KOVA_2016_GRAY       0x2cee
+#define ROCKCAT_PID_KOVA_2016_WHITE      0x2cef
+#define ROCKCAT_PID_KOVA_2016_BLACK      0x2cf0
+#define ROCKCAT_PID_RYOS_MK_FX           0x2fda
 
 /* most keystrokes one macro can hold */
 #define ROCKCAT_MACRO_KEYSTROKES 480
@@ -72,6 +76,13 @@ typedef struct rockcat_device_info {
 } rockcat_device_info;
 
 ROCKCAT_API const char *rockcat_version(void);
+
+/* Pretend devices, for trying things without the hardware. the gui has them in its debug menu (--debug).
+ * a plugged one shows up in rockcat_enumerate like a real one, its path starts with "sim:" */
+ROCKCAT_API const char *rockcat_sim_name(int i);  /* NULL past the end */
+ROCKCAT_API const char *rockcat_sim_label(int i); /* the model it pretends to be */
+ROCKCAT_API int rockcat_sim_plug(const char *name, int plugged);
+ROCKCAT_API int rockcat_sim_plugged(const char *name);
 ROCKCAT_API const char *rockcat_strerror(int error);
 
 /* Optional: called automatically by rockcat_enumerate()/rockcat_open(). */
@@ -123,16 +134,66 @@ typedef enum rockcat_effect {
     ROCKCAT_EFFECT_BREATHING_2  = 7, /* software (firmware shows a moving dot) */
     ROCKCAT_EFFECT_HEARTBEAT_2  = 8, /* software (firmware shows a moving dot) */
     ROCKCAT_EFFECT_AIMO         = 9, /* software, uses the colour theme */
-    ROCKCAT_EFFECT_COLORWAVE    = 10 /* firmware */
+    ROCKCAT_EFFECT_COLORWAVE    = 10, /* firmware */
+    /* keyboards (Ryos MK FX). the first one the keyboard does by itself, the other five Swarm drew from the pc.
+     * a profile can say it uses one of those, rockcat does not draw them yet */
+    ROCKCAT_EFFECT_FADE         = 11, /* firmware: a key lights up when pressed and fades out */
+    ROCKCAT_EFFECT_EQUALIZER    = 12, /* not drawn by anybody yet */
+    ROCKCAT_EFFECT_RIPPLE       = 13, /* software: rings run outwards from every key press */
+    ROCKCAT_EFFECT_WAVE         = 14, /* software: colours wander across the board */
+    ROCKCAT_EFFECT_HEATMAP      = 15, /* software: the keys you use most glow hottest */
+    ROCKCAT_EFFECT_GAME_PRESET  = 16, /* not drawn by anybody yet */
+    /* effects ROCCAT never shipped, all software */
+    ROCKCAT_EFFECT_FIRE         = 17, /* flames rise from the bottom row */
+    ROCKCAT_EFFECT_DRIP         = 18, /* every key press lets a drop fall, they collect at the bottom */
+    ROCKCAT_EFFECT_COLOR_FLOW   = 19  /* the whole device wanders smoothly through the colours */
 } rockcat_effect;
+
+/* Effects the pc draws have settings of their own (how fast, which colours, ...). They live on the pc, per device
+ * and profile, next to the other host side settings, and take effect at once: no profile write needed.
+ * A colour is 0xRRGGBB, a toggle 0 / 1, a choice the index into its list. */
+typedef enum rockcat_option_kind { ROCKCAT_OPTION_RANGE, ROCKCAT_OPTION_COLOR, ROCKCAT_OPTION_TOGGLE, ROCKCAT_OPTION_CHOICE } rockcat_option_kind;
+
+typedef struct rockcat_effect_option {
+    const char *key;     /* name in the config file and for get / set */
+    const char *label;   /* for showing to people */
+    rockcat_option_kind kind;
+    int min, max;        /* RANGE */
+    int fallback;        /* what it is until somebody sets it */
+    const char *choices; /* CHOICE: "one|two|three" */
+} rockcat_effect_option;
+
+/* What a keyboard does when nobody types is its own set of options, the same for every effect the pc draws on a profile.
+ * Ask for them with this in place of an effect. */
+#define ROCKCAT_EFFECT_OPTIONS_IDLE (-1)
+
+/* points *out at the options of that effect and returns how many there are, 0 for an effect without any */
+ROCKCAT_API int rockcat_effect_options(int effect, const rockcat_effect_option **out);
+ROCKCAT_API int rockcat_effect_option_get(uint16_t pid, uint8_t profile, int effect, const char *key);
+ROCKCAT_API int rockcat_effect_option_set(uint16_t pid, uint8_t profile, int effect, const char *key, int value);
+
+/* lets a running engine play the idle animation once and wake up again, to see what it looks like */
+ROCKCAT_API int rockcat_effect_idle_preview(uint16_t pid, uint8_t profile);
 
 typedef struct rockcat_color {
     uint8_t a, r, g, b;     /* a = per-LED brightness (0..255) */
 } rockcat_color;
 
+/* The Easy-Shift light layer of a keyboard: other colours while Easy-Shift is held, drawn by the engine (the
+ * keyboard has no such thing itself). Kept on the pc per profile. count colours, one per led, a = 0 is a dark key.
+ * get fills what was never set with dark keys and enabled = 0 */
+ROCKCAT_API int rockcat_shift_layer_get(uint16_t pid, uint8_t profile, int *enabled, rockcat_color *colors, int count);
+ROCKCAT_API int rockcat_shift_layer_set(uint16_t pid, uint8_t profile, int enabled, const rockcat_color *colors, int count);
+/* which effect the Easy-Shift layer shows: ROCKCAT_EFFECT_FULLY_LIT (its colours, standing still, the default) or one of
+ * the effects the pc draws. its settings go through rockcat_effect_option_get/set with profile | ROCKCAT_SHIFT_LAYER */
+#define ROCKCAT_SHIFT_LAYER 0x80
+ROCKCAT_API int rockcat_shift_layer_effect(uint16_t pid, uint8_t profile);
+ROCKCAT_API int rockcat_shift_layer_set_effect(uint16_t pid, uint8_t profile, int effect);
+
 ROCKCAT_API int  rockcat_polling_rate_hz(uint8_t polling_rate);
 ROCKCAT_API const char *rockcat_effect_name(uint8_t effect);
-/* Non-zero if the effect has to be drawn by the host (see rockcat_engine). */
+/* Non-zero if the effect has to be drawn by the host (see rockcat_engine). This is the answer for the Kone AIMO,
+ * a keyboard does heartbeat by itself: ask rockcat_caps.software_effects when you have a device at hand. */
 ROCKCAT_API int rockcat_effect_is_software(uint8_t effect);
 
 /* ------------------------------------------------------------------------ */
@@ -185,6 +246,25 @@ typedef enum rockcat_button_type {
     ROCKCAT_BT_EASYSHIFT_LOCK    = 0x52,
     ROCKCAT_BT_EASYSHIFT_ALL     = 0x53,
     ROCKCAT_BT_EASYSHIFT_LOCK_ALL = 0x54,
+    /* seen on the Kova 2016 (names from roccat-tools). nobody has tried these on a Kone AIMO */
+    ROCKCAT_BT_EASYWHEEL_PROFILE = 0x43, /* hold and turn the wheel: switch profile */
+    ROCKCAT_BT_EASYWHEEL_DPI     = 0x44,
+    ROCKCAT_BT_EASYWHEEL_VOLUME  = 0x45,
+    ROCKCAT_BT_EASYWHEEL_ALT_TAB = 0x46,
+    ROCKCAT_BT_HOME              = 0x62,
+    ROCKCAT_BT_END               = 0x63,
+    ROCKCAT_BT_PAGE_UP           = 0x64,
+    ROCKCAT_BT_PAGE_DOWN         = 0x65,
+    ROCKCAT_BT_LEFT_CTRL         = 0x66,
+    ROCKCAT_BT_LEFT_SHIFT        = 0x67,
+    ROCKCAT_BT_LEFT_ALT          = 0x68,
+    ROCKCAT_BT_EASYAIM_CUSTOM    = 0x7c, /* p1 = dpi / 50 */
+    ROCKCAT_BT_PROFILE_1         = 0xbf, /* jump straight to profile 1..5 */
+    ROCKCAT_BT_PROFILE_2         = 0xc0,
+    ROCKCAT_BT_PROFILE_3         = 0xc1,
+    ROCKCAT_BT_PROFILE_4         = 0xc2,
+    ROCKCAT_BT_PROFILE_5         = 0xc3,
+    ROCKCAT_BT_EASYAIM_200       = 0xd0, /* what roccat-tools calls it, factory setting of the left forward button */
     /* 0x8c..0xbb are "host actions": the firmware only reports them to the
      * PC (input report [03 00 f2 N 00] on press, N = type - 0x8b). The
      * rockcat lighting engine implements these two: */
@@ -299,8 +379,9 @@ typedef struct rockcat_engine_status {
 } rockcat_engine_status;
 
 /* Starts a background thread with its own device handle. Only one engine per
- * user can run at a time (lock in $XDG_RUNTIME_DIR); a second start returns
- * ROCKCAT_ERR_BUSY. Software effects are rendered at ~30 fps and react to
+ * user and device can run at a time (lock in $XDG_RUNTIME_DIR); a second start returns
+ * ROCKCAT_ERR_BUSY. path = NULL takes the first mouse the pc can draw on. For a keyboard
+ * give its path: it gets an engine of its own that draws wave, ripple and heatmap. Software effects are rendered at ~30 fps and react to
  * mouse activity; firmware effects are left to the mouse. */
 ROCKCAT_API int  rockcat_engine_start(const char *path, rockcat_engine_mode mode, rockcat_engine **out);
 /* Stops the thread and hands the LEDs back to the firmware. */
@@ -326,7 +407,7 @@ typedef struct rockcat_shift_lighting {
 } rockcat_shift_lighting;
 
 /* Effects rendered by rockcat. The firmware paints its own, hard-coded
- * Easy-Shift[+] indicator (#059cfa, see docs/PROTOCOL.md) for every effect
+ * Easy-Shift[+] indicator (#059cfa, see docs/protocol/kone-aimo.md) for every effect
  * except AIMO (9). So when a profile is "rendered by rockcat", the mouse
  * stores effect 9 and the effect the user picked is kept on the PC; the
  * engine draws it and can show a custom Easy-Shift[+] colour.
@@ -374,11 +455,16 @@ typedef struct rockcat_caps {
     uint32_t       features;
     int profile_count;
     int input_count;                /* buttons on a mouse, keys on a keyboard */
-    int layer_count;                /* 2 on a mouse: normal and Easy-Shift[+] */
+    int layer_count;                /* 2 on a mouse: normal and Easy-Shift[+]. 3 on a Ryos, Fn comes on top. not every
+                                     * key has something on every layer, then get/set answer ROCKCAT_ERR_UNSUPPORTED */
     int led_count;
     int dpi_levels, dpi_min, dpi_max, dpi_step;
     int polling_hz[8];              /* zero terminated */
     uint32_t effects;               /* bit n = rockcat_effect n can be selected */
+    uint32_t software_effects;      /* bit n = the device cant do effect n by itself, the pc has to draw it */
+    int effect_speed_min, effect_speed_max; /* what ROCKCAT_SET_EFFECT_SPEED takes */
+    int carrier_effect;             /* what the device itself has stored while the pc draws an effect it has no number
+                                     * for, -1 if there is no such thing. rockcat_profile_get_effect() hides this */
 } rockcat_caps;
 
 /* NULL for a device that was opened raw and isnt in the table */
@@ -389,6 +475,29 @@ ROCKCAT_API int rockcat_model_at(int i, uint16_t *product_id, const char **name,
 ROCKCAT_API const char *rockcat_input_label(const rockcat_caps *caps, int input);
 ROCKCAT_API const char *rockcat_led_label(const rockcat_caps *caps, int led);
 ROCKCAT_API const char *rockcat_layer_label(const rockcat_caps *caps, int layer);
+/* what the type byte of an assignment means on this device, as text. on a mouse thats rockcat_button_type_name(),
+ * on a keyboard the type is a key (its HID usage) or one of rockcat_key_function. "?" for a code nobody knows */
+ROCKCAT_API const char *rockcat_assignment_name(const rockcat_caps *caps, uint8_t type);
+/* 1 when the type byte is a function of the device, 0 when it is a key (a keyboard key set to be another key) */
+ROCKCAT_API int rockcat_assignment_is_function(const rockcat_caps *caps, uint8_t type);
+
+/* Keyboards: which keys there are and where they sit, per regional layout (ROCCAT numbers them: 0 US, 1 DE, 3 FR, 5 nordic, 14 CZ).
+ * A key sits at x/y/w/h in a coordinate space of rockcat_keyboard_size(), stretch your picture of the keyboard onto that.
+ * led is the keys index in a lighting frame, and at the same time its input number for rockcat_profile_get_input().
+ * A key whose led is not below caps->led_count has no light of its own (the thumb keys of the Ryos).
+ * All three calls answer 0 / "?" for a device that is not a keyboard. */
+typedef struct rockcat_key {
+    const char *name;
+    int led;
+    int x, y, w, h;
+} rockcat_key;
+
+/* writes up to max layout ids, returns how many there are */
+ROCKCAT_API int rockcat_keyboard_regions(const rockcat_caps *caps, int *ids, int max);
+ROCKCAT_API const char *rockcat_keyboard_region_name(const rockcat_caps *caps, int region);
+ROCKCAT_API int rockcat_keyboard_size(const rockcat_caps *caps, int *width, int *height);
+/* points *keys at the key table of that layout and returns its length */
+ROCKCAT_API int rockcat_keyboard_keys(const rockcat_caps *caps, int region, const rockcat_key **keys);
 
 /* A profile is read from the device, changed through the calls below and written back. It keeps the raw reports
  * inside, so whatever we dont understand yet goes back to the device exactly as it came. */
@@ -402,8 +511,57 @@ typedef enum rockcat_setting {
     ROCKCAT_SET_EFFECT,         /* rockcat_effect as stored on the device, see rockcat_profile_get_effect */
     ROCKCAT_SET_EFFECT_SPEED,
     ROCKCAT_SET_BRIGHTNESS,     /* 0-255 */
-    ROCKCAT_SET_COLOR_THEME     /* AIMO theme, from 0 */
+    ROCKCAT_SET_COLOR_THEME,    /* AIMO theme, from 0 */
+    ROCKCAT_SET_COLOR_FLOW,     /* 0 / 1, the lights wander through the colours by themselves */
+    ROCKCAT_SET_LEFT_HANDED,    /* 0 / 1, swaps what the device thinks is the left side */
+    /* keyboards: what the lights do when nobody has touched a key for a while */
+    ROCKCAT_SET_IDLE_MINUTES,   /* after how many minutes, 0 = never */
+    ROCKCAT_SET_IDLE_BRIGHTNESS, /* 0-255, how bright they stay */
+    ROCKCAT_SET_IDLE_STYLE,     /* rockcat_idle_style */
+    ROCKCAT_SET_MACRO_FEEDBACK  /* 0 / 1, the lights show a macro running */
 } rockcat_setting;
+
+typedef enum rockcat_idle_style {
+    ROCKCAT_IDLE_DIM         = 0, /* go down to the idle brightness */
+    ROCKCAT_IDLE_STARLIT_SKY = 1, /* single keys twinkle */
+    ROCKCAT_IDLE_FALL_ASLEEP = 3  /* the lights go out one after the other */
+} rockcat_idle_style;
+
+/* What a key of a keyboard can be set to, next to "be this other key" (then the type is the HID usage of that key,
+ * 0x04 = A and so on). Codes and names are the ones roccat-tools uses for the Ryos. Only the first block is checked
+ * against a real keyboard (they are in the factory layout of a Ryos MK FX). */
+typedef enum rockcat_key_function {
+    ROCKCAT_KF_DISABLED       = 0x00,
+    ROCKCAT_KF_M1             = 0xaa, /* the macro keys as they come: M1..M5 */
+    ROCKCAT_KF_M2             = 0xab,
+    ROCKCAT_KF_M3             = 0xac,
+    ROCKCAT_KF_M4             = 0xad,
+    ROCKCAT_KF_M5             = 0xae,
+    ROCKCAT_KF_PROFILE_UP     = 0xb0,
+    ROCKCAT_KF_PROFILE_DOWN   = 0xb1,
+    ROCKCAT_KF_OPEN_PLAYER    = 0xcb,
+    ROCKCAT_KF_APP_EMAIL      = 0xc0,
+    ROCKCAT_KF_SHIFT_1        = 0xd3, /* shift + 1..5 and ctrl + 1..5, what M1..M5 do out of the box */
+    ROCKCAT_KF_CTRL_1         = 0xd8,
+    ROCKCAT_KF_OPEN_DRIVER    = 0xdd,
+    ROCKCAT_KF_FN             = 0xf1,
+    ROCKCAT_KF_EASYSHIFT      = 0xff,
+    /* not seen on a keyboard here yet */
+    ROCKCAT_KF_PROFILE_CYCLE  = 0xb2,
+    ROCKCAT_KF_PROFILE_1      = 0xb3, /* ..5 = 0xb7 */
+    ROCKCAT_KF_SHORTCUT       = 0xb8, /* p1 = modifiers (bit 0 ctrl, 1 shift, 2 alt, 3 win), p2 = HID key usage */
+    ROCKCAT_KF_QUICKLAUNCH    = 0xb9,
+    ROCKCAT_KF_TIMER          = 0xbc,
+    ROCKCAT_KF_TIMER_STOP     = 0xbd,
+    ROCKCAT_KF_MACRO          = 0xbe,
+    ROCKCAT_KF_PLAY_PAUSE     = 0xcc,
+    ROCKCAT_KF_NEXT_TRACK     = 0xcd,
+    ROCKCAT_KF_PREV_TRACK     = 0xce,
+    ROCKCAT_KF_STOP           = 0xcf,
+    ROCKCAT_KF_VOLUME_UP      = 0xd0,
+    ROCKCAT_KF_VOLUME_DOWN    = 0xd1,
+    ROCKCAT_KF_MUTE           = 0xd2
+} rockcat_key_function;
 
 /* what a button or key does, same three bytes the devices use: type (rockcat_button_type) and two parameters */
 typedef rockcat_button rockcat_assignment;
@@ -429,6 +587,15 @@ ROCKCAT_API int rockcat_profile_get_led(const rockcat_profile *p, int led, rockc
 ROCKCAT_API int rockcat_profile_set_led(rockcat_profile *p, int led, rockcat_color c, int enabled);
 ROCKCAT_API int rockcat_profile_get_input(const rockcat_profile *p, int layer, int input, rockcat_assignment *a);
 ROCKCAT_API int rockcat_profile_set_input(rockcat_profile *p, int layer, int input, const rockcat_assignment *a);
+/* what an input can be given on a layer, as bits. 0 = it has nothing on that layer */
+enum {
+    ROCKCAT_ROOM_KEY    = 1, /* a type without parameters: another key, a function of the device */
+    ROCKCAT_ROOM_PARAMS = 2, /* a type with its two parameters too: a shortcut, a profile number, ... */
+    ROCKCAT_ROOM_MACRO  = 4  /* a macro of its own */
+};
+ROCKCAT_API int rockcat_profile_input_room(const rockcat_profile *p, int layer, int input);
+/* what the input does out of the box on that layer. ROCKCAT_ERR_UNSUPPORTED when the library doesnt know */
+ROCKCAT_API int rockcat_profile_factory_input(const rockcat_profile *p, int layer, int input, rockcat_assignment *a);
 /* puts every input of every layer back to what the device shipped with */
 ROCKCAT_API int rockcat_profile_reset_inputs(rockcat_profile *p);
 /* macros are big and slow to fetch, so they are not read along with the profile. get asks the device every time,
@@ -446,6 +613,13 @@ ROCKCAT_API int rockcat_profile_export(const rockcat_profile *p, uint8_t *buf, s
 /* the other way around. refuses a backup that was made from a different model */
 ROCKCAT_API int rockcat_profile_import(rockcat_device *dev, const uint8_t *buf, size_t len, rockcat_profile **out);
 
+/* every profile of the device in one file. returns how many went in, or an error (ROCKCAT_ERR_ACCESS: cant write the file) */
+ROCKCAT_API int rockcat_backup_save(rockcat_device *dev, const char *path);
+/* puts a backup back onto the device: all profiles (profile -1) or just that one. returns how many got written.
+ * ROCKCAT_ERR_ACCESS: cant read the file, ROCKCAT_ERR_PROTOCOL: not a backup or cut off, ROCKCAT_ERR_UNSUPPORTED: made
+ * with another model. nothing gets written unless every profile in the file fits this device */
+ROCKCAT_API int rockcat_backup_restore(rockcat_device *dev, const char *path, int profile);
+
 /* what an effect looks like at time t (seconds) with the colours of this profile, for previews. nothing is sent anywhere.
  * activity is 0..1, how busy the user is. writes up to count colours, returns how many leds there are */
 ROCKCAT_API int rockcat_profile_render(const rockcat_profile *p, int effect, double t, double activity, rockcat_color *out, int count);
@@ -455,8 +629,11 @@ typedef enum rockcat_event_type {
     ROCKCAT_EVENT_NONE,        /* a report came in that means nothing to us */
     ROCKCAT_EVENT_ACTIVITY,    /* its being used. value = the buttons that are down, as a bitmask */
     ROCKCAT_EVENT_EASYSHIFT,   /* Easy-Shift[+] went down or up, see pressed */
-    ROCKCAT_EVENT_HOST_ACTION, /* a button that is assigned to something only the pc can do. value = which one, from 1 */
-    ROCKCAT_EVENT_CHANGED      /* profile or dpi got switched on the device itself, whatever you read before may be stale */
+    ROCKCAT_EVENT_HOST_ACTION, /* a button that is assigned to something only the pc can do. value = which one, from 1
+                                * (on a Ryos: 0x10 = a key set to "open driver") */
+    ROCKCAT_EVENT_CHANGED,     /* profile or dpi got switched on the device itself, whatever you read before may be stale */
+    ROCKCAT_EVENT_KEY          /* keyboards, only while the active profile has an effect the pc draws: a key went down or up.
+                                * value = the key (its led number), see pressed */
 } rockcat_event_type;
 
 typedef struct rockcat_event {

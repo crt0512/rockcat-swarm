@@ -1,0 +1,224 @@
+{
+ "_about": "recipes for tools/assets/mouse-view.py: how the picture of a mouse with its button markers and light masks gets put together out of the sorted Swarm artwork (the folder sort-swarm.py writes). key = usb product id. device = folder in there. picture = the top view (a path that starts with another device folder is taken from there). like = start from the recipe of that pid and change what is listed. inputs = for every button in OUR order (the order rockcat_input_label counts in) the number Swarm prints on its marker, 0 for a button without a marker. view = which of the button page pictures of the device the markers come from (default 0). nudge = [x, y] pushes all markers by that much (the Kova ones sat 0.9 px left of the middle of the mouse: 0.4 from where the picture was dragged to, 0.5 from rounding). extras = more pictures on the same canvas, each {picture, at, scale} and view = the button page picture whose markers come along (the side of the Leadr), or just a picture to hang lights on (the back of the Nyth). lights = one entry per led we know: led = our led index, then either hue = [from, to] (the light is painted into the picture in that colour, angles on the colour wheel, box = [x0, y0, x1, y1] to only take it there, extras = true to take it off the extra pictures as well) or from = a light layer (of this device or one with the same shape) with scale and at to make it fit the picture, kind = luma for the grey on black ones, painted = true when the picture already shows that light in ROCCATs colours so the layer has to cover it when off too. the at / scale numbers of layers out of another picture were found by matching that picture onto the top view, not by eye",
+ "2cee": {
+  "device": "Kova", "picture": "buttons/KOVA_GRAY_TOP_VIEW.png",
+  "inputs": [1, 2, 3, 11, 4, 5, 12, 6, 7, 10, 8, 9],
+  "nudge": [0.9, 0],
+  "lights": [
+   {"led": 0, "from": "Kova_AIMO/lighting/Backlight.png", "scale": 1.113, "at": [-24, 0]},
+   {"led": 1, "hue": [340, 25]}
+  ]
+ },
+ "2cef": {"like": "2cee", "picture": "buttons/KOVA_WHT_TOP_VIEW.png"},
+ "2cf0": {"like": "2cee", "picture": "buttons/KOVA_BLK_TOP_VIEW.png"},
+
+ "2cf1": {
+  "device": "Kova_AIMO", "picture": "views/Kova-Black.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "lights": [
+   {"led": 0, "from": "Kova_AIMO/lighting/Backlight.png"},
+   {"led": 1, "from": "Kova_AIMO/lighting/Wheel_light.png"}
+  ]
+ },
+ "2cf3": {"like": "2cf1", "picture": "views/Kova-White.png"},
+
+ "2e27": {
+  "device": "Kone_AIMO", "picture": "lighting/KoneAimo_Black.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "lights": [
+   {"led": 0, "from": "Kone_AIMO/lighting/Led_0.png"},
+   {"led": 1, "from": "Kone_AIMO/lighting/Led_1.png"},
+   {"led": 2, "from": "Kone_AIMO/lighting/Led_2.png"},
+   {"led": 3, "from": "Kone_AIMO/lighting/Led_3.png"},
+   {"led": 4, "from": "Kone_AIMO/lighting/Led_4.png"},
+   {"led": 5, "from": "Kone_AIMO/lighting/Led_5.png"},
+   {"led": 6, "from": "Kone_AIMO/lighting/Led_6.png"},
+   {"led": 7, "from": "Kone_AIMO/lighting/Led_7.png"},
+   {"led": 8, "from": "Kone_AIMO/lighting/Led_8.png"},
+   {"led": 9, "from": "Kone_AIMO/lighting/Led_9.png"},
+   {"led": 10, "from": "Kone_AIMO/lighting/Led_10.png"}
+  ]
+ },
+ "2e2c": {"like": "2e27", "device": "Kone_AIMO_Remastered", "picture": "lighting/KoneAimo-16K_BLK.png"},
+
+ "2e24": {
+  "device": "Kone_EMP", "picture": "buttons/kone_emp_top_view.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  "lights": [
+   {"led": 0, "hue": [0, 360], "box": [40, 0, 115, 262]},
+   {"led": 1, "hue": [0, 360], "box": [40, 262, 115, 527]},
+   {"led": 2, "hue": [0, 360], "box": [190, 0, 265, 262]},
+   {"led": 3, "hue": [0, 360], "box": [190, 262, 265, 527]}
+  ]
+ },
+
+ "2c88": {
+  "device": "Kone_Pro", "picture": "buttons/Kone_Pro_Btn.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8],
+  "lights": [
+   {"led": 0, "from": "Kone_Pro/lighting/Kone_Pro_Left_Mask.png", "at": [117, 0]},
+   {"led": 1, "from": "Kone_Pro/lighting/Kone_Pro_Right_Mask.png", "at": [117, 0]}
+  ]
+ },
+ "2c92": {
+  "device": "Kone_Pro_Air", "picture": "buttons/Kone_Pro_Btn.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8],
+  "lights": [
+   {"led": 0, "from": "Kone_Pro_Air/lighting/kone_pro_Left_Lighting_MASK.png", "at": [117, 0]},
+   {"led": 1, "from": "Kone_Pro_Air/lighting/kone_pro_Right_Lighting_MASK.png", "at": [117, 0]}
+  ]
+ },
+ "2c8e": {"like": "2c92"},
+
+ "afc9": {"device": "Kone_Air", "picture": "buttons/Button-Assignment.png", "inputs": [1, 2, 3, 4, 5, 6, 7, 8, 9]},
+ "afca": {"like": "afc9"},
+
+ "2c8b": {
+  "device": "Kone_XP", "picture": "buttons/Kone_XP_Btn.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+  "lights": [
+   {"led": 0, "from": "Kone_XP/lighting/Kone-XP_BRANDING.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 1, "from": "Kone_XP/lighting/Kone-XP_DPI_LED.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 2, "from": "Kone_XP/lighting/Kone-XP_LED-01.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 3, "from": "Kone_XP/lighting/Kone-XP_LED-02.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 4, "from": "Kone_XP/lighting/Kone-XP_LED-03.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 5, "from": "Kone_XP/lighting/Kone-XP_LED-04.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 6, "from": "Kone_XP/lighting/Kone-XP_LED-05.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 7, "from": "Kone_XP/lighting/Kone-XP_LED-06.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 8, "from": "Kone_XP/lighting/Kone-XP_LED-07.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 9, "from": "Kone_XP/lighting/Kone-XP_LED-08.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 10, "from": "Kone_XP/lighting/Kone-XP_LED-09.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 11, "from": "Kone_XP/lighting/Kone-XP_LED-10.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 12, "from": "Kone_XP/lighting/Kone-XP_LED-11.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 13, "from": "Kone_XP/lighting/Kone-XP_LED-12.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 14, "from": "Kone_XP/lighting/Kone-XP_LED-13.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 15, "from": "Kone_XP/lighting/Kone-XP_LED-14.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 16, "from": "Kone_XP/lighting/Kone-XP_LED-15.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 17, "from": "Kone_XP/lighting/Kone-XP_LED-16.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 18, "from": "Kone_XP/lighting/Kone-XP_LED_I1.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 19, "from": "Kone_XP/lighting/Kone-XP_LED_J1.png", "scale": 1.07, "at": [91, -9]},
+   {"led": 20, "from": "Kone_XP/lighting/Kone-XP_Wheel-LED.png", "scale": 1.07, "at": [91, -9]}
+  ]
+ },
+
+ "2cb2": {
+  "device": "Kone_XP_Air", "picture": "lighting/Kone-XP-Air_with_logo.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+  "lights": [
+   {"led": 0, "from": "Kone_XP_Air/lighting/Kone-XP-AIR_Branding.png", "at": [136, 0]},
+   {"led": 1, "from": "Kone_XP_Air/lighting/Kone-XP-AIR_LED_Bottom_Left.png", "at": [136, 0]},
+   {"led": 2, "from": "Kone_XP_Air/lighting/Kone-XP-AIR_LED_Bottom_Right.png", "at": [136, 0]},
+   {"led": 3, "from": "Kone_XP_Air/lighting/Kone-XP-AIR_LED_Upper_Left.png", "at": [136, 0]},
+   {"led": 4, "from": "Kone_XP_Air/lighting/Kone-XP-AIR_LED_Upper_Right.png", "at": [136, 0]},
+   {"led": 5, "from": "Kone_XP_Air/lighting/Kone-XP-AIR_LED_Wheel.png", "at": [136, 0]}
+  ]
+ },
+ "2cb6": {"like": "2cb2"},
+ "2cb8": {
+  "device": "Kone_XP_Air", "picture": "lighting/Charge-Dock_Base.png", "inputs": [],
+  "lights": [
+   {"led": 0, "from": "Kone_XP_Air/lighting/Charge-Dock_LED-LEFT.png"},
+   {"led": 1, "from": "Kone_XP_Air/lighting/Charge-Dock_LED-RIGHT.png"}
+  ]
+ },
+
+ "2dcd": {
+  "device": "Kone_Pure_Owl-Eye", "picture": "buttons/kone_pure_owl-eye_top_view.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "lights": [{"led": 0, "hue": [0, 50]}]
+ },
+ "2dca": {"like": "2dcd", "device": "Kone_Pure_SE", "picture": "Kone_Pure_Owl-Eye/buttons/kone_pure_owl-eye_top_view.png"},
+ "2dcb": {"like": "2dcd", "device": "Kone_Pure_SEL", "picture": "Kone_Pure_Owl-Eye/buttons/kone_pure_owl-eye_top_view.png"},
+ "2dd2": {"like": "2dcd", "device": "Kone_Pure_Ultra", "picture": "Kone_Pure_Owl-Eye/buttons/kone_pure_owl-eye_top_view.png"},
+ "2dd7": {"like": "2dcd", "device": "Kone_Pure_Ultra_iCafe", "picture": "Kone_Pure_Owl-Eye/buttons/kone_pure_owl-eye_top_view.png"},
+
+ "2ccc": {
+  "device": "Pure_Air", "picture": "buttons/pure_air_btn.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8],
+  "lights": [{"led": 0, "hue": [160, 230], "box": [290, 390, 370, 460]}]
+ },
+ "3c6e": {"like": "2ccc"},
+ "2cc8": {
+  "device": "Pure_SEL", "picture": "buttons/pure_sel_btn.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8],
+  "lights": [{"led": 0, "hue": [70, 170], "box": [355, 405, 435, 480]}]
+ },
+
+ "2de1": {
+  "device": "Burst_Pro", "picture": "views/CM_100.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8],
+  "lights": [
+   {"led": 0, "from": "Burst_Pro/lighting/CM_100_Logo_Lighting_MASK.png"},
+   {"led": 1, "from": "Burst_Pro/lighting/CM_100_Wheel_Lighting_MASK.png"}
+  ]
+ },
+ "2de6": {
+  "device": "Burst_Core", "picture": "views/CM_100.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8],
+  "lights": [
+   {"led": 0, "from": "Burst_Core/lighting/CM_100_Logo_Lighting_MASK.png"},
+   {"led": 1, "from": "Burst_Core/lighting/CM_100_Wheel_Lighting_MASK.png"}
+  ]
+ },
+ "2cab": {
+  "device": "Burst_Pro_Air", "picture": "lighting/CM_300_with_logo.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8],
+  "lights": [
+   {"led": 0, "from": "Burst_Pro_Air/lighting/CM_300_Left_Lighting_MASK.png"},
+   {"led": 1, "from": "Burst_Pro_Air/lighting/CM_300_Logo_Lighting_MASK.png"},
+   {"led": 2, "from": "Burst_Pro_Air/lighting/CM_300_Right_Lighting_MASK.png"},
+   {"led": 3, "from": "Burst_Pro_Air/lighting/CM_300_Wheel_Lighting_MASK.png"}
+  ]
+ },
+ "2ca6": {"like": "2cab"},
+
+ "2d00": {
+  "device": "Kain_100_AIMO", "picture": "views/Kain_100_Gray.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8],
+  "lights": [
+   {"led": 0, "from": "Kain_100_AIMO/lighting/Kain_120_Logo_Lighting_MASK.png"},
+   {"led": 1, "from": "Kain_100_AIMO/lighting/Kain_120_Wheel_Lighting_MASK.png"}
+  ]
+ },
+ "2d5c": {"like": "2d00", "device": "Kain_120_AIMO", "picture": "views/Kain_120_Gray.png"},
+ "2d5f": {"like": "2d00", "device": "Kain_200_AIMO", "picture": "views/Kain_120_Gray.png"},
+ "2d60": {"like": "2d5f"},
+
+ "2c38": {
+  "device": "Kiro", "picture": "buttons/KIRO_TOP_SIDEGRIPS-BUTTONS.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "lights": [{"led": 0, "hue": [170, 215], "box": [120, 260, 220, 430]}]
+ },
+
+ "2e4c": {
+  "device": "Leadr", "picture": "buttons/leadr_top_view.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+  "extras": [{"picture": "Leadr/buttons/leadr_side_view.png", "at": [323, 0], "view": 1}],
+  "lights": [
+   {"led": 0, "hue": [25, 60], "extras": true},
+   {"led": 1, "hue": [185, 250], "extras": true}
+  ]
+ },
+ "2e4e": {"like": "2e4c"},
+
+ "2e7c": {
+  "device": "Nyth", "picture": "buttons/NYTH_BLK_TOP_VIEW.png",
+  "inputs": [1, 2, 3, 4, 5, 6, 7, 8],
+  "extras": [{"picture": "Nyth/views/Nyth-back_black.png", "at": [25, 515]}],
+  "lights": [
+   {"led": 0, "hue": [5, 45]},
+   {"led": 1, "from": "Nyth/lighting/Light-Pipe_Mask.png", "at": [25, 515]}
+  ]
+ },
+ "2e7d": {"like": "2e7c", "picture": "buttons/NYTH_WHT_TOP_VIEW.png",
+  "extras": [{"picture": "Nyth/views/Nyth-back_white.png", "at": [25, 515]}]},
+
+ "_older": "the ones below are from before Swarm, roccat-tools knows them. Swarm never drew them, they borrow the art of the Swarm mouse with the same shell: Kone Pure, Kone Pure Military and both Kone Pure Optical take the Owl-Eye (same body, lit logo), Kone XTD, Kone XTD Optical and Kone[+] take the Kone EMP (same body, four leds in the same spots, roccat-tools counts them top left, bottom left, top right, bottom right like the EMP recipe does)",
+ "2dbe": {"like": "2dcd"},
+ "2dbf": {"like": "2dcd"},
+ "2db4": {"like": "2dcd"},
+ "2dc2": {"like": "2dcd"},
+ "2e22": {"like": "2e24"},
+ "2e23": {"like": "2e24"},
+ "2d51": {"like": "2e24"}
+}

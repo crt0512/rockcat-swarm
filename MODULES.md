@@ -6,7 +6,7 @@ with each USB product ID listed in the bundled `settings.xml`. Module versions a
 
 A checked box means rockcat-swarm supports the device (as of rockcat-swarm 2.0.0).
 The supported Kone AIMO Remastered was tested on hardware with firmware 1.05;
-see [README.md](README.md) for features and [docs/PROTOCOL.md](docs/PROTOCOL.md)
+see [README.md](README.md) for features and [docs/protocol/kone-aimo.md](docs/protocol/kone-aimo.md)
 for the protocol. `tools/re/allmods.py` regenerates this list from the update server.
 
 ## Mouse
@@ -36,9 +36,9 @@ for the protocol. `tools/re/allmods.py` regenerates this list from the update se
 - [ ] **Kone XP** - `1E7D:2C8B`, module `KONE_XP` v1.0006 (2.5 MB)
 - [ ] **Kone XP Air** - `1E7D:2CB2`, module `KONE_XP_AIR` v1.0019 (9.1 MB)
 - [ ] **Kone XP Air** - `1E7D:2CB6`, module `KONE_XP_AIR` v1.0019 (9.1 MB)
-- [ ] **Kova** - `1E7D:2CEE`, module `KOVA` v1.2123 (3.7 MB)
-- [ ] **Kova** - `1E7D:2CEF`, module `KOVA` v1.2123 (3.7 MB)
-- [ ] **Kova** - `1E7D:2CF0`, module `KOVA` v1.2123 (3.7 MB)
+- [x] **Kova** - `1E7D:2CEE`, module `KOVA` v1.2123 (3.7 MB)
+- [x] **Kova** - `1E7D:2CEF`, module `KOVA` v1.2123 (3.7 MB)
+- [x] **Kova** - `1E7D:2CF0`, module `KOVA` v1.2123 (3.7 MB)
 - [ ] **Kova AIMO** - `1E7D:2CF1`, module `KOVA_AIMO` v1.0017 (1.5 MB)
 - [ ] **Kova AIMO** - `1E7D:2CF2`, module `KOVA_AIMO` v1.0017 (1.5 MB)
 - [ ] **Kova AIMO** - `1E7D:2CF3`, module `KOVA_AIMO` v1.0017 (1.5 MB)
@@ -59,7 +59,7 @@ for the protocol. `tools/re/allmods.py` regenerates this list from the update se
 - [ ] **Magma** - `1E7D:3124`, module `MAGMA` v1.0009 (5.1 MB)
 - [ ] **Magma Mini** - `1E7D:69A0`, module `MAGMA_MINI` v1.0000 (2.3 MB)
 - [ ] **Pyro** - `1E7D:314C`, module `PYRO` v1.0009 (5.1 MB)
-- [ ] **Ryos MK FX** - `1E7D:2FDA`, module `RYOS_MK_FX` v1.2128 (4.7 MB)
+- [x] **Ryos MK FX** - `1E7D:2FDA`, module `RYOS_MK_FX` v1.2128 (4.7 MB)
 - [ ] **Skeltr** - `1E7D:2FC6`, module `SKELTR` v1.2128 (6.1 MB)
 - [ ] **Sova** - `1E7D:2F76`, module `SOVA_MEMBRANE` v1.1128 (4.9 MB)
 - [ ] **Sova** - `1E7D:2F94`, module `SOVA_MECHANICAL` v1.1128 (4.9 MB)

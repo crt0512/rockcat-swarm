@@ -1,5 +1,183 @@
 $ rockcat-cli list
-sim:kone-aimo-remastered  1e7d:2e2c  if0  ROCCAT Kone AIMO Remastered (simulated)
+1  sim:kone-aimo-remastered  1e7d:2e2c  if0  ROCCAT Kone AIMO Remastered (simulated)  [not tested on real hardware since the fork]
+[exit 0]
+
+$ rockcat-cli --device 1 info
+Device:         ROCCAT Kone AIMO Remastered (simulated)
+USB ID:         1e7d:2e2c (interface 0)
+Path:           sim:kone-aimo-remastered
+Firmware:       1.05
+Active profile: 1 of 5
+[exit 0]
+G 09 9 : 09 09 69 00 00 00 00 00 00
+G 05 4 : 05 04 00 05
+
+$ rockcat-cli --device 2e2c profile
+1
+[exit 0]
+G 05 4 : 05 04 00 05
+
+$ rockcat-cli --device 7 info
+rockcat-cli: there is no device number 7, see 'list'
+[exit 2]
+
+$ rockcat-cli --device 2cee info
+rockcat-cli: no supported device matches '2cee', see 'list'
+[exit 2]
+
+$ rockcat-cli udev-rules
+# rockcat-swarm: lets whoever is logged in talk to their ROCCAT devices without being root
+# generated from the device table with 'rockcat-cli udev-rules', dont edit this by hand
+# ROCCAT Kone AIMO Remastered
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e2c", MODE="0660", TAG+="uaccess"
+# ROCCAT Kova 2016 Gray
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cee", MODE="0660", TAG+="uaccess"
+# ROCCAT Kova 2016 White
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cef", MODE="0660", TAG+="uaccess"
+# ROCCAT Kova 2016 Black
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cf0", MODE="0660", TAG+="uaccess"
+# ROCCAT Ryos MK FX
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2fda", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e27", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone[+]
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2d51", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone XTD
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e22", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone XTD Optical
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e23", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pure
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dbe", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pure Optical
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2db4", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pure Military
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dbf", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pure Optical Black
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dc2", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan 80
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="305c", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan TKL AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2fee", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan Pro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="30f7", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan TKL Pro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="311a", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan TKL Pro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3167", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan II
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2f4e", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan II Max
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2ee2", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan II Mini
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2f09", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan II Mini Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3aa9", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan II Mini Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="6978", MODE="0660", TAG+="uaccess"
+# ROCCAT Horde
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="300c", MODE="0660", TAG+="uaccess"
+# ROCCAT Horde AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="303e", MODE="0660", TAG+="uaccess"
+# ROCCAT Isku+
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="31e2", MODE="0660", TAG+="uaccess"
+# ROCCAT Isku+ Force FX
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3214", MODE="0660", TAG+="uaccess"
+# ROCCAT Suora FX
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3246", MODE="0660", TAG+="uaccess"
+# ROCCAT Magma
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3124", MODE="0660", TAG+="uaccess"
+# ROCCAT Magma Mini
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="69a0", MODE="0660", TAG+="uaccess"
+# ROCCAT Pyro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="314c", MODE="0660", TAG+="uaccess"
+# ROCCAT Kova AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cf1", MODE="0660", TAG+="uaccess"
+# ROCCAT Kova AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cf2", MODE="0660", TAG+="uaccess"
+# ROCCAT Kova AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cf3", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone EMP
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e24", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pure Owl-Eye
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dcd", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pure SE
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dca", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pure SEL
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dcb", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pure Ultra
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dd2", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pure Ultra iCafe
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dd7", MODE="0660", TAG+="uaccess"
+# ROCCAT Leadr
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e4c", MODE="0660", TAG+="uaccess"
+# ROCCAT Leadr
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e4e", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2c88", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pro Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2c8e", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pro Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2c92", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone XP
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2c8b", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone XP Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cb2", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone XP Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cb6", MODE="0660", TAG+="uaccess"
+# ROCCAT Burst Core
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2de6", MODE="0660", TAG+="uaccess"
+# ROCCAT Burst Pro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2de1", MODE="0660", TAG+="uaccess"
+# ROCCAT Burst Pro Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2ca6", MODE="0660", TAG+="uaccess"
+# ROCCAT Burst Pro Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cab", MODE="0660", TAG+="uaccess"
+# ROCCAT Kain 100 AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2d00", MODE="0660", TAG+="uaccess"
+# ROCCAT Kain 120 AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2d5c", MODE="0660", TAG+="uaccess"
+# ROCCAT Kain 200 AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2d5f", MODE="0660", TAG+="uaccess"
+# ROCCAT Kain 200 AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2d60", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="afc9", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="afca", MODE="0660", TAG+="uaccess"
+# ROCCAT Pure Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2ccc", MODE="0660", TAG+="uaccess"
+# ROCCAT Pure Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3c6e", MODE="0660", TAG+="uaccess"
+# ROCCAT Pure SEL
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cc8", MODE="0660", TAG+="uaccess"
+# ROCCAT Sense AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="343a", MODE="0660", TAG+="uaccess"
+# ROCCAT Sense AIMO XXL
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="343b", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone XP Air dock
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cb8", MODE="0660", TAG+="uaccess"
+# ROCCAT Khan AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="39d0", MODE="0660", TAG+="uaccess"
+# ROCCAT Elo 7.1 USB
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3a34", MODE="0660", TAG+="uaccess"
+# ROCCAT Elo 7.1 Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3a37", MODE="0660", TAG+="uaccess"
+# ROCCAT Elo 7.1 Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3a39", MODE="0660", TAG+="uaccess"
+# ROCCAT Syn Pro Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3a3b", MODE="0660", TAG+="uaccess"
+# ROCCAT Syn Pro Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3a3d", MODE="0660", TAG+="uaccess"
+# ROCCAT Syn Max Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3a3f", MODE="0660", TAG+="uaccess"
+# ROCCAT Syn Max Air
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3a41", MODE="0660", TAG+="uaccess"
+# ROCCAT Torch
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3a56", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan 100 AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="307a", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan 120 AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3098", MODE="0660", TAG+="uaccess"
 [exit 0]
 
 $ rockcat-cli info
@@ -381,6 +559,24 @@ $ rockcat-cli types
   0x52  easyshift-lock       Easy-Shift[+] lock
   0x53  easyshift-all        Easy-Shift[+] all devices
   0x54  easyshift-lock-all   Easy-Shift[+] lock all devices
+  0x43  easywheel-profile    EasyWheel: switch profile
+  0x44  easywheel-dpi        EasyWheel: change DPI
+  0x45  easywheel-volume     EasyWheel: volume
+  0x46  easywheel-alt-tab    EasyWheel: alt+tab
+  0x62  home                 Home
+  0x63  end                  End
+  0x64  page-up              Page up
+  0x65  page-down            Page down
+  0x66  left-ctrl            Left Ctrl
+  0x67  left-shift           Left Shift
+  0x68  left-alt             Left Alt
+  0x7c  easyaim-custom       EasyAim custom DPI
+  0xbf  profile-1            Profile 1
+  0xc0  profile-2            Profile 2
+  0xc1  profile-3            Profile 3
+  0xc2  profile-4            Profile 4
+  0xc3  profile-5            Profile 5
+  0xd0  easyaim-200          EasyAim 200
   0x8c  brightness-up        Brightness step up (engine)
   0x8d  brightness-down      Brightness step down (engine)
 
@@ -478,6 +674,7 @@ TDCU mode 2 (custom calibration), state 1, value 0x1234
 G 0f 6 : 0f 06 02 01 34 12
 
 $ rockcat-cli direct #00ff00
+the lights stay like this until 'rockcat-cli direct off', switching profiles does not bring them back
 [exit 0]
 S 0e 06 01 01 ff ff
 G 04 3 : 04 01 00
@@ -601,4 +798,2353 @@ G 04 3 : 04 01 00
 $ rockcat-cli restore TMP/nope.rswb
 rockcat-cli: cannot open 'TMP/nope.rswb'
 [exit 2]
+
+$ rockcat-cli list
+1  sim:ryos-mk-fx  1e7d:2fda  if1  ROCCAT Ryos MK FX (simulated)  [tested on hardware, firmware 1.31]
+[exit 0]
+
+$ rockcat-cli info
+Device:         ROCCAT Ryos MK FX (simulated)
+USB ID:         1e7d:2fda (interface 1)
+Path:           sim:ryos-mk-fx
+Firmware:       1.31
+Active profile: 1 of 5
+[exit 0]
+G 0f 8 : 0f 08 83 6d 00 01 01 00
+G 05 3 : 05 03 50
+
+$ rockcat-cli profile 2
+[exit 0]
+G 05 3 : 05 03 50
+S 05 03 51
+G 04 3 : 04 01 00
+
+$ rockcat-cli profile
+1
+[exit 0]
+G 05 3 : 05 03 50
+
+$ rockcat-cli show
+Profile 1
+  Lighting effect: Fully lit (1)
+  Effect speed:    2
+  Brightness:      255
+  When idle:       after 15 min starlit sky
+  Macro feedback:  off
+  Key colours:
+    #ff0000  111 keys
+[exit 0]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+
+$ rockcat-cli show -p 3
+Profile 3
+  Lighting effect: Fully lit (1)
+  Effect speed:    2
+  Brightness:      255
+  When idle:       after 15 min starlit sky
+  Macro feedback:  off
+  Key colours:
+    #0050ff  111 keys
+[exit 0]
+S 04 02 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 02 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 5a 24
+S 04 02 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 02 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f2 0d
+S 04 02 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 02 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 98 08
+S 04 02 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 02 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 24 04
+S 04 02 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 02 ff f1 00 04 02
+S 04 02 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 02 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a4 1a
+S 04 02 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 02 3f 53 00
+S 04 02 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 02 05 00 0f 00 01 00 02 00 00 01 1e 00 0f 11 04 3f 0f 00 00 00 00 00 00 00 00 00 00 d7 00
+S 04 02 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 02 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 00 00 00 00 00 00 00 11 00 00 00 00 00 00 3f 00 00 00 00 00 00 0f 00 00 00 04 00 00 00 0f 00 00 00 00 00 00 00 00 00 5f 1c
+
+$ rockcat-cli set effect=heartbeat speed=3 brightness=100 idle-minutes=5 idle-style=fall-asleep macro-feedback=on
+[exit 0]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+S 0d 20 00 02 00 05 00 04 00 03 00 01 03 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 c9 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli set -p 2 led=all:#0000ff led=w,a,s,d:#ff0000 led=esc:#000000
+[exit 0]
+S 04 01 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 01 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 59 24
+S 04 01 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 01 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f1 0d
+S 04 01 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 01 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 97 08
+S 04 01 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 01 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 23 04
+S 04 01 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 01 ff f1 00 03 02
+S 04 01 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 01 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a3 1a
+S 04 01 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 01 3f 52 00
+S 04 01 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 01 05 00 0f 00 01 00 02 00 00 01 1e 00 0f 3f 0f 00 0f 00 00 00 00 00 00 00 00 00 00 d0 00
+S 04 01 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 01 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 00 00 00 00 00 00 00 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 58 1c
+S 0d 20 01 05 00 0f 01 01 00 02 00 00 01 1e 00 0f 3f 0f 00 0f 00 00 00 00 00 00 00 00 00 00 d1 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 17 ef 01 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 21 11 11 11 11 11 21 12 11 11 11 11 21 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 12 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 21 22 22 22 22 22 22 22 12 22 22 22 22 22 12 21 22 22 22 12 12 22 22 22 22 22 22 22 22 12 22 22 22 22 11 21 22 22 22 12 12 22 22 12 00 3f 3f 3f 3f 3f 3f 00 00 00 00 00 00 00 00 3f 3f 3f 3f 3f 3f ff ff ff 0f ff ff ff 0f ff ff ff 0f 00 00 00 00 00 00 8d 2b
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli show -p 2
+Profile 2
+  Lighting effect: Fully lit (1)
+  Effect speed:    2
+  Brightness:      255
+  When idle:       after 15 min starlit sky
+  Macro feedback:  off
+  Key colours:
+    #00ff00  111 keys
+[exit 0]
+S 04 01 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 01 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 59 24
+S 04 01 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 01 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f1 0d
+S 04 01 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 01 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 97 08
+S 04 01 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 01 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 23 04
+S 04 01 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 01 ff f1 00 03 02
+S 04 01 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 01 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a3 1a
+S 04 01 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 01 3f 52 00
+S 04 01 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 01 05 00 0f 00 01 00 02 00 00 01 1e 00 0f 3f 0f 00 0f 00 00 00 00 00 00 00 00 00 00 d0 00
+S 04 01 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 01 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 00 00 00 00 00 00 00 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 58 1c
+
+$ rockcat-cli set effect=wave
+[exit 0]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+S 0d 20 00 05 00 0f 00 07 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 d5 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli set effect=snake
+rockcat-cli: this device cant show the effect 'Snake' (yet), see 'show' and the help for the ones it can
+[exit 2]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+
+$ rockcat-cli set dpi1=800
+rockcat-cli: this device has no dpi to set
+[exit 2]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+
+$ rockcat-cli buttons
+Profile 1 keys (second column: with Easy-Shift[+] held, or with Fn where it says so)
+  M1         shift-1                  ctrl-1
+  Esc        esc                      
+  F1         f1                       fn: mute
+  F3         f3                       fn: volume-up
+  F5         f5                       fn: play-pause
+  F7         f7                       fn: prev-track
+  F9         f9                       fn: my-computer
+  F10        f10                      fn: browser
+  F11        f11                      fn: light
+  Print      printscreen              fn: disabled
+  Num        numlock                  numlock
+  *          kpasterisk               kpasterisk
+  `          grave                    grave
+  1          1                        1
+  F2         f2                       fn: volume-down
+  F4         f4                       fn: calculator
+  F6         f6                       fn: stop
+  F8         f8                       fn: next-track
+  0          0                        0
+  =          equal                    equal
+  F12        f12                      fn: record
+  Scroll     scrolllock               fn: disabled
+  /          kpslash                  kpslash
+  -          kpminus                  kpminus
+  M2         shift-2                  ctrl-2
+  2          2                        2
+  3          3                        3
+  4          4                        4
+  6          6                        6
+  8          8                        8
+  _          minus                    minus
+  [          leftbrace                leftbrace
+  ?          yen                      yen
+  Break      pause                    fn: sleep
+  Num_7      kp7                      kp7
+  Num_9      kp9                      kp9
+  Tab        tab                      tab
+  Q          q                        q
+  E          e                        e
+  5          5                        5
+  7          7                        7
+  9          9                        9
+  O          o                        o
+  ]          rightbrace               rightbrace
+  Back       backspace                backspace
+  Ins        insert                   insert
+  Num_8      kp8                      kp8
+  Num_+      kpplus                   kpplus
+  M3         shift-3                  ctrl-3
+  W          w                        w
+  R          r                        r
+  T          t                        t
+  Z          y                        y
+  I          i                        i
+  P          p                        p
+  '          apostrophe               apostrophe
+  \          backslash                backslash
+  Home       home                     home
+  Num_4      kp4                      kp4
+  Num_6      kp6                      kp6
+  Left+      easyshift                
+  A          a                        a
+  D          d                        d
+  G          g                        g
+  U          u                        u
+  K          k                        k
+  L          l                        l
+  U          hash                     hash
+  Enter      enter                    enter
+  Pg_up      pageup                   pageup
+  Num_5      kp5                      kp5
+  M4         shift-4                  ctrl-4
+  S          s                        s
+  F          f                        f
+  H          h                        h
+  J          j                        j
+  M          m                        m
+  ;          semicolon                semicolon
+  /          slash                    slash
+  R_Shift    rshift                   rshift
+  Del        delete                   delete
+  Num_1      kp1                      kp1
+  Num_3      kp3                      kp3
+  L_Shift    lshift                   lshift
+  >          102nd                    102nd
+  X          x                        x
+  V          v                        v
+  N          n                        n
+  ;          comma                    comma
+  :          dot                      dot
+  ?          ro                       ro
+  R_Ctrl     rctrl                    rctrl
+  End        end                      end
+  Num_2      kp2                      kp2
+  R_Enter    kpenter                  kpenter
+  M5         shift-5                  ctrl-5
+  Z          z                        z
+  C          c                        c
+  B          b                        b
+  ?          muhenkan                 muhenkan
+  ?          henkan                   henkan
+  Menu       menu                     menu
+  Left       left                     left
+  Pg_down    pagedown                 pagedown
+  Num_0      kp0                      kp0
+  Num_.      kpdot                    kpdot
+  L_Ctrl     lctrl                    lctrl
+  L_Win      lwin                     lwin
+  L_Alt      lalt                     lalt
+  Space      space                    space
+  ?          katakana                 katakana
+  R_Alt      ralt                     ralt
+  Fn         fn                       
+  Down       down                     down
+  Up         up                       up
+  Right      right                    right
+  T1         profile-down             capslock
+  T2         open-driver              open-player
+  T3         profile-up               email
+[exit 0]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+
+$ rockcat-cli bind esc a
+[exit 0]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+S 06 7d 00 aa 04 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 33 24
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli bind shift+a ctrl+c
+[exit 0]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+S 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 b8 01 06 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 5d 1b
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli bind a ctrl+c
+rockcat-cli: A can only be another key or a function without parameters, combinations go on its Easy-Shift side (shift+KEY)
+[exit 2]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+
+$ rockcat-cli bind fn+f1 volume-up
+[exit 0]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+S 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d0 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 ee 0d
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli bind shift+f1 mute
+rockcat-cli: the second function of F1 sits on Fn, not on Easy-Shift: use fn+KEY
+[exit 2]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+
+$ rockcat-cli bind fn+a mute
+rockcat-cli: A has nothing on the Fn layer, only F1 to F12, Print, Scroll and Pause do
+[exit 2]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+
+$ rockcat-cli bind t1 volume-down
+[exit 0]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+S 09 17 00 d1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 42 04
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli bind nosuchkey a
+rockcat-cli: no key called 'nosuchkey' (the names are the ones 'buttons' prints, like esc, f1, m1, num_7)
+[exit 2]
+
+$ rockcat-cli buttons -p 1
+Profile 1 keys (second column: with Easy-Shift[+] held, or with Fn where it says so)
+  M1         shift-1                  ctrl-1
+  Esc        esc                      
+  F1         f1                       fn: mute
+  F3         f3                       fn: volume-up
+  F5         f5                       fn: play-pause
+  F7         f7                       fn: prev-track
+  F9         f9                       fn: my-computer
+  F10        f10                      fn: browser
+  F11        f11                      fn: light
+  Print      printscreen              fn: disabled
+  Num        numlock                  numlock
+  *          kpasterisk               kpasterisk
+  `          grave                    grave
+  1          1                        1
+  F2         f2                       fn: volume-down
+  F4         f4                       fn: calculator
+  F6         f6                       fn: stop
+  F8         f8                       fn: next-track
+  0          0                        0
+  =          equal                    equal
+  F12        f12                      fn: record
+  Scroll     scrolllock               fn: disabled
+  /          kpslash                  kpslash
+  -          kpminus                  kpminus
+  M2         shift-2                  ctrl-2
+  2          2                        2
+  3          3                        3
+  4          4                        4
+  6          6                        6
+  8          8                        8
+  _          minus                    minus
+  [          leftbrace                leftbrace
+  ?          yen                      yen
+  Break      pause                    fn: sleep
+  Num_7      kp7                      kp7
+  Num_9      kp9                      kp9
+  Tab        tab                      tab
+  Q          q                        q
+  E          e                        e
+  5          5                        5
+  7          7                        7
+  9          9                        9
+  O          o                        o
+  ]          rightbrace               rightbrace
+  Back       backspace                backspace
+  Ins        insert                   insert
+  Num_8      kp8                      kp8
+  Num_+      kpplus                   kpplus
+  M3         shift-3                  ctrl-3
+  W          w                        w
+  R          r                        r
+  T          t                        t
+  Z          y                        y
+  I          i                        i
+  P          p                        p
+  '          apostrophe               apostrophe
+  \          backslash                backslash
+  Home       home                     home
+  Num_4      kp4                      kp4
+  Num_6      kp6                      kp6
+  Left+      easyshift                
+  A          a                        a
+  D          d                        d
+  G          g                        g
+  U          u                        u
+  K          k                        k
+  L          l                        l
+  U          hash                     hash
+  Enter      enter                    enter
+  Pg_up      pageup                   pageup
+  Num_5      kp5                      kp5
+  M4         shift-4                  ctrl-4
+  S          s                        s
+  F          f                        f
+  H          h                        h
+  J          j                        j
+  M          m                        m
+  ;          semicolon                semicolon
+  /          slash                    slash
+  R_Shift    rshift                   rshift
+  Del        delete                   delete
+  Num_1      kp1                      kp1
+  Num_3      kp3                      kp3
+  L_Shift    lshift                   lshift
+  >          102nd                    102nd
+  X          x                        x
+  V          v                        v
+  N          n                        n
+  ;          comma                    comma
+  :          dot                      dot
+  ?          ro                       ro
+  R_Ctrl     rctrl                    rctrl
+  End        end                      end
+  Num_2      kp2                      kp2
+  R_Enter    kpenter                  kpenter
+  M5         shift-5                  ctrl-5
+  Z          z                        z
+  C          c                        c
+  B          b                        b
+  ?          muhenkan                 muhenkan
+  ?          henkan                   henkan
+  Menu       menu                     menu
+  Left       left                     left
+  Pg_down    pagedown                 pagedown
+  Num_0      kp0                      kp0
+  Num_.      kpdot                    kpdot
+  L_Ctrl     lctrl                    lctrl
+  L_Win      lwin                     lwin
+  L_Alt      lalt                     lalt
+  Space      space                    space
+  ?          katakana                 katakana
+  R_Alt      ralt                     ralt
+  Fn         fn                       
+  Down       down                     down
+  Up         up                       up
+  Right      right                    right
+  T1         profile-down             capslock
+  T2         open-driver              open-player
+  T3         profile-up               email
+[exit 0]
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+
+$ rockcat-cli reset-buttons
+[exit 0]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+S 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 0a 08 00 ff f1 00 02 02
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli types
+  0x00  disabled
+  0x81  shutdown
+  0x82  sleep
+  0x83  wake
+  0xa3  light
+  0xa7  record
+  0xaa  m1
+  0xab  m2
+  0xac  m3
+  0xad  m4
+  0xae  m5
+  0xb0  profile-up
+  0xb1  profile-down
+  0xb2  profile-cycle
+  0xb3  profile-1
+  0xb4  profile-2
+  0xb5  profile-3
+  0xb6  profile-4
+  0xb7  profile-5
+  0xb8  shortcut
+  0xb9  quicklaunch
+  0xba  macro-pause
+  0xbc  timer
+  0xbd  timer-stop
+  0xbe  macro
+  0xbf  led-macro
+  0xc0  email
+  0xc1  calculator
+  0xc2  my-computer
+  0xc3  browser
+  0xc4  www-search
+  0xc5  www-home
+  0xc6  www-back
+  0xc7  www-forward
+  0xc8  www-stop
+  0xc9  www-refresh
+  0xca  www-favorites
+  0xcb  open-player
+  0xcc  play-pause
+  0xcd  next-track
+  0xce  prev-track
+  0xcf  stop
+  0xd0  volume-up
+  0xd1  volume-down
+  0xd2  mute
+  0xd3  shift-1
+  0xd4  shift-2
+  0xd5  shift-3
+  0xd6  shift-4
+  0xd7  shift-5
+  0xd8  ctrl-1
+  0xd9  ctrl-2
+  0xda  ctrl-3
+  0xdb  ctrl-4
+  0xdc  ctrl-5
+  0xdd  open-driver
+  0xf1  fn
+  0xf5  talk-easyshift
+  0xf6  talk-easyshift-lock
+  0xff  easyshift
+
+a key can also be set to another key (bind esc a) or, on its Easy-Shift side, to a combination
+(bind shift+a ctrl+c). key names are the ones 'buttons' prints.
+[exit 0]
+
+$ rockcat-cli macro -b m1 --text hi --name greeting
+[exit 0]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+S 0e 01 00 00 01 72 6f 63 6b 63 61 74 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 67 72 65 65 74 69 6e 67 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 0b 01 14 00 0b 02 14 00 0c 01 14 00 0c 02 14 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+G 04 3 : 04 01 00
+S 0e 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+G 04 3 : 04 01 00
+S 08 23 00 be 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 81 08
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli macro -b m1
+Macro '' / '' (profile 1, button M1), mode 0, loop 0, 0 events
+[exit 0]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+S 04 10 00
+G 04 3 : 04 01 00
+G 0e 1026 : 0e 01 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+S 04 20 00
+G 04 3 : 04 01 00
+G 0e 1026 : 0e 02 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+
+$ rockcat-cli macro -b f1
+rockcat-cli: read macro: this device has no such thing
+[exit 1]
+G 05 3 : 05 03 50
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+
+$ rockcat-cli direct #00ff00
+the lights stay like this until 'rockcat-cli direct off', switching profiles does not bring them back
+[exit 0]
+S 13 08 01 00 00 00 00 00
+G 04 3 : 04 01 00
+S 18 e8 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 21 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 12 22 22 22 22 22 22 22 22 22 12 22 22 22 22 11 21 22 22 22 12 12 22 22 12 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 00 00 00 00 00 00 00 00 3f 3f 3f 3f 3f 3f 00 00 00 00 00 00 00 ff ff ff 0f ff ff ff 0f ff ff ff 0f 1c 2a
+G 13 8 : 13 08 01 00 00 00 01 00
+
+$ rockcat-cli direct off
+[exit 0]
+S 13 08 00 00 00 00 00 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli dump -p 5
+Profile as it goes into a backup (865 bytes)
+  0000: 52 43 50 46 01 da 2f 04 06 7d 04 aa 29 3a 3c 3e
+  0010: 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45
+  0020: 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b
+  0030: 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c
+  0040: 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28
+  0050: 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1
+  0060: 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b
+  0070: 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51
+  0080: 52 4f e7 5c 24 07 5f 04 3a 00 00 3b 00 00 3c 00
+  0090: 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00
+  00a0: 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47
+  00b0: 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00
+  00c0: 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00
+  00d0: c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82
+  00e0: 00 00 f4 0d 08 23 04 d3 00 00 d4 00 00 d5 00 00
+  00f0: d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db
+  0100: 00 00 dc 00 00 9a 08 09 17 04 b1 00 00 dd 00 00
+  0110: b0 00 00 39 00 00 cb 00 00 c0 00 00 26 04 0a 08
+  0120: 04 ff f1 00 06 02 0b 26 01 04 35 00 00 1e 00 00
+  0130: 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24
+  0140: 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00
+  0150: 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00
+  0160: 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c
+  0170: 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00
+  0180: 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00
+  0190: 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34
+  01a0: 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00
+  01b0: 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00
+  01c0: 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5
+  01d0: 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00
+  01e0: 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00
+  01f0: 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c
+  0200: 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00
+  0210: 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00
+  0220: 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d
+  0230: 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00
+  0240: 00 58 00 00 62 00 00 63 00 00 a6 1a 0c 06 04 3f
+  0250: 55 00 0d 20 04 05 00 0f 00 01 00 02 00 00 01 1e
+  0260: 00 0f 21 0a 3f 0f 00 00 00 00 00 00 00 00 00 00
+  0270: ef 00 17 ef 04 ff ff ff ff ff ff ff ff ff ff ff
+  0280: ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11
+  0290: 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+  02a0: 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+  02b0: 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+  02c0: 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+  02d0: 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+  02e0: 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+  02f0: 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+  0300: 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+  0310: 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+  0320: 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+  0330: 11 11 11 11 11 11 11 11 00 00 00 00 00 00 00 21
+  0340: 00 00 00 00 00 00 3f 00 00 00 00 00 00 0f 00 00
+  0350: 00 0a 00 00 00 0f 00 00 00 00 00 00 00 00 00 77
+  0360: 1c
+[exit 0]
+S 04 04 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 04 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 5c 24
+S 04 04 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 04 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f4 0d
+S 04 04 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 04 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 9a 08
+S 04 04 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 04 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 26 04
+S 04 04 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 04 ff f1 00 06 02
+S 04 04 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 04 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a6 1a
+S 04 04 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 04 3f 55 00
+S 04 04 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 04 05 00 0f 00 01 00 02 00 00 01 1e 00 0f 21 0a 3f 0f 00 00 00 00 00 00 00 00 00 00 ef 00
+S 04 04 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 04 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 00 00 00 00 00 00 00 21 00 00 00 00 00 00 3f 00 00 00 00 00 00 0f 00 00 00 0a 00 00 00 0f 00 00 00 00 00 00 00 00 00 77 1c
+
+$ rockcat-cli backup TMP/kb.rswb
+Saved 5 profiles to TMP/kb.rswb
+[exit 0]
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 00 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 58 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f0 0d
+S 04 00 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 00 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 96 08
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 00 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 22 04
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 00 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a2 1a
+S 04 00 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 00 3f 51 00
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 00 05 00 0f 00 01 00 02 00 00 01 1e 3f 0f 00 0f 00 0f 00 00 00 00 00 00 00 00 00 00 cf 00
+S 04 00 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 57 1c
+S 04 01 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 01 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 59 24
+S 04 01 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 01 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f1 0d
+S 04 01 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 01 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 97 08
+S 04 01 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 01 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 23 04
+S 04 01 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 01 ff f1 00 03 02
+S 04 01 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 01 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a3 1a
+S 04 01 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 01 3f 52 00
+S 04 01 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 01 05 00 0f 00 01 00 02 00 00 01 1e 00 0f 3f 0f 00 0f 00 00 00 00 00 00 00 00 00 00 d0 00
+S 04 01 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 01 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 00 00 00 00 00 00 00 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 58 1c
+S 04 02 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 02 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 5a 24
+S 04 02 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 02 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f2 0d
+S 04 02 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 02 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 98 08
+S 04 02 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 02 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 24 04
+S 04 02 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 02 ff f1 00 04 02
+S 04 02 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 02 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a4 1a
+S 04 02 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 02 3f 53 00
+S 04 02 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 02 05 00 0f 00 01 00 02 00 00 01 1e 00 0f 11 04 3f 0f 00 00 00 00 00 00 00 00 00 00 d7 00
+S 04 02 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 02 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 00 00 00 00 00 00 00 11 00 00 00 00 00 00 3f 00 00 00 00 00 00 0f 00 00 00 04 00 00 00 0f 00 00 00 00 00 00 00 00 00 5f 1c
+S 04 03 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 03 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 5b 24
+S 04 03 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 03 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f3 0d
+S 04 03 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 03 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 99 08
+S 04 03 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 03 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 25 04
+S 04 03 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 03 ff f1 00 05 02
+S 04 03 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 03 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a5 1a
+S 04 03 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 03 3f 54 00
+S 04 03 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 03 05 00 0f 00 01 00 02 00 00 01 1e 00 0f 30 03 3f 0f 00 00 00 00 00 00 00 00 00 00 f6 00
+S 04 03 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 03 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 00 00 00 00 00 00 00 30 00 00 00 00 00 00 3f 00 00 00 00 00 00 0f 00 00 00 03 00 00 00 0f 00 00 00 00 00 00 00 00 00 7e 1c
+S 04 04 a0
+G 04 3 : 04 01 00
+G 06 125 : 06 7d 04 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 5c 24
+S 04 04 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 04 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f4 0d
+S 04 04 a2
+G 04 3 : 04 01 00
+G 08 35 : 08 23 04 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 9a 08
+S 04 04 a3
+G 04 3 : 04 01 00
+G 09 23 : 09 17 04 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 26 04
+S 04 04 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 04 ff f1 00 06 02
+S 04 04 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 26 01 04 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a6 1a
+S 04 04 b0
+G 04 3 : 04 01 00
+G 0c 6 : 0c 06 04 3f 55 00
+S 04 04 b1
+G 04 3 : 04 01 00
+G 0d 32 : 0d 20 04 05 00 0f 00 01 00 02 00 00 01 1e 00 0f 21 0a 3f 0f 00 00 00 00 00 00 00 00 00 00 ef 00
+S 04 04 b3
+G 04 3 : 04 01 00
+G 17 239 : 17 ef 04 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 00 00 00 00 00 00 00 21 00 00 00 00 00 00 3f 00 00 00 00 00 00 0f 00 00 00 0a 00 00 00 0f 00 00 00 00 00 00 00 00 00 77 1c
+
+$ rockcat-cli restore -p 2 TMP/kb.rswb
+Restored 1 profile from TMP/kb.rswb
+[exit 0]
+S 06 7d 01 aa 29 3a 3c 3e 40 42 43 44 46 53 55 35 1e 3b 3d 3f 41 27 2e 45 47 54 56 ab 1f 20 21 23 25 2d 2f 89 48 5f 61 2b 14 08 22 24 26 12 30 2a 49 60 57 ac 1a 15 17 1c 0c 13 34 31 4a 5c 5e 39 04 07 0a 18 0e 0f 32 28 4b 5d 85 ad 16 09 0b 0d 10 33 38 e5 4c 59 5b e1 64 1b 19 11 36 37 87 e4 4d 5a 58 ae 1d 06 05 8b 8a 90 65 50 4e 62 63 e0 e3 e2 91 2c 88 e6 f1 51 52 4f e7 59 24
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 07 5f 01 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 d2 00 00 d1 00 00 d0 00 00 c1 00 00 cc 00 00 cf 00 00 ce 00 00 cd 00 00 c2 00 00 c3 00 00 a3 00 00 a7 00 00 00 00 00 00 00 00 82 00 00 f1 0d
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 08 23 01 d3 00 00 d4 00 00 d5 00 00 d6 00 00 d7 00 00 d8 00 00 d9 00 00 da 00 00 db 00 00 dc 00 00 97 08
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 09 17 01 b1 00 00 dd 00 00 b0 00 00 39 00 00 cb 00 00 c0 00 00 23 04
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 0a 08 01 ff f1 00 03 02
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 0b 26 01 01 35 00 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 23 00 00 24 00 00 25 00 00 26 00 00 27 00 00 2d 00 00 2e 00 00 89 00 00 2a 00 00 2b 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 1c 00 00 18 00 00 0c 00 00 12 00 00 13 00 00 2f 00 00 30 00 00 31 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 0b 00 00 0d 00 00 0e 00 00 0f 00 00 33 00 00 34 00 00 32 00 00 28 00 00 e1 00 00 64 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 11 00 00 10 00 00 36 00 00 37 00 00 38 00 00 87 00 00 e5 00 00 e0 00 00 e3 00 00 e2 00 00 8b 00 00 91 00 00 2c 00 00 90 00 00 8a 00 00 88 00 00 e6 00 00 65 00 00 e4 00 00 49 00 00 4a 00 00 4b 00 00 4c 00 00 4d 00 00 4e 00 00 52 00 00 50 00 00 51 00 00 4f 00 00 53 00 00 54 00 00 55 00 00 56 00 00 5f 00 00 60 00 00 61 00 00 57 00 00 5c 00 00 5d 00 00 5e 00 00 85 00 00 59 00 00 5a 00 00 5b 00 00 58 00 00 62 00 00 63 00 00 a3 1a
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 0c 06 01 3f 52 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 0d 20 01 05 00 0f 00 01 00 02 00 00 01 1e 00 0f 3f 0f 00 0f 00 00 00 00 00 00 00 00 00 00 d0 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 17 ef 01 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 00 00 00 00 00 00 00 3f 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 00 00 00 0f 00 00 00 0f 00 00 00 00 00 00 00 00 00 58 1c
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli restore TMP/all.rswb
+rockcat-cli: 'TMP/all.rswb' was made with a different device, not restoring it onto this one
+[exit 2]
+
+$ rockcat-cli list
+1  sim:kova-2016  1e7d:2cee  if0  ROCCAT Kova 2016 (gray) (simulated)  [tested on hardware, firmware 1.18]
+[exit 0]
+
+$ rockcat-cli info
+Device:         ROCCAT Kova 2016 (gray) (simulated)
+USB ID:         1e7d:2cee (interface 0)
+Path:           sim:kova-2016
+Firmware:       1.18
+Active profile: 1 of 5
+[exit 0]
+G 09 8 : 09 08 76 69 07 01 21 14
+G 05 4 : 05 04 00 05
+
+$ rockcat-cli show
+Profile 1
+  DPI levels:
+      1:   400  (disabled)
+      2:   800
+    * 3:  1000
+      4:  1600  (disabled)
+      5:  2250  (disabled)
+  Polling rate:    1000 Hz
+  Lighting effect: Fully lit (1)
+  Colour flow:     off
+  Left handed:     no
+  Effect speed:    0
+  LEDs (enable mask 0x003):
+     1 Light pipe   #0000ff@255
+     2 Wheel        #0000ff@255
+[exit 0]
+G 05 4 : 05 04 00 05
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 00 00 06 ff 06 08 10 14 20 2d 02 03 33 00 01 00 00 00 00 ff 00 00 00 ff dd 03
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 21 00 00 33 00 00 41 00 00 22 00 00 64 00 00 65 00 00 23 00 00 0d 00 00 0e 00 00 01 00 00 02 00 00 25 00 00 08 00 00 00 00 00 00 00 00 07 00 00 62 00 00 63 00 00 14 00 00 26 00 00 27 00 00
+
+$ rockcat-cli show -p 2
+Profile 2
+  DPI levels:
+      1:   400  (disabled)
+    * 2:  2300
+      3:  2400  (disabled)
+      4:  3500  (disabled)
+      5:  7000  (disabled)
+  Polling rate:    1000 Hz
+  Lighting effect: Fully lit (1)
+  Colour flow:     off
+  Left handed:     no
+  Effect speed:    2
+  LEDs (enable mask 0x003):
+     1 Light pipe   #0590fe@255
+     2 Wheel        #0590fe@255
+[exit 0]
+S 04 01 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 01 00 06 ff 02 08 2e 30 46 8c 01 03 03 00 01 02 00 05 90 fe 00 05 90 fe 92 05
+S 04 01 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 01 01 00 00 02 00 00 03 00 00 64 00 00 d0 00 00 41 00 00 65 00 00 05 00 1c 05 00 63 00 00 00 0d 00 00 0e 00 00 08 00 00 07 00 00 25 00 00 21 00 00 23 00 00 00 00 00 22 00 00 62 00 00 63 00 00 10 00 00 26 00 00 27 00 00
+
+$ rockcat-cli set effect=breathing speed=2 dpi2=1200 led=1:#ff0000
+[exit 0]
+G 05 4 : 05 04 00 05
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 00 00 06 ff 06 08 10 14 20 2d 02 03 33 00 01 00 00 00 00 ff 00 00 00 ff dd 03
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 21 00 00 33 00 00 41 00 00 22 00 00 64 00 00 65 00 00 23 00 00 0d 00 00 0e 00 00 01 00 00 02 00 00 25 00 00 08 00 00 00 00 00 00 00 00 07 00 00 62 00 00 63 00 00 14 00 00 26 00 00 27 00 00
+S 06 1c 00 00 06 ff 06 08 18 14 20 2d 02 03 33 00 03 02 00 ff 00 00 00 00 00 ff e9 03
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli set effect=wave
+rockcat-cli: this device cant show the effect 'Wave' (yet), see 'show' and the help for the ones it can
+[exit 2]
+G 05 4 : 05 04 00 05
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 00 00 06 ff 06 08 10 14 20 2d 02 03 33 00 01 00 00 00 00 ff 00 00 00 ff dd 03
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 21 00 00 33 00 00 41 00 00 22 00 00 64 00 00 65 00 00 23 00 00 0d 00 00 0e 00 00 01 00 00 02 00 00 25 00 00 08 00 00 00 00 00 00 00 00 07 00 00 62 00 00 63 00 00 14 00 00 26 00 00 27 00 00
+
+$ rockcat-cli set effect=smooth-flow
+[exit 0]
+G 05 4 : 05 04 00 05
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 00 00 06 ff 06 08 10 14 20 2d 02 03 33 00 01 00 00 00 00 ff 00 00 00 ff dd 03
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 21 00 00 33 00 00 41 00 00 22 00 00 64 00 00 65 00 00 23 00 00 0d 00 00 0e 00 00 01 00 00 02 00 00 25 00 00 08 00 00 00 00 00 00 00 00 07 00 00 62 00 00 63 00 00 14 00 00 26 00 00 27 00 00
+S 06 1c 00 00 06 ff 06 08 10 14 20 2d 02 03 33 00 01 00 00 00 00 ff 00 00 00 ff dd 03
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli buttons
+Profile 1 buttons
+  1         Left button                        Click
+  2         Right button                       Menu
+  3         Middle button                      Universal scrolling
+  4         Left Smart Cast                    Previous track
+  5         Left forward                       EasyAim DPI level 1
+  6         Left backward                      Easy-Shift[+]
+  7         Right Smart Cast                   Next track
+  8         Right forward                      Page up
+  9         Right backward                     Page down
+  10        Top button                         Play / pause
+  11        Wheel up                           Scroll up
+  12        Wheel down                         Scroll down
+  shift+1   Easy-Shift + Left button           Click
+  shift+2   Easy-Shift + Right button          Menu
+  shift+3   Easy-Shift + Middle button         Mute
+  shift+4   Easy-Shift + Left Smart Cast       Browser backward
+  shift+5   Easy-Shift + Left forward          Unassigned
+  shift+6   Easy-Shift + Left backward         Unassigned
+  shift+7   Easy-Shift + Right Smart Cast      Browser forward
+  shift+8   Easy-Shift + Right forward         Home
+  shift+9   Easy-Shift + Right backward        End
+  shift+10  Easy-Shift + Top button            DPI cycle
+  shift+11  Easy-Shift + Wheel up              Volume up
+  shift+12  Easy-Shift + Wheel down            Volume down
+[exit 0]
+G 05 4 : 05 04 00 05
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 00 00 06 ff 06 08 10 14 20 2d 02 03 33 00 01 00 00 00 00 ff 00 00 00 ff dd 03
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 21 00 00 33 00 00 41 00 00 22 00 00 64 00 00 65 00 00 23 00 00 0d 00 00 0e 00 00 01 00 00 02 00 00 25 00 00 08 00 00 00 00 00 00 00 00 07 00 00 62 00 00 63 00 00 14 00 00 26 00 00 27 00 00
+
+$ rockcat-cli bind 4 volume-up
+[exit 0]
+G 05 4 : 05 04 00 05
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 00 00 06 ff 06 08 10 14 20 2d 02 03 33 00 01 00 00 00 00 ff 00 00 00 ff dd 03
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 21 00 00 33 00 00 41 00 00 22 00 00 64 00 00 65 00 00 23 00 00 0d 00 00 0e 00 00 01 00 00 02 00 00 25 00 00 08 00 00 00 00 00 00 00 00 07 00 00 62 00 00 63 00 00 14 00 00 26 00 00 27 00 00
+S 07 4b 00 01 00 00 02 00 00 03 00 00 26 00 00 33 00 00 41 00 00 22 00 00 64 00 00 65 00 00 23 00 00 0d 00 00 0e 00 00 01 00 00 02 00 00 25 00 00 08 00 00 00 00 00 00 00 00 07 00 00 62 00 00 63 00 00 14 00 00 26 00 00 27 00 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli types
+  0x00  unused               Unassigned
+  0x01  click                Click
+  0x02  menu                 Menu
+  0x03  universal-scroll     Universal scrolling
+  0x04  double-click         Double click
+  0x05  shortcut             Shortcut
+  0x06  disabled             Disabled
+  0x07  forward              Browser forward
+  0x08  backward             Browser backward
+  0x09  tilt-left            Tilt left
+  0x0a  tilt-right           Tilt right
+  0x0d  scroll-up            Scroll up
+  0x0e  scroll-down          Scroll down
+  0x0f  quicklaunch          Quicklaunch
+  0x10  profile-cycle        Profile cycle
+  0x11  profile-up           Profile up
+  0x12  profile-down         Profile down
+  0x14  dpi-cycle            DPI cycle
+  0x15  dpi-up               DPI up
+  0x16  dpi-down             DPI down
+  0x1a  windows-key          Windows key
+  0x1b  open-driver          Open driver
+  0x20  open-player          Open media player
+  0x21  prev-track           Previous track
+  0x22  next-track           Next track
+  0x23  play-pause           Play / pause
+  0x24  stop                 Stop
+  0x25  mute                 Mute
+  0x26  volume-up            Volume up
+  0x27  volume-down          Volume down
+  0x30  macro                Macro
+  0x31  timer                Timer
+  0x32  timer-stop           Timer stop
+  0x33  easyaim-1            EasyAim DPI level 1
+  0x34  easyaim-2            EasyAim DPI level 2
+  0x35  easyaim-3            EasyAim DPI level 3
+  0x36  easyaim-4            EasyAim DPI level 4
+  0x37  easyaim-5            EasyAim DPI level 5
+  0x41  easyshift            Easy-Shift[+]
+  0x51  easyshift-other      Easy-Shift[+] other devices
+  0x52  easyshift-lock       Easy-Shift[+] lock
+  0x53  easyshift-all        Easy-Shift[+] all devices
+  0x54  easyshift-lock-all   Easy-Shift[+] lock all devices
+  0x43  easywheel-profile    EasyWheel: switch profile
+  0x44  easywheel-dpi        EasyWheel: change DPI
+  0x45  easywheel-volume     EasyWheel: volume
+  0x46  easywheel-alt-tab    EasyWheel: alt+tab
+  0x62  home                 Home
+  0x63  end                  End
+  0x64  page-up              Page up
+  0x65  page-down            Page down
+  0x66  left-ctrl            Left Ctrl
+  0x67  left-shift           Left Shift
+  0x68  left-alt             Left Alt
+  0x7c  easyaim-custom       EasyAim custom DPI
+  0xbf  profile-1            Profile 1
+  0xc0  profile-2            Profile 2
+  0xc1  profile-3            Profile 3
+  0xc2  profile-4            Profile 4
+  0xc3  profile-5            Profile 5
+  0xd0  easyaim-200          EasyAim 200
+  0x8c  brightness-up        Brightness step up (engine)
+  0x8d  brightness-down      Brightness step down (engine)
+
+shortcut takes a key combination: bind 9 shortcut ctrl+c / alt+f4 / shift+win+s
+(raw form: bind 9 shortcut MODMASK USAGE, mod bits 2 shift, 4 ctrl, 8 alt, 16 win).
+[exit 0]
+
+$ rockcat-cli macro -b 5 --text gg --name kova
+[exit 0]
+G 05 4 : 05 04 00 05
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 00 00 06 ff 06 08 10 14 20 2d 02 03 33 00 01 00 00 00 00 ff 00 00 00 ff dd 03
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 21 00 00 33 00 00 41 00 00 22 00 00 64 00 00 65 00 00 23 00 00 0d 00 00 0e 00 00 01 00 00 02 00 00 25 00 00 08 00 00 00 00 00 00 00 00 07 00 00 62 00 00 63 00 00 14 00 00 26 00 00 27 00 00
+S 08 01 00 04 01 72 6f 63 6b 63 61 74 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 6b 6f 76 61 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 04 00 0a 01 14 00 0a 02 14 00 0a 01 14 00 0a 02 14 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+G 04 3 : 04 01 00
+S 08 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+G 04 3 : 04 01 00
+S 07 4b 00 01 00 00 02 00 00 03 00 00 21 00 00 30 00 00 41 00 00 22 00 00 64 00 00 65 00 00 23 00 00 0d 00 00 0e 00 00 01 00 00 02 00 00 25 00 00 08 00 00 00 00 00 00 00 00 07 00 00 62 00 00 63 00 00 14 00 00 26 00 00 27 00 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli direct #00ff00
+the lights stay like this until 'rockcat-cli direct off', switching profiles does not bring them back
+[exit 0]
+S 10 10 ff ff ff 01 03 01 01 02 00 ff 00 00 ff 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli direct off
+[exit 0]
+S 10 10 ff ff ff 00 00 00 00 00 00 00 00 00 00 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli backup TMP/kova.rswb
+Saved 5 profiles to TMP/kova.rswb
+[exit 0]
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 00 00 06 ff 06 08 10 14 20 2d 02 03 33 00 01 00 00 00 00 ff 00 00 00 ff dd 03
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 21 00 00 33 00 00 41 00 00 22 00 00 64 00 00 65 00 00 23 00 00 0d 00 00 0e 00 00 01 00 00 02 00 00 25 00 00 08 00 00 00 00 00 00 00 00 07 00 00 62 00 00 63 00 00 14 00 00 26 00 00 27 00 00
+S 04 01 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 01 00 06 ff 02 08 2e 30 46 8c 01 03 03 00 01 02 00 05 90 fe 00 05 90 fe 92 05
+S 04 01 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 01 01 00 00 02 00 00 03 00 00 64 00 00 d0 00 00 41 00 00 65 00 00 05 00 1c 05 00 63 00 00 00 0d 00 00 0e 00 00 08 00 00 07 00 00 25 00 00 21 00 00 23 00 00 00 00 00 22 00 00 62 00 00 63 00 00 10 00 00 26 00 00 27 00 00
+S 04 02 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 02 00 06 ff 1f 08 10 20 46 8c 01 03 03 00 01 02 07 ff 00 00 07 ff 00 00 68 04
+S 04 02 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 02 01 00 00 02 00 00 03 00 00 64 00 00 d0 00 00 41 00 00 65 00 00 67 00 00 66 00 00 14 00 00 0d 00 00 0e 00 00 08 00 00 07 00 00 25 00 00 21 00 00 23 00 00 00 00 00 22 00 00 62 00 00 63 00 00 10 00 00 26 00 00 27 00 00
+S 04 03 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 03 00 06 ff 1f 08 10 20 46 8c 01 03 03 00 01 02 0b 00 ff 00 0b 00 ff 00 71 04
+S 04 03 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 03 01 00 00 02 00 00 03 00 00 64 00 00 d0 00 00 41 00 00 65 00 00 67 00 00 66 00 00 14 00 00 0d 00 00 0e 00 00 08 00 00 07 00 00 25 00 00 21 00 00 23 00 00 00 00 00 22 00 00 62 00 00 63 00 00 10 00 00 26 00 00 27 00 00
+S 04 04 80
+G 04 3 : 04 01 00
+G 06 28 : 06 1c 04 00 06 ff 1f 08 10 20 46 8c 01 03 03 00 01 02 02 00 00 ff 02 00 00 ff 60 04
+S 04 04 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 04 01 00 00 02 00 00 03 00 00 64 00 00 d0 00 00 41 00 00 65 00 00 67 00 00 66 00 00 14 00 00 0d 00 00 0e 00 00 08 00 00 07 00 00 25 00 00 21 00 00 23 00 00 00 00 00 22 00 00 62 00 00 63 00 00 10 00 00 26 00 00 27 00 00
+
+$ rockcat-cli restore TMP/kova.rswb
+Restored 5 profiles from TMP/kova.rswb
+[exit 0]
+S 06 1c 00 00 06 ff 06 08 10 14 20 2d 02 03 33 00 01 00 00 00 00 ff 00 00 00 ff dd 03
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 07 4b 00 01 00 00 02 00 00 03 00 00 21 00 00 33 00 00 41 00 00 22 00 00 64 00 00 65 00 00 23 00 00 0d 00 00 0e 00 00 01 00 00 02 00 00 25 00 00 08 00 00 00 00 00 00 00 00 07 00 00 62 00 00 63 00 00 14 00 00 26 00 00 27 00 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 06 1c 01 00 06 ff 02 08 2e 30 46 8c 01 03 03 00 01 02 00 05 90 fe 00 05 90 fe 92 05
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 07 4b 01 01 00 00 02 00 00 03 00 00 64 00 00 d0 00 00 41 00 00 65 00 00 05 00 1c 05 00 63 00 00 00 0d 00 00 0e 00 00 08 00 00 07 00 00 25 00 00 21 00 00 23 00 00 00 00 00 22 00 00 62 00 00 63 00 00 10 00 00 26 00 00 27 00 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 06 1c 02 00 06 ff 1f 08 10 20 46 8c 01 03 03 00 01 02 07 ff 00 00 07 ff 00 00 68 04
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 07 4b 02 01 00 00 02 00 00 03 00 00 64 00 00 d0 00 00 41 00 00 65 00 00 67 00 00 66 00 00 14 00 00 0d 00 00 0e 00 00 08 00 00 07 00 00 25 00 00 21 00 00 23 00 00 00 00 00 22 00 00 62 00 00 63 00 00 10 00 00 26 00 00 27 00 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 06 1c 03 00 06 ff 1f 08 10 20 46 8c 01 03 03 00 01 02 0b 00 ff 00 0b 00 ff 00 71 04
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 07 4b 03 01 00 00 02 00 00 03 00 00 64 00 00 d0 00 00 41 00 00 65 00 00 67 00 00 66 00 00 14 00 00 0d 00 00 0e 00 00 08 00 00 07 00 00 25 00 00 21 00 00 23 00 00 00 00 00 22 00 00 62 00 00 63 00 00 10 00 00 26 00 00 27 00 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 06 1c 04 00 06 ff 1f 08 10 20 46 8c 01 03 03 00 01 02 02 00 00 ff 02 00 00 ff 60 04
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+S 07 4b 04 01 00 00 02 00 00 03 00 00 64 00 00 d0 00 00 41 00 00 65 00 00 67 00 00 66 00 00 14 00 00 0d 00 00 0e 00 00 08 00 00 07 00 00 25 00 00 21 00 00 23 00 00 00 00 00 22 00 00 62 00 00 63 00 00 10 00 00 26 00 00 27 00 00
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli restore TMP/kb.rswb
+rockcat-cli: 'TMP/kb.rswb' was made with a different device, not restoring it onto this one
+[exit 2]
+
+$ rockcat-cli info
+Device:         ROCCAT Kone[+] (simulated)
+USB ID:         1e7d:2d51 (interface 0)
+Path:           sim:kone-plus
+Firmware:       1.00
+Active profile: 1 of 5
+[exit 0]
+G 09 6 : 09 06 64 01 00 00
+G 05 3 : 05 03 00
+
+$ rockcat-cli show
+Profile 1
+  DPI levels:
+      1:   400
+    * 2:   800
+      3:  1600
+      4:  3200
+      5:  6000
+  Polling rate:    1000 Hz
+  Lighting effect: Breathing (3)
+  Colour flow:     on
+  Effect speed:    2
+  LEDs (enable mask 0x00f):
+     1 Top left     #0064fa@255
+     2 Bottom left  #0064fa@255
+     3 Top right    #0064fa@255
+     4 Bottom right #0064fa@255
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 43 : 06 2b 00 00 06 06 1f 04 08 10 20 3c 01 04 08 10 20 3c 00 03 0f 00 01 03 02 13 00 64 fa 13 00 64 fa 13 00 64 fa 13 00 64 fa 29 07
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 77 : 07 4d 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 09 00 00 0a 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 1a 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 21 00 00 22 00 00 26 00 00 27 00 00 11 00 00 12 00 00 1b 00 00 1d 02
+
+$ rockcat-cli set effect=fully-lit dpi1=1200 polling=500 led=1:#ff0000
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 43 : 06 2b 00 00 06 06 1f 04 08 10 20 3c 01 04 08 10 20 3c 00 03 0f 00 01 03 02 13 00 64 fa 13 00 64 fa 13 00 64 fa 13 00 64 fa 29 07
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 77 : 07 4d 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 09 00 00 0a 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 1a 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 21 00 00 22 00 00 26 00 00 27 00 00 11 00 00 12 00 00 1b 00 00 1d 02
+S 06 2b 00 00 06 06 1f 0c 08 10 20 3c 01 0c 08 10 20 3c 00 02 0f 00 01 01 02 01 fa 00 00 13 00 64 fa 13 00 64 fa 13 00 64 fa c0 06
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli buttons
+Profile 1 buttons
+  1         Left button                        Click
+  2         Right button                       Menu
+  3         Middle button                      Universal scrolling
+  4         Thumb forward                      Browser forward
+  5         Thumb backward                     Easy-Shift[+]
+  6         Wheel tilt left                    Tilt left
+  7         Wheel tilt right                   Tilt right
+  8         Wheel up                           Scroll up
+  9         Wheel down                         Scroll down
+  10        Plus button                        DPI up
+  11        Minus button                       DPI down
+  12        Top button                         Windows key
+  shift+1   Easy-Shift + Left button           Browser backward
+  shift+2   Easy-Shift + Right button          Browser forward
+  shift+3   Easy-Shift + Middle button         Mute
+  shift+4   Easy-Shift + Thumb forward         Disabled
+  shift+5   Easy-Shift + Thumb backward        Unassigned
+  shift+6   Easy-Shift + Wheel tilt left       Previous track
+  shift+7   Easy-Shift + Wheel tilt right      Next track
+  shift+8   Easy-Shift + Wheel up              Volume up
+  shift+9   Easy-Shift + Wheel down            Volume down
+  shift+10  Easy-Shift + Plus button           Profile up
+  shift+11  Easy-Shift + Minus button          Profile down
+  shift+12  Easy-Shift + Top button            Open driver
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 43 : 06 2b 00 00 06 06 1f 04 08 10 20 3c 01 04 08 10 20 3c 00 03 0f 00 01 03 02 13 00 64 fa 13 00 64 fa 13 00 64 fa 13 00 64 fa 29 07
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 77 : 07 4d 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 09 00 00 0a 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 1a 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 21 00 00 22 00 00 26 00 00 27 00 00 11 00 00 12 00 00 1b 00 00 1d 02
+
+$ rockcat-cli bind 4 volume-up
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 43 : 06 2b 00 00 06 06 1f 04 08 10 20 3c 01 04 08 10 20 3c 00 03 0f 00 01 03 02 13 00 64 fa 13 00 64 fa 13 00 64 fa 13 00 64 fa 29 07
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 77 : 07 4d 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 09 00 00 0a 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 1a 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 21 00 00 22 00 00 26 00 00 27 00 00 11 00 00 12 00 00 1b 00 00 1d 02
+S 07 4d 00 01 00 00 02 00 00 03 00 00 26 00 00 41 00 00 09 00 00 0a 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 1a 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 21 00 00 22 00 00 26 00 00 27 00 00 11 00 00 12 00 00 1b 00 00 3c 02
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli direct #00ff00
+the lights stay like this until 'rockcat-cli direct off', switching profiles does not bring them back
+[exit 0]
+S 10 10 ff ff ff 01 01 00 01 01 00 ff 00 00 ff 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli direct off
+[exit 0]
+S 10 10 ff ff ff 00 00 00 00 00 00 00 00 00 00 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli info
+Device:         ROCCAT Kone XTD (simulated)
+USB ID:         1e7d:2e22 (interface 0)
+Path:           sim:kone-xtd
+Firmware:       1.00
+Active profile: 1 of 5
+[exit 0]
+G 09 6 : 09 06 64 01 00 00
+G 05 3 : 05 03 00
+
+$ rockcat-cli show
+Profile 1
+  DPI levels:
+      1:   800
+    * 2:  1600
+      3:  3200
+      4:  6400
+      5:  8200
+  Polling rate:    1000 Hz
+  Lighting effect: Breathing (3)
+  Colour flow:     on
+  Effect speed:    2
+  LEDs (enable mask 0x00f):
+     1 Top left     #0064fa@255
+     2 Bottom left  #0064fa@255
+     3 Top right    #0064fa@255
+     4 Bottom right #0064fa@255
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 43 : 06 2b 00 00 06 06 1f 10 20 40 80 a4 01 10 20 40 80 a4 00 03 0f 00 01 03 02 13 00 64 fa 13 00 64 fa 13 00 64 fa 13 00 64 fa 61 09
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 77 : 07 4d 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 09 00 00 0a 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 1a 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 21 00 00 22 00 00 26 00 00 27 00 00 11 00 00 12 00 00 1b 00 00 1d 02
+
+$ rockcat-cli set effect=fully-lit dpi1=1200 polling=500 led=1:#ff0000
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 43 : 06 2b 00 00 06 06 1f 10 20 40 80 a4 01 10 20 40 80 a4 00 03 0f 00 01 03 02 13 00 64 fa 13 00 64 fa 13 00 64 fa 13 00 64 fa 61 09
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 77 : 07 4d 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 09 00 00 0a 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 1a 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 21 00 00 22 00 00 26 00 00 27 00 00 11 00 00 12 00 00 1b 00 00 1d 02
+S 06 2b 00 00 06 06 1f 18 20 40 80 a4 01 18 20 40 80 a4 00 02 0f 00 01 01 02 ff ff 00 00 ff 00 64 fa ff 00 64 fa ff 00 64 fa bf 0c
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli buttons
+Profile 1 buttons
+  1         Left button                        Click
+  2         Right button                       Menu
+  3         Middle button                      Universal scrolling
+  4         Thumb forward                      Browser forward
+  5         Thumb backward                     Easy-Shift[+]
+  6         Wheel tilt left                    Tilt left
+  7         Wheel tilt right                   Tilt right
+  8         Wheel up                           Scroll up
+  9         Wheel down                         Scroll down
+  10        Plus button                        DPI up
+  11        Minus button                       DPI down
+  12        Top button                         Windows key
+  shift+1   Easy-Shift + Left button           Browser backward
+  shift+2   Easy-Shift + Right button          Browser forward
+  shift+3   Easy-Shift + Middle button         Mute
+  shift+4   Easy-Shift + Thumb forward         Disabled
+  shift+5   Easy-Shift + Thumb backward        Unassigned
+  shift+6   Easy-Shift + Wheel tilt left       Previous track
+  shift+7   Easy-Shift + Wheel tilt right      Next track
+  shift+8   Easy-Shift + Wheel up              Volume up
+  shift+9   Easy-Shift + Wheel down            Volume down
+  shift+10  Easy-Shift + Plus button           Profile up
+  shift+11  Easy-Shift + Minus button          Profile down
+  shift+12  Easy-Shift + Top button            Open driver
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 43 : 06 2b 00 00 06 06 1f 10 20 40 80 a4 01 10 20 40 80 a4 00 03 0f 00 01 03 02 13 00 64 fa 13 00 64 fa 13 00 64 fa 13 00 64 fa 61 09
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 77 : 07 4d 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 09 00 00 0a 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 1a 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 21 00 00 22 00 00 26 00 00 27 00 00 11 00 00 12 00 00 1b 00 00 1d 02
+
+$ rockcat-cli bind 4 volume-up
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 43 : 06 2b 00 00 06 06 1f 10 20 40 80 a4 01 10 20 40 80 a4 00 03 0f 00 01 03 02 13 00 64 fa 13 00 64 fa 13 00 64 fa 13 00 64 fa 61 09
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 77 : 07 4d 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 09 00 00 0a 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 1a 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 21 00 00 22 00 00 26 00 00 27 00 00 11 00 00 12 00 00 1b 00 00 1d 02
+S 07 4d 00 01 00 00 02 00 00 03 00 00 26 00 00 41 00 00 09 00 00 0a 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 1a 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 21 00 00 22 00 00 26 00 00 27 00 00 11 00 00 12 00 00 1b 00 00 3c 02
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli direct #00ff00
+the lights stay like this until 'rockcat-cli direct off', switching profiles does not bring them back
+[exit 0]
+S 10 10 02 01 00 ff 00 00 ff 00 00 ff 00 00 ff 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli direct off
+[exit 0]
+S 10 10 ff ff ff 00 00 00 00 00 00 00 00 00 00 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli info
+Device:         ROCCAT Kone Pure Optical (simulated)
+USB ID:         1e7d:2db4 (interface 0)
+Path:           sim:kone-pure-optical
+Firmware:       1.00
+Active profile: 1 of 5
+[exit 0]
+G 09 6 : 09 06 64 01 00 00
+G 05 3 : 05 03 00
+
+$ rockcat-cli show
+Profile 1
+  DPI levels:
+      1:   400
+    * 2:   800
+      3:  1200
+      4:  2000
+      5:  4000
+  Polling rate:    1000 Hz
+  Lighting effect: Breathing (3)
+  Colour flow:     on
+  Effect speed:    2
+  LEDs (enable mask 0x001):
+     1 Logo         #0064fa@255
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 31 : 06 1f 00 00 06 06 1f 10 00 11 13 03 00 00 00 00 00 01 00 03 01 00 01 02 02 13 00 64 fa 02 02
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 59 : 07 3b 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 26 00 00 27 00 00 11 00 00 12 00 00 80 01
+
+$ rockcat-cli set effect=fully-lit dpi1=1200 polling=500 led=1:#ff0000
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 31 : 06 1f 00 00 06 06 1f 10 00 11 13 03 00 00 00 00 00 01 00 03 01 00 01 02 02 13 00 64 fa 02 02
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 59 : 07 3b 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 26 00 00 27 00 00 11 00 00 12 00 00 80 01
+S 06 1f 00 00 06 06 1f 11 00 11 13 03 00 00 00 00 00 01 00 02 01 01 01 01 02 ff ff 00 00 8f 02
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli buttons
+Profile 1 buttons
+  1         Left button                        Click
+  2         Right button                       Menu
+  3         Middle button                      Universal scrolling
+  4         Thumb forward                      Browser forward
+  5         Thumb backward                     Easy-Shift[+]
+  6         Wheel up                           Scroll up
+  7         Wheel down                         Scroll down
+  8         Plus button                        DPI up
+  9         Minus button                       DPI down
+  shift+1   Easy-Shift + Left button           Browser backward
+  shift+2   Easy-Shift + Right button          Browser forward
+  shift+3   Easy-Shift + Middle button         Mute
+  shift+4   Easy-Shift + Thumb forward         Disabled
+  shift+5   Easy-Shift + Thumb backward        Unassigned
+  shift+6   Easy-Shift + Wheel up              Volume up
+  shift+7   Easy-Shift + Wheel down            Volume down
+  shift+8   Easy-Shift + Plus button           Profile up
+  shift+9   Easy-Shift + Minus button          Profile down
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 31 : 06 1f 00 00 06 06 1f 10 00 11 13 03 00 00 00 00 00 01 00 03 01 00 01 02 02 13 00 64 fa 02 02
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 59 : 07 3b 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 26 00 00 27 00 00 11 00 00 12 00 00 80 01
+
+$ rockcat-cli bind 4 volume-up
+[exit 0]
+G 05 3 : 05 03 00
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 31 : 06 1f 00 00 06 06 1f 10 00 11 13 03 00 00 00 00 00 01 00 03 01 00 01 02 02 13 00 64 fa 02 02
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 59 : 07 3b 00 01 00 00 02 00 00 03 00 00 07 00 00 41 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 26 00 00 27 00 00 11 00 00 12 00 00 80 01
+S 07 3b 00 01 00 00 02 00 00 03 00 00 26 00 00 41 00 00 0d 00 00 0e 00 00 15 00 00 16 00 00 08 00 00 07 00 00 25 00 00 06 00 00 00 00 00 26 00 00 27 00 00 11 00 00 12 00 00 9f 01
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli direct #00ff00
+the lights stay like this until 'rockcat-cli direct off', switching profiles does not bring them back
+[exit 0]
+S 10 10 ff ff ff 01 01 00 01 01 00 ff 00 00 ff 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli direct off
+[exit 0]
+S 10 10 ff ff ff 00 00 00 00 00 00 00 00 00 00 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli info
+Device:         ROCCAT Kone AIMO (simulated)
+USB ID:         1e7d:2e27 (interface 0)
+Path:           sim:kone-aimo
+Firmware:       1.05
+Active profile: 1 of 5
+[exit 0]
+G 09 9 : 09 09 69 00 00 00 00 00 00
+G 05 4 : 05 04 00 05
+
+$ rockcat-cli show
+Profile 1
+  DPI levels:
+      1:   400
+      2:   800
+    * 3:  1200
+      4:  1600
+      5:  2000
+  Polling rate:    1000 Hz
+  Angle snapping:  off
+  Debounce time:   8 ms
+  Lighting effect: Fully lit (1), rendered by the mouse (Easy-Shift shows the built-in light blue)
+  AIMO theme:      1
+  Effect speed:    6
+  Brightness:      255
+  LEDs (enable mask 0x7ff):
+     1 Wheel        #00ff00@255
+     2 Left 1 (front) #14eb00@255
+     3 Left 2       #28d700@255
+     4 Left 3       #3cc300@255
+     5 Left 4       #50af00@255
+     6 Right 1 (front) #649b00@255
+     7 Right 2      #788700@255
+     8 Right 3      #8c7300@255
+     9 Right 4      #a05f00@255
+    10 Left 5 (rear) #b44b00@255
+    11 Right 5 (rear) #c83700@255
+[exit 0]
+G 05 4 : 05 04 00 05
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 105 : 06 69 00 00 1f 08 10 18 20 28 02 03 00 5a 08 ff 07 00 01 06 ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ff 00 ff 00 00 ff 14 eb 00 00 ff 28 d7 00 00 ff 3c c3 00 00 ff 50 af 00 00 ff 64 9b 00 00 ff 78 87 00 00 ff 8c 73 00 00 ff a0 5f 00 00 ff b4 4b 00 00 ff c8 37 00 00 80 00 e3 19
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 04 00 00 05 00 00 06 00 00 07 00 00 08 00 00 09 00 00 0a 00 00 0b 00 00 0c 00 00 0d 00 00 0e 00 00 0f 00 00 10 00 00 11 00 00 12 00 00 13 00 00 14 00 00 15 00 00 16 00 00 17 00 00 18 00 00
+
+$ rockcat-cli set effect=fully-lit dpi1=1200 polling=500 led=1:#ff0000
+[exit 0]
+G 05 4 : 05 04 00 05
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 105 : 06 69 00 00 1f 08 10 18 20 28 02 03 00 5a 08 ff 07 00 01 06 ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ff 00 ff 00 00 ff 14 eb 00 00 ff 28 d7 00 00 ff 3c c3 00 00 ff 50 af 00 00 ff 64 9b 00 00 ff 78 87 00 00 ff 8c 73 00 00 ff a0 5f 00 00 ff b4 4b 00 00 ff c8 37 00 00 80 00 e3 19
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 04 00 00 05 00 00 06 00 00 07 00 00 08 00 00 09 00 00 0a 00 00 0b 00 00 0c 00 00 0d 00 00 0e 00 00 0f 00 00 10 00 00 11 00 00 12 00 00 13 00 00 14 00 00 15 00 00 16 00 00 17 00 00 18 00 00
+S 06 69 00 00 1f 18 10 18 20 28 02 02 00 5a 08 ff 07 00 01 06 ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ff ff 00 00 00 ff 14 eb 00 00 ff 28 d7 00 00 ff 3c c3 00 00 ff 50 af 00 00 ff 64 9b 00 00 ff 78 87 00 00 ff 8c 73 00 00 ff a0 5f 00 00 ff b4 4b 00 00 ff c8 37 00 00 80 00 f2 19
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli buttons
+Profile 1 buttons
+  1         Left button                        Click
+  2         Right button                       Menu
+  3         Middle button                      Universal scrolling
+  4         Wheel tilt left                    Double click
+  5         Wheel tilt right                   Shortcut 0x00
+  6         Wheel up                           Disabled
+  7         Wheel down                         Browser forward
+  8         Thumb forward                      Browser backward
+  9         Thumb backward                     Tilt left
+  10        Thumb Easy-Shift[+]                Tilt right
+  11        DPI up                             unknown [type 0x0b, 0x00, 0x00]
+  12        DPI down                           unknown [type 0x0c, 0x00, 0x00]
+  shift+1   Easy-Shift + Left button           Scroll up
+  shift+2   Easy-Shift + Right button          Scroll down
+  shift+3   Easy-Shift + Middle button         Quicklaunch
+  shift+4   Easy-Shift + Wheel tilt left       Profile cycle
+  shift+5   Easy-Shift + Wheel tilt right      Profile up
+  shift+6   Easy-Shift + Wheel up              Profile down
+  shift+7   Easy-Shift + Wheel down            unknown [type 0x13, 0x00, 0x00]
+  shift+8   Easy-Shift + Thumb forward         DPI cycle
+  shift+9   Easy-Shift + Thumb backward        DPI up
+  shift+10  Easy-Shift + Thumb Easy-Shift[+]   DPI down
+  shift+11  Easy-Shift + DPI up                unknown [type 0x17, 0x00, 0x00]
+  shift+12  Easy-Shift + DPI down              unknown [type 0x18, 0x00, 0x00]
+[exit 0]
+G 05 4 : 05 04 00 05
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 105 : 06 69 00 00 1f 08 10 18 20 28 02 03 00 5a 08 ff 07 00 01 06 ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ff 00 ff 00 00 ff 14 eb 00 00 ff 28 d7 00 00 ff 3c c3 00 00 ff 50 af 00 00 ff 64 9b 00 00 ff 78 87 00 00 ff 8c 73 00 00 ff a0 5f 00 00 ff b4 4b 00 00 ff c8 37 00 00 80 00 e3 19
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 04 00 00 05 00 00 06 00 00 07 00 00 08 00 00 09 00 00 0a 00 00 0b 00 00 0c 00 00 0d 00 00 0e 00 00 0f 00 00 10 00 00 11 00 00 12 00 00 13 00 00 14 00 00 15 00 00 16 00 00 17 00 00 18 00 00
+
+$ rockcat-cli bind 4 volume-up
+[exit 0]
+G 05 4 : 05 04 00 05
+S 04 00 80
+G 04 3 : 04 01 00
+G 06 105 : 06 69 00 00 1f 08 10 18 20 28 02 03 00 5a 08 ff 07 00 01 06 ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ff 00 ff 00 00 ff 14 eb 00 00 ff 28 d7 00 00 ff 3c c3 00 00 ff 50 af 00 00 ff 64 9b 00 00 ff 78 87 00 00 ff 8c 73 00 00 ff a0 5f 00 00 ff b4 4b 00 00 ff c8 37 00 00 80 00 e3 19
+S 04 00 90
+G 04 3 : 04 01 00
+G 07 75 : 07 4b 00 01 00 00 02 00 00 03 00 00 04 00 00 05 00 00 06 00 00 07 00 00 08 00 00 09 00 00 0a 00 00 0b 00 00 0c 00 00 0d 00 00 0e 00 00 0f 00 00 10 00 00 11 00 00 12 00 00 13 00 00 14 00 00 15 00 00 16 00 00 17 00 00 18 00 00
+S 07 4b 00 01 00 00 02 00 00 03 00 00 26 00 00 05 00 00 06 00 00 07 00 00 08 00 00 09 00 00 0a 00 00 0b 00 00 0c 00 00 0d 00 00 0e 00 00 0f 00 00 10 00 00 11 00 00 12 00 00 13 00 00 14 00 00 15 00 00 16 00 00 17 00 00 18 00 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli direct #00ff00
+the lights stay like this until 'rockcat-cli direct off', switching profiles does not bring them back
+[exit 0]
+S 0e 06 01 01 ff ff
+G 04 3 : 04 01 00
+S 0d 2e 00 ff 00 00 00 ff 00 00 00 ff 00 00 00 ff 00 00 00 ff 00 00 00 ff 00 00 00 ff 00 00 00 ff 00 00 00 ff 00 00 00 ff 00 00 00 ff 00 00
+
+$ rockcat-cli direct off
+[exit 0]
+S 0e 06 01 00 00 ff
+G 04 3 : 04 01 00
+
+$ rockcat-cli info
+Device:         ROCCAT Vulcan 120 AIMO (simulated)
+USB ID:         1e7d:3098 (interface 1)
+Path:           sim:vulcan-120-aimo
+Firmware:       1.00
+Active profile: 1 of 1
+[exit 0]
+G 05 4 : 05 04 00 04
+
+$ rockcat-cli show
+Profile 1
+  Lighting effect: AIMO (9)
+  AIMO theme:      1
+  Effect speed:    6
+  Brightness:      255
+  Key colours:
+    #ff0a00    6 keys:  Esc ` Tab Left+ L_Shift L_Ctrl
+    #ff1700    6 keys:  F1 2 W A Z L_Alt
+    #ff1e00    5 keys:  F2 3 E S X
+    #ff2500    5 keys:  F3 4 R D C
+    #ff2b00    4 keys:  F4 5 F V
+    #ff3900    6 keys:  F5 7 Z H B Space
+    #ff3f00    5 keys:  F6 8 U J N
+    #ff4600    5 keys:  F7 9 I K M
+    #ff4d00    4 keys:  F8 O L ;
+    #fc5700    6 keys:  F9 _ [ ; / Fn
+    #fa5c00    5 keys:  F10 = ] ' Menu
+    #f86200    3 keys:  F11 Back R_Shift
+    #f66600    4 keys:  F12 \ Enter R_Ctrl
+    #f46b00    4 keys:  Print Ins Del Left
+    #f17100    5 keys:  Scroll Home End Up Down
+    #ef7500    4 keys:  Break Pg_up Pg_down Right
+    #ff1100    3 keys:  1 Q L_Win
+    #ff3200    3 keys:  6 T G
+    #fe5300    4 keys:  0 P : R_Alt
+    #ed7a00    5 keys:  Num Num_7 Num_4 Num_1 Num_0
+    #eb7f00    4 keys:  / Num_8 Num_5 Num_2
+    #e98400    5 keys:  * Num_9 Num_6 Num_3 Num_.
+    #e78900    3 keys:  - Num_+ R_Enter
+    #000000    2 keys:  # >
+[exit 0]
+G 05 4 : 05 04 00 04
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 133 : 06 85 00 3a 29 35 1e 2b 39 e1 e0 3b 1f 14 1a 04 64 00 00 3d 3c 20 21 08 16 1d e2 3e 23 22 15 07 1b 06 8b 3f 24 00 17 0a 09 19 91 40 41 00 1c 18 0b 05 2c 42 26 25 0c 0d 0e 10 11 43 2a 27 2d 12 0f 36 8a 44 45 89 2e 13 33 37 90 46 49 4c 2f 30 34 38 88 47 4a 4d 31 32 00 87 e6 48 4b 4e 28 52 50 e5 e7 d2 53 5f 5c 59 51 00 f1 d1 54 60 5d 5a 4f 8e 65 d0 55 61 5e 5b 62 a4 e4 fc 56 57 85 58 63 00 00 c2 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 b3 00 00 b4 00 00 b5 00 00 b6 00 00 c2 00 00 c3 00 00 c0 00 00 c1 00 00 ce 00 00 cf 00 00 cc 00 00 cd 00 00 46 00 00 fc 00 00 48 00 00 cd 0e
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 43 : 09 2b 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 34 00
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 41 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 de 01
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 443 : 0d bb 01 00 09 06 05 45 80 ff ff ff ff ff ff ff ff ff 00 ff ff 0a 0a 0a 0a 0a 0a 11 11 17 00 11 17 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff 00 ff 17 17 1e 17 17 1e 1e 1e 25 1e 00 25 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff ff ff 25 25 2b 25 2b 2b 32 32 2b 32 39 39 00 00 00 00 00 00 00 00 00 00 00 00 ff ff 00 00 00 00 00 00 00 00 00 00 39 39 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff 00 ff 39 39 3f 3f 3f 3f 3f 46 46 46 00 46 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff 00 ff fe fe fc fe fe 00 46 4d 4d 4d 00 4d 53 53 57 53 53 00 00 00 00 00 00 00 00 00 00 00 00 00 fc fc fa fc fc 00 fc fa fa f6 f8 fa 57 57 5c 57 57 00 57 5c 5c 66 62 5c 00 00 00 00 00 00 00 00 00 00 00 00 fa f8 f6 f8 f6 f6 00 00 00 00 00 00 5c 62 66 62 66 66 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 f4 f4 f4 f4 f1 f1 f1 f1 f1 00 00 00 6b 6b 6b 6b 71 71 71 71 71 00 00 00 00 00 00 00 00 00 00 00 00 ef ef ef ef 00 ed ed ed ed ed 00 eb 75 75 75 75 00 7a 7a 7a 7a 7a 00 7f 00 00 00 00 00 00 00 00 00 00 00 00 eb eb eb 00 e9 e9 e9 e9 e9 e7 e7 e7 7f 7f 7f 00 84 84 84 84 84 89 89 89 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 8f 85
+
+$ rockcat-cli set effect=fully-lit dpi1=1200 polling=500 led=1:#ff0000
+rockcat-cli: this device has no dpi to set
+[exit 2]
+G 05 4 : 05 04 00 04
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 133 : 06 85 00 3a 29 35 1e 2b 39 e1 e0 3b 1f 14 1a 04 64 00 00 3d 3c 20 21 08 16 1d e2 3e 23 22 15 07 1b 06 8b 3f 24 00 17 0a 09 19 91 40 41 00 1c 18 0b 05 2c 42 26 25 0c 0d 0e 10 11 43 2a 27 2d 12 0f 36 8a 44 45 89 2e 13 33 37 90 46 49 4c 2f 30 34 38 88 47 4a 4d 31 32 00 87 e6 48 4b 4e 28 52 50 e5 e7 d2 53 5f 5c 59 51 00 f1 d1 54 60 5d 5a 4f 8e 65 d0 55 61 5e 5b 62 a4 e4 fc 56 57 85 58 63 00 00 c2 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 b3 00 00 b4 00 00 b5 00 00 b6 00 00 c2 00 00 c3 00 00 c0 00 00 c1 00 00 ce 00 00 cf 00 00 cc 00 00 cd 00 00 46 00 00 fc 00 00 48 00 00 cd 0e
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 43 : 09 2b 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 34 00
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 41 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 de 01
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 443 : 0d bb 01 00 09 06 05 45 80 ff ff ff ff ff ff ff ff ff 00 ff ff 0a 0a 0a 0a 0a 0a 11 11 17 00 11 17 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff 00 ff 17 17 1e 17 17 1e 1e 1e 25 1e 00 25 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff ff ff 25 25 2b 25 2b 2b 32 32 2b 32 39 39 00 00 00 00 00 00 00 00 00 00 00 00 ff ff 00 00 00 00 00 00 00 00 00 00 39 39 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff 00 ff 39 39 3f 3f 3f 3f 3f 46 46 46 00 46 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff 00 ff fe fe fc fe fe 00 46 4d 4d 4d 00 4d 53 53 57 53 53 00 00 00 00 00 00 00 00 00 00 00 00 00 fc fc fa fc fc 00 fc fa fa f6 f8 fa 57 57 5c 57 57 00 57 5c 5c 66 62 5c 00 00 00 00 00 00 00 00 00 00 00 00 fa f8 f6 f8 f6 f6 00 00 00 00 00 00 5c 62 66 62 66 66 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 f4 f4 f4 f4 f1 f1 f1 f1 f1 00 00 00 6b 6b 6b 6b 71 71 71 71 71 00 00 00 00 00 00 00 00 00 00 00 00 ef ef ef ef 00 ed ed ed ed ed 00 eb 75 75 75 75 00 7a 7a 7a 7a 7a 00 7f 00 00 00 00 00 00 00 00 00 00 00 00 eb eb eb 00 e9 e9 e9 e9 e9 e7 e7 e7 7f 7f 7f 00 84 84 84 84 84 89 89 89 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 8f 85
+
+$ rockcat-cli buttons
+Profile 1 keys (second column: with Easy-Shift[+] held, or with Fn where it says so)
+  Esc        esc                      
+  F1         f1                       fn: profile-1
+  F2         f2                       fn: profile-2
+  F3         f3                       fn: profile-3
+  F4         f4                       fn: profile-4
+  F5         f5                       fn: my-computer
+  F6         f6                       fn: browser
+  F7         f7                       fn: email
+  F8         f8                       fn: calculator
+  F9         f9                       fn: prev-track
+  F10        f10                      fn: stop
+  F11        f11                      fn: play-pause
+  F12        f12                      fn: next-track
+  Print      printscreen              fn: printscreen
+  Scroll     scrolllock               fn: 0xfc
+  Break      pause                    fn: pause
+  `          grave                    
+  1          1                        1
+  2          2                        2
+  3          3                        3
+  4          4                        4
+  5          5                        5
+  6          6                        
+  7          7                        
+  8          8                        
+  9          9                        
+  0          0                        
+  _          minus                    
+  =          equal                    
+  Back       backspace                
+  Ins        insert                   
+  Home       home                     
+  Pg_up      pageup                   
+  Num        numlock                  
+  /          kpslash                  
+  *          kpasterisk               
+  -          kpminus                  
+  Tab        tab                      
+  Q          q                        q
+  W          w                        w
+  E          e                        e
+  R          r                        r
+  T          t                        t
+  Z          y                        
+  U          u                        
+  I          i                        
+  O          o                        
+  P          p                        
+  [          leftbrace                
+  ]          rightbrace               
+  \          backslash                
+  Del        delete                   
+  End        end                      
+  Pg_down    pagedown                 
+  Num_7      kp7                      
+  Num_8      kp8                      
+  Num_9      kp9                      
+  Num_+      kpplus                   
+  Left+      easyshift                
+  A          a                        a
+  S          s                        s
+  D          d                        d
+  F          f                        f
+  G          g                        g
+  H          h                        
+  J          j                        
+  K          k                        
+  L          l                        
+  ;          semicolon                
+  '          apostrophe               
+  #          hash                     
+  Enter      enter                    
+  Num_4      kp4                      
+  Num_5      kp5                      
+  Num_6      kp6                      
+  L_Shift    lshift                   
+  >          102nd                    
+  Z          z                        z
+  X          x                        x
+  C          c                        c
+  V          v                        v
+  B          b                        b
+  N          n                        
+  M          m                        
+  ;          comma                    
+  :          dot                      
+  /          slash                    
+  R_Shift    rshift                   
+  Up         up                       
+  Num_1      kp1                      
+  Num_2      kp2                      
+  Num_3      kp3                      
+  R_Enter    kpenter                  
+  L_Ctrl     lctrl                    
+  L_Win      disabled                 
+  L_Alt      lalt                     
+  Space      space                    
+  R_Alt      ralt                     
+  Fn         fn                       
+  Menu       menu                     
+  R_Ctrl     rctrl                    
+  Left       left                     
+  Down       down                     
+  Right      right                    
+  Num_0      kp0                      
+  Num_.      kpdot                    
+[exit 0]
+G 05 4 : 05 04 00 04
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 133 : 06 85 00 3a 29 35 1e 2b 39 e1 e0 3b 1f 14 1a 04 64 00 00 3d 3c 20 21 08 16 1d e2 3e 23 22 15 07 1b 06 8b 3f 24 00 17 0a 09 19 91 40 41 00 1c 18 0b 05 2c 42 26 25 0c 0d 0e 10 11 43 2a 27 2d 12 0f 36 8a 44 45 89 2e 13 33 37 90 46 49 4c 2f 30 34 38 88 47 4a 4d 31 32 00 87 e6 48 4b 4e 28 52 50 e5 e7 d2 53 5f 5c 59 51 00 f1 d1 54 60 5d 5a 4f 8e 65 d0 55 61 5e 5b 62 a4 e4 fc 56 57 85 58 63 00 00 c2 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 b3 00 00 b4 00 00 b5 00 00 b6 00 00 c2 00 00 c3 00 00 c0 00 00 c1 00 00 ce 00 00 cf 00 00 cc 00 00 cd 00 00 46 00 00 fc 00 00 48 00 00 cd 0e
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 43 : 09 2b 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 34 00
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 41 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 de 01
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 443 : 0d bb 01 00 09 06 05 45 80 ff ff ff ff ff ff ff ff ff 00 ff ff 0a 0a 0a 0a 0a 0a 11 11 17 00 11 17 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff 00 ff 17 17 1e 17 17 1e 1e 1e 25 1e 00 25 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff ff ff 25 25 2b 25 2b 2b 32 32 2b 32 39 39 00 00 00 00 00 00 00 00 00 00 00 00 ff ff 00 00 00 00 00 00 00 00 00 00 39 39 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff 00 ff 39 39 3f 3f 3f 3f 3f 46 46 46 00 46 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff 00 ff fe fe fc fe fe 00 46 4d 4d 4d 00 4d 53 53 57 53 53 00 00 00 00 00 00 00 00 00 00 00 00 00 fc fc fa fc fc 00 fc fa fa f6 f8 fa 57 57 5c 57 57 00 57 5c 5c 66 62 5c 00 00 00 00 00 00 00 00 00 00 00 00 fa f8 f6 f8 f6 f6 00 00 00 00 00 00 5c 62 66 62 66 66 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 f4 f4 f4 f4 f1 f1 f1 f1 f1 00 00 00 6b 6b 6b 6b 71 71 71 71 71 00 00 00 00 00 00 00 00 00 00 00 00 ef ef ef ef 00 ed ed ed ed ed 00 eb 75 75 75 75 00 7a 7a 7a 7a 7a 00 7f 00 00 00 00 00 00 00 00 00 00 00 00 eb eb eb 00 e9 e9 e9 e9 e9 e7 e7 e7 7f 7f 7f 00 84 84 84 84 84 89 89 89 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 8f 85
+
+$ rockcat-cli bind 4 volume-up
+[exit 0]
+G 05 4 : 05 04 00 04
+S 04 00 a0
+G 04 3 : 04 01 00
+G 06 133 : 06 85 00 3a 29 35 1e 2b 39 e1 e0 3b 1f 14 1a 04 64 00 00 3d 3c 20 21 08 16 1d e2 3e 23 22 15 07 1b 06 8b 3f 24 00 17 0a 09 19 91 40 41 00 1c 18 0b 05 2c 42 26 25 0c 0d 0e 10 11 43 2a 27 2d 12 0f 36 8a 44 45 89 2e 13 33 37 90 46 49 4c 2f 30 34 38 88 47 4a 4d 31 32 00 87 e6 48 4b 4e 28 52 50 e5 e7 d2 53 5f 5c 59 51 00 f1 d1 54 60 5d 5a 4f 8e 65 d0 55 61 5e 5b 62 a4 e4 fc 56 57 85 58 63 00 00 c2 24
+S 04 00 a1
+G 04 3 : 04 01 00
+G 07 95 : 07 5f 00 3a 00 00 3b 00 00 3c 00 00 3d 00 00 3e 00 00 3f 00 00 40 00 00 41 00 00 42 00 00 43 00 00 44 00 00 45 00 00 46 00 00 47 00 00 48 00 00 b3 00 00 b4 00 00 b5 00 00 b6 00 00 c2 00 00 c3 00 00 c0 00 00 c1 00 00 ce 00 00 cf 00 00 cc 00 00 cd 00 00 46 00 00 fc 00 00 48 00 00 cd 0e
+S 04 00 a3
+G 04 3 : 04 01 00
+G 09 43 : 09 2b 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 34 00
+S 04 00 a4
+G 04 3 : 04 01 00
+G 0a 8 : 0a 08 00 ff f1 00 02 02
+S 04 00 a5
+G 04 3 : 04 01 00
+G 0b 294 : 0b 41 00 1e 00 00 1f 00 00 20 00 00 21 00 00 22 00 00 14 00 00 1a 00 00 08 00 00 15 00 00 17 00 00 04 00 00 16 00 00 07 00 00 09 00 00 0a 00 00 1d 00 00 1b 00 00 06 00 00 19 00 00 05 00 00 de 01
+S 04 00 b1
+G 04 3 : 04 01 00
+G 0d 443 : 0d bb 01 00 09 06 05 45 80 ff ff ff ff ff ff ff ff ff 00 ff ff 0a 0a 0a 0a 0a 0a 11 11 17 00 11 17 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff 00 ff 17 17 1e 17 17 1e 1e 1e 25 1e 00 25 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff ff ff 25 25 2b 25 2b 2b 32 32 2b 32 39 39 00 00 00 00 00 00 00 00 00 00 00 00 ff ff 00 00 00 00 00 00 00 00 00 00 39 39 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff ff ff 00 ff 39 39 3f 3f 3f 3f 3f 46 46 46 00 46 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff 00 ff fe fe fc fe fe 00 46 4d 4d 4d 00 4d 53 53 57 53 53 00 00 00 00 00 00 00 00 00 00 00 00 00 fc fc fa fc fc 00 fc fa fa f6 f8 fa 57 57 5c 57 57 00 57 5c 5c 66 62 5c 00 00 00 00 00 00 00 00 00 00 00 00 fa f8 f6 f8 f6 f6 00 00 00 00 00 00 5c 62 66 62 66 66 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 f4 f4 f4 f4 f1 f1 f1 f1 f1 00 00 00 6b 6b 6b 6b 71 71 71 71 71 00 00 00 00 00 00 00 00 00 00 00 00 ef ef ef ef 00 ed ed ed ed ed 00 eb 75 75 75 75 00 7a 7a 7a 7a 7a 00 7f 00 00 00 00 00 00 00 00 00 00 00 00 eb eb eb 00 e9 e9 e9 e9 e9 e7 e7 e7 7f 7f 7f 00 84 84 84 84 84 89 89 89 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 8f 85
+S 06 85 00 3a 29 35 1e 2b 39 e1 e0 3b 1f 14 1a 04 64 00 00 3d 3c 20 d0 08 16 1d e2 3e 23 22 15 07 1b 06 8b 3f 24 00 17 0a 09 19 91 40 41 00 1c 18 0b 05 2c 42 26 25 0c 0d 0e 10 11 43 2a 27 2d 12 0f 36 8a 44 45 89 2e 13 33 37 90 46 49 4c 2f 30 34 38 88 47 4a 4d 31 32 00 87 e6 48 4b 4e 28 52 50 e5 e7 d2 53 5f 5c 59 51 00 f1 d1 54 60 5d 5a 4f 8e 65 d0 55 61 5e 5b 62 a4 e4 fc 56 57 85 58 63 00 00 71 25
+G 04 3 : 04 03 00
+G 04 3 : 04 01 00
+
+$ rockcat-cli direct #00ff00
+rockcat-cli: enter direct mode: this device has no such thing
+[exit 1]
+
+$ rockcat-cli direct off
+rockcat-cli: leave direct mode: this device has no such thing
+[exit 1]
+
+$ rockcat-cli info
+Device:         ROCCAT Vulcan Pro (simulated)
+USB ID:         1e7d:30f7 (interface 0)
+Path:           sim:vulcan-pro
+Firmware:       1.00
+Support:        known by name only, nothing gets sent to it yet
+[exit 0]
+
+$ rockcat-cli show
+rockcat-cli: read active profile: this device has no such thing
+[exit 1]
 

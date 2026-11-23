@@ -40,6 +40,24 @@ std::unique_ptr<transport> transport_open_hid(const std::string &path);
 // sim.cpp. what ROCKCAT_SIM can be set to, nullptr for a name nobody knows
 std::unique_ptr<transport> transport_sim(const std::string &name, rockcat_device_info *info);
 
+// a pretend device. a family file adds its own at file scope:
+//     static const sim_registration sim({"kone-pure", ROCKCAT_PID_..., "ROCCAT Kone Pure", 0, [] { return std::unique_ptr<transport>(new my_sim); }});
+// make gets called for every handle that opens it. a device that should keep what was written to it between handles
+// (the gui writes, the engine reads) hands out doors to one shared instance, see sim.cpp
+struct sim_entry {
+    const char *name;  // what ROCKCAT_SIM and the debug menu call it
+    uint16_t pid;
+    const char *label; // shown as the model name, "(simulated)" gets added
+    int interface_number;
+    std::unique_ptr<transport> (*make)();
+};
+struct sim_registration {
+    explicit sim_registration(const sim_entry &e);
+};
+const std::vector<sim_entry> &sim_entries();
+// the pretend devices plugged in right now (rockcat_sim_plug), besides the real ones
+std::vector<std::string> sims_plugged();
+
 // capture.cpp
 std::unique_ptr<transport> transport_record(std::unique_ptr<transport> inner, const std::string &file, const rockcat_device_info &info);
 // info gets filled from the header of the recording. nullptr if the file is missing or makes no sense

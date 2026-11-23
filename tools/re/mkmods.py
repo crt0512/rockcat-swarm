@@ -14,7 +14,7 @@ out=['# ROCCAT Swarm device modules','',
 for t in sorted(rows,key=int):
     out+=['## '+types.get(t,t),'']
     for pid,a,m in sorted(rows[t],key=lambda r:(r[2]['name'] if r[2] else r[1].get('disp_name',''),r[0])):
-        ok = pid=='2E2C'
+        ok = pid in ('2E2C','2CEE','2CEF','2CF0')
         name = m['name'] if m else a.get('disp_name','').replace('_',' ').title()+' *(no module on server)*'
         out.append('- [%s] **%s** - `1E7D:%s`, module `%s`%s'%('x' if ok else ' ',name,pid,a['dll_name'],(' v%s (%.1f MB)'%(m['version'],m['size']/1e6)) if m else ''))
     out.append('')

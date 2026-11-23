@@ -60,27 +60,26 @@ constexpr type_entry TYPES[] = {
     {ROCKCAT_BT_EASYSHIFT_LOCK,    "easyshift-lock",    "Easy-Shift[+] lock"},
     {ROCKCAT_BT_EASYSHIFT_ALL,     "easyshift-all",     "Easy-Shift[+] all devices"},
     {ROCKCAT_BT_EASYSHIFT_LOCK_ALL,"easyshift-lock-all","Easy-Shift[+] lock all devices"},
+    {ROCKCAT_BT_EASYWHEEL_PROFILE, "easywheel-profile", "EasyWheel: switch profile"},
+    {ROCKCAT_BT_EASYWHEEL_DPI,     "easywheel-dpi",     "EasyWheel: change DPI"},
+    {ROCKCAT_BT_EASYWHEEL_VOLUME,  "easywheel-volume",  "EasyWheel: volume"},
+    {ROCKCAT_BT_EASYWHEEL_ALT_TAB, "easywheel-alt-tab", "EasyWheel: alt+tab"},
+    {ROCKCAT_BT_HOME,              "home",              "Home"},
+    {ROCKCAT_BT_END,               "end",               "End"},
+    {ROCKCAT_BT_PAGE_UP,           "page-up",           "Page up"},
+    {ROCKCAT_BT_PAGE_DOWN,         "page-down",         "Page down"},
+    {ROCKCAT_BT_LEFT_CTRL,         "left-ctrl",         "Left Ctrl"},
+    {ROCKCAT_BT_LEFT_SHIFT,        "left-shift",        "Left Shift"},
+    {ROCKCAT_BT_LEFT_ALT,          "left-alt",          "Left Alt"},
+    {ROCKCAT_BT_EASYAIM_CUSTOM,    "easyaim-custom",    "EasyAim custom DPI"},
+    {ROCKCAT_BT_PROFILE_1,         "profile-1",         "Profile 1"},
+    {ROCKCAT_BT_PROFILE_2,         "profile-2",         "Profile 2"},
+    {ROCKCAT_BT_PROFILE_3,         "profile-3",         "Profile 3"},
+    {ROCKCAT_BT_PROFILE_4,         "profile-4",         "Profile 4"},
+    {ROCKCAT_BT_PROFILE_5,         "profile-5",         "Profile 5"},
+    {ROCKCAT_BT_EASYAIM_200,       "easyaim-200",       "EasyAim 200"},
     {ROCKCAT_BT_BRIGHTNESS_UP,     "brightness-up",     "Brightness step up (engine)"},
     {ROCKCAT_BT_BRIGHTNESS_DOWN,   "brightness-down",   "Brightness step down (engine)"},
-};
-
-constexpr const char *BUTTON_NAMES[ROCKCAT_BUTTON_COUNT / 2] = {
-    "Left button",   "Right button",   "Middle button", "Wheel tilt left",
-    "Wheel tilt right", "Wheel up",    "Wheel down",    "Thumb forward",
-    "Thumb backward", "Thumb Easy-Shift[+]", "DPI up",  "DPI down",
-};
-
-// Factory layout from the Swarm module (FUN_6a44ea50).
-constexpr uint8_t DEFAULT_LAYOUT[ROCKCAT_BUTTON_COUNT] = {
-    ROCKCAT_BT_CLICK,      ROCKCAT_BT_MENU,        ROCKCAT_BT_UNIVERSAL_SCROLL,
-    ROCKCAT_BT_TILT_LEFT,  ROCKCAT_BT_TILT_RIGHT,  ROCKCAT_BT_SCROLL_UP,
-    ROCKCAT_BT_SCROLL_DOWN, ROCKCAT_BT_BROWSER_FORWARD, ROCKCAT_BT_BROWSER_BACKWARD,
-    ROCKCAT_BT_EASYSHIFT,  ROCKCAT_BT_DPI_UP,      ROCKCAT_BT_DPI_DOWN,
-    // Easy-Shift[+] layer
-    ROCKCAT_BT_UNUSED,     ROCKCAT_BT_UNUSED,      ROCKCAT_BT_PLAY_PAUSE,
-    ROCKCAT_BT_PREV_TRACK, ROCKCAT_BT_NEXT_TRACK,  ROCKCAT_BT_VOLUME_UP,
-    ROCKCAT_BT_VOLUME_DOWN, ROCKCAT_BT_UNUSED,     ROCKCAT_BT_UNUSED,
-    ROCKCAT_BT_UNUSED,     ROCKCAT_BT_PROFILE_UP,  ROCKCAT_BT_PROFILE_DOWN,
 };
 
 struct key_entry {
@@ -97,6 +96,15 @@ constexpr key_entry KEYS[] = {
     {0x4d, "end"}, {0x4e, "pagedown"}, {0x4f, "right"}, {0x50, "left"}, {0x51, "down"},
     {0x52, "up"}, {0x53, "numlock"}, {0x54, "kpslash"}, {0x55, "kpasterisk"}, {0x56, "kpminus"},
     {0x57, "kpplus"}, {0x58, "kpenter"}, {0x63, "kpdot"}, {0x65, "menu"},
+    // the iso keys: # next to enter and < > next to left shift
+    {0x32, "hash"}, {0x64, "102nd"},
+    {0x59, "kp1"}, {0x5a, "kp2"}, {0x5b, "kp3"}, {0x5c, "kp4"}, {0x5d, "kp5"}, {0x5e, "kp6"}, {0x5f, "kp7"},
+    {0x60, "kp8"}, {0x61, "kp9"}, {0x62, "kp0"},
+    // keys of japanese, korean and brazilian boards
+    {0x87, "ro"}, {0x88, "katakana"}, {0x89, "yen"}, {0x8a, "henkan"}, {0x8b, "muhenkan"},
+    // the modifiers as keys of their own, for making one key into another ("bind capslock lctrl")
+    {0xe0, "lctrl"}, {0xe1, "lshift"}, {0xe2, "lalt"}, {0xe3, "lwin"},
+    {0xe4, "rctrl"}, {0xe5, "rshift"}, {0xe6, "ralt"}, {0xe7, "rwin"},
 };
 
 std::string lower(const std::string &in)
@@ -203,20 +211,6 @@ void rockcat_format_shortcut(uint8_t modifiers, uint8_t key, char *buf, size_t l
     std::snprintf(buf, len, "%s", out.c_str());
 }
 
-
-const char *rockcat_button_name(int index)
-{
-    static std::string shifted[ROCKCAT_BUTTON_COUNT / 2];
-    if (index < 0 || index >= ROCKCAT_BUTTON_COUNT)
-        return "?";
-    if (index < ROCKCAT_BUTTON_COUNT / 2)
-        return BUTTON_NAMES[index];
-    int base = index - ROCKCAT_BUTTON_COUNT / 2;
-    if (shifted[base].empty())
-        shifted[base] = std::string("Easy-Shift + ") + BUTTON_NAMES[base];
-    return shifted[base].c_str();
-}
-
 const char *rockcat_button_type_name(uint8_t type)
 {
     for (const auto &t : TYPES)
@@ -240,16 +234,6 @@ int rockcat_button_type_from_string(const char *s)
     if (end && *end == '\0' && v >= 0 && v <= 0xff)
         return static_cast<int>(v);
     return -1;
-}
-
-void rockcat_buttons_default(uint8_t profile, rockcat_buttons *out)
-{
-    if (!out)
-        return;
-    std::memset(out, 0, sizeof *out);
-    out->profile = profile;
-    for (int i = 0; i < ROCKCAT_BUTTON_COUNT; ++i)
-        out->buttons[i].type = DEFAULT_LAYOUT[i];
 }
 
 int rockcat_button_type_count(void)

@@ -18,11 +18,11 @@ It comes in three parts:
 
 ## What works
 
-Right now exactly one device, the same one upstream supported:
+- **ROCCAT Kova 2016** gray (`1e7d:2cee`): profiles, dpi, polling rate, both lights, buttons with the Easy-Shift[+] layer, macros. Tested on a real one. The gui shows it too (dpi, polling, buttons, lights), with ROCCATs picture of the mouse, a marker on every button and the lights in the colours you pick. White (`2cef`) and black (`2cf0`) should be the same mouse in a different shell but nobody here has one, so they are marked untested
+- **ROCCAT Ryos MK FX** (`1e7d:2fda`): profiles, what every key does (both sides, normal and Easy-Shift[+]), macros, the colour of every key, light effects and idle settings, lighting from the pc. Tested on a real one. In the gui: the keyboard with every key in its colour (click keys, pick a colour), effect, brightness and idle settings. What the keys do is cli only so far. Effects the keyboard cant do are drawn by rockcat itself while the gui (or `rockcat-cli engine`) runs: wave, ripple, heatmap, an equalizer for what the computer plays, fire and drip, each with its own settings, plus idle and wake animations
+- **ROCCAT Kone AIMO Remastered** (`1e7d:2e2c`): everything listed below, cli and gui. The one upstream supported
 
-- **ROCCAT Kone AIMO Remastered** (`1e7d:2e2c`)
-
-Next up are the Kova 2016 and the Ryos MK FX, simply because those two are plugged into the machine this gets written on. After that the rest of the Ryos family, Sova, Lua and then whatever we can dig out of roccat-tools and the Swarm modules. [MODULES.md](MODULES.md) has every device module Swarm could download, the ticked ones work here.
+Next up is the gui for the Kova and the Ryos, then the rest of the Ryos family, Sova, Lua and then whatever we can dig out of roccat-tools and the Swarm modules. [MODULES.md](MODULES.md) has every device module Swarm could download, the ticked ones work here.
 
 What the Kone AIMO Remastered can do with it:
 
@@ -38,7 +38,7 @@ What the Kone AIMO Remastered can do with it:
 - backup and restore of all five profiles
 - raw report access for everything that isnt decoded yet
 
-Protocol writeup: [docs/PROTOCOL.md](docs/PROTOCOL.md).
+Protocol writeup: [docs/protocol/kone-aimo.md](docs/protocol/kone-aimo.md).
 
 ## Building
 
@@ -131,7 +131,8 @@ If it still says no: UNPLUG THE MOUSE AND PLUG IT BACK IN. udev only hands out t
 ## CLI
 
 ```bash
-rockcat-cli list                         # find the mouse
+rockcat-cli list                         # whats plugged in, with a number in front
+rockcat-cli --device 2 info              # more than one device? pick it by that number (or by product id, 2e2c)
 rockcat-cli info                         # firmware + active profile
 rockcat-cli profile 2                    # switch to profile 2
 rockcat-cli show -p 1                    # dump profile 1 settings
@@ -239,8 +240,9 @@ Link it with `pkg-config --cflags --libs rockcat`, or from CMake with `find_pack
 ## Credits and legal stuff
 
 - [TheElevatedOne](https://github.com/TheElevatedOne/rossat-swarm) wrote rossat-swarm, which this is forked from. The whole Kone AIMO Remastered protocol work is his.
-- Not affiliated with ROCCAT or Turtle Beach in any way. No ROCCAT code or artwork is in here, the Swarm layout is rebuilt in GTK and the icon is an original drawing.
-- License: [GPL-3.0-only](LICENSE).
+- Not affiliated with ROCCAT or Turtle Beach in any way. No ROCCAT code is in here, the Swarm layout is rebuilt in GTK and the app icon is an original drawing.
+- The device pictures in `assets/roccat/` ARE ROCCATs, taken from Swarm, and they are not under the GPL like the rest. Where each one came from and how to build without them (`-DROCKCAT_ROCCAT_ASSETS=OFF`) is in [assets/roccat/ATTRIBUTION.md](assets/roccat/ATTRIBUTION.md). Rights holder and unhappy about it? Open an issue, they get removed.
+- License: [GPL-3.0-only](LICENSE) for everything except `assets/roccat/`.
 
 ## Whats where
 
@@ -250,7 +252,11 @@ src/lib/                    protocol + HID transport (hidapi)
 src/cli/                    rockcat-cli
 src/gui/                    rockcat-swarm (GTK3)
 data/                       icon, css, udev rule, desktop file, user service, pkg-config template
-docs/PROTOCOL.md            reverse engineered protocol and firmware notes
+assets/roccat/              device pictures out of Swarm, not ours, read the ATTRIBUTION.md in there
+assets/free/                our own stand ins with the same names, for builds without the above
+tools/dev/                  gui-shot.sh, takes a picture of the gui without a screen
+tools/assets/               the scripts that fill those two folders (extract.py for icons, mouse-view.py for the mouse pictures with markers and lights), plus dump-swarm.sh and sort-swarm.py if you want ALL the artwork out of your own Swarm install, sorted per device
+docs/protocol/              what we know about how the devices talk, one file per family
 docs/CAPTURES.md            how recordings work
 tools/re/                   scripts used for the reverse engineering
 tools/capture/              read only scripts that record what a device has stored

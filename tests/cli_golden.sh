@@ -1,5 +1,5 @@
 #!/bin/sh
-# runs a pile of cli commands against the simulated mouse and compares what they print AND what they send over the wire
+# runs a pile of cli commands against the simulated mouse and the simulated keyboard and compares what they print AND what they send over the wire
 # with tests/cli_golden.txt. thats what catches a cli change that quietly sends something different to the device
 #   tests/cli_golden.sh /path/to/rockcat-cli            compare, exit 1 on any difference
 #   tests/cli_golden.sh /path/to/rockcat-cli --update   rewrite the expected file. look at the diff before committing it!
@@ -27,6 +27,11 @@ run() {
 
 all() {
     run list
+    run --device 1 info
+    run --device 2e2c profile
+    run --device 7 info
+    run --device 2cee info
+    run udev-rules
     run info
     run profile
     run profile 3
@@ -65,6 +70,77 @@ all() {
     run backup "$WORK/all.rswb"
     run restore "$WORK/all.rswb"
     run restore "$WORK/nope.rswb"
+
+    # and the same idea for a keyboard, where keys go by name and there is a third layer
+    export ROCKCAT_SIM=ryos-mk-fx
+    run list
+    run info
+    run profile 2
+    run profile
+    run show
+    run show -p 3
+    run set effect=heartbeat speed=3 brightness=100 idle-minutes=5 idle-style=fall-asleep macro-feedback=on
+    run set -p 2 led=all:#0000ff led=w,a,s,d:#ff0000 led=esc:#000000
+    run show -p 2
+    run set effect=wave
+    run set effect=snake
+    run set dpi1=800
+    run buttons
+    run bind esc a
+    run bind shift+a ctrl+c
+    run bind a ctrl+c
+    run bind fn+f1 volume-up
+    run bind shift+f1 mute
+    run bind fn+a mute
+    run bind t1 volume-down
+    run bind nosuchkey a
+    run buttons -p 1
+    run reset-buttons
+    run types
+    run macro -b m1 --text "hi" --name greeting
+    run macro -b m1
+    run macro -b f1
+    run direct '#00ff00'
+    run direct off
+    run dump -p 5
+    run backup "$WORK/kb.rswb"
+    run restore -p 2 "$WORK/kb.rswb"
+    run restore "$WORK/all.rswb"
+
+    # a second mouse, the pretend Kova (its profiles are what a real gray one answered)
+    export ROCKCAT_SIM=kova-2016
+    run list
+    run info
+    run show
+    run show -p 2
+    run set effect=breathing speed=2 dpi2=1200 led=1:#ff0000
+    run set effect=wave
+    run set effect=smooth-flow
+    run buttons
+    run bind 4 volume-up
+    run types
+    run macro -b 5 --text "gg" --name kova
+    run direct '#00ff00'
+    run direct off
+    run backup "$WORK/kova.rswb"
+    run restore "$WORK/kova.rswb"
+    run restore "$WORK/kb.rswb"
+
+    # the Kone line out of roccat-tools: one pretend mouse with one colour per light, one with a fixed dpi table
+    for sim in kone-plus kone-xtd kone-pure-optical kone-aimo vulcan-120-aimo; do
+        export ROCKCAT_SIM=$sim
+        run info
+        run show
+        run set effect=fully-lit dpi1=1200 polling=500 led=1:#ff0000
+        run buttons
+        run bind 4 volume-up
+        run direct '#00ff00'
+        run direct off
+    done
+    # a device known by name only says so and doesnt get anything sent
+    export ROCKCAT_SIM=vulcan-pro
+    run info
+    run show
 }
 
 # the temp path shows up in a few messages and is different every run

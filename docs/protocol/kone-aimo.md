@@ -14,7 +14,7 @@ layouts). Addresses below refer to those binaries.
 
 The original Kone AIMO (`1e7d:2e27`, type 26) uses the same protocol with a
 shorter 0x69-byte settings report (single-byte DPI values); the Remastered
-inserts 15 bytes for 16-bit X/Y DPI values. Only the Remastered is implemented.
+inserts 15 bytes for 16-bit X/Y DPI values. The original has its own file, [kone-aimo-original.md](kone-aimo-original.md).
 
 ## Transfer rules
 

@@ -1,0 +1,568 @@
+<!doctype html>
+<!-- the page tools/assets/sort-swarm.py writes as index.html. the script drops the list of devices in where it says MANIFEST below,
+     everything else is plain html + canvas, no libraries, works straight from disk. it only ever loads the pictures lying next to it -->
+<meta charset="utf-8">
+<title>ROCCAT devices</title>
+<style>
+body { background: #17181c; color: #d8dae0; font: 14px sans-serif; margin: 0 24px 60px; }
+#bar { position: sticky; top: 0; z-index: 5; background: #1e2026; margin: 0 -24px; padding: 10px 24px; display: flex; gap: 22px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid #33353c; }
+#bar b { font-size: 16px; margin-right: 8px; }
+#bar label { display: flex; gap: 6px; align-items: center; }
+nav { columns: 5; margin: 18px 0 10px; }
+a { color: #7fb4ff; }
+section { border-top: 1px solid #33353c; margin-top: 34px; padding-top: 14px; }
+h2 { font-size: 19px; margin: 0 0 2px; display: flex; gap: 12px; align-items: center; }
+h2 img { height: 44px; }
+small, figcaption, .hint { color: #8a8d96; font-size: 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 26px; align-items: flex-start; margin-top: 12px; }
+figure { margin: 0; }
+figcaption { margin-top: 6px; max-width: 520px; }
+canvas, .row figure > img { background: #22242a; border-radius: 8px; max-width: 100%; }
+canvas.wide { width: 100%; max-width: 1226px; height: auto; }
+textarea { width: 100%; height: 120px; background: #22242a; color: #d8dae0; border: 1px solid #33353c; box-sizing: border-box; font: 13px sans-serif; padding: 6px; }
+#export { display: none; margin-top: 12px; }
+#export textarea { height: 220px; font-family: monospace; }
+.device { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+.notes { position: sticky; top: 64px; }
+.notes textarea { height: 170px; }
+.notes label { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+details { margin-top: 6px; max-width: 420px; }
+details select, details button, figure button { background: #22242a; color: #d8dae0; border: 1px solid #33353c; border-radius: 4px; font-size: 12px; margin: 3px 0; }
+.layer { display: block; font-size: 12px; color: #b9bcc5; }
+.layer:hover { color: #fff; }
+figure button { margin-top: 6px; cursor: pointer; }
+figure canvas { display: block; }
+figure select { margin-right: 6px; }
+nav .ok a { color: #6fcf7f; }
+nav .noted a { color: #f2c14e; }
+</style>
+
+<div id="bar">
+  <b>ROCCAT devices</b>
+  <label><input type="checkbox" id="rainbow" checked> rainbow</label>
+  <label>speed <input type="range" id="speed" min="0.2" max="4" step="0.1" value="1"></label>
+  <label><input type="checkbox" id="markers" checked> button markers</label>
+  <label>keyboard layout <select id="region"></select></label>
+  <label>find <input type="search" id="find" placeholder="kone, vulcan, ..." size="14"></label>
+  <button id="export-button">Export Notes</button>
+  <span class="hint" id="progress"></span>
+</div>
+<div id="export">
+  <p class="hint">Everything you wrote, ticked or dragged, per device. It was also saved as asset-notes-roundN.json (check your downloads), hand over either the file or this text.</p>
+  <textarea id="export-text" readonly></textarea>
+</div>
+<nav id="toc"></nav>
+<main id="devices"></main>
+
+<script>const DEVICES = /*MANIFEST*/[];</script>
+<script>
+const state = { rainbow: true, speed: 1, markers: true, region: null };
+
+// notes, the "looks right" tick and dragged pictures are kept in the browser, so closing the tab or rebuilding the page loses nothing
+// the number goes up with every review round: what was fixed after a round is the new starting point, old drags would fight it
+const ROUND = 5, STORE = 'rockcat-asset-notes-' + ROUND;
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) { saved = {}; }
+const entry = dev => saved[dev.folder] || (saved[dev.folder] = {});
+const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) { /* private mode, then it just doesnt stick */ } };
+const scenes = [];
+const images = new Map();
+
+function picture(src) {
+  if (!images.has(src)) { const i = new Image(); i.src = src; images.set(src, i); }
+  return images.get(src);
+}
+const ready = i => i.complete && i.naturalWidth > 0;
+const hue = h => `hsl(${((h % 360) + 360) % 360} 100% 55%)`;
+
+// only what is on screen gets redrawn, 55 devices animating at once would cook the laptop
+const watcher = new IntersectionObserver(es => es.forEach(e => { e.target.scene.visible = e.isIntersecting; }), { rootMargin: '300px' });
+
+function makeCanvas(w, h, cls) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  if (cls) c.className = cls;
+  return c;
+}
+
+function figure(parent, node, text) {
+  const f = document.createElement('figure');
+  f.append(node);
+  const cap = document.createElement('figcaption');
+  cap.textContent = text;
+  f.append(cap);
+  parent.append(f);
+  return cap;
+}
+
+function addScene(canvas, draw) {
+  canvas.scene = { canvas, draw, visible: false };
+  scenes.push(canvas.scene);
+  watcher.observe(canvas);
+}
+
+// the device picture with every led zone tinted. two kinds of layers exist in Swarm:
+// "alpha" ones are a shape on transparent (fill with the colour, keep the shape), "luma" ones are grey on black (multiply, then add).
+// which picture is the base and what each layer is was guessed from names and pixels, so all of it can be changed under the picture
+const ROLES = [['alpha', 'zone, shape on transparent'], ['luma', 'zone, grey on black'], ['overlay', 'drawn on top as it is'], ['off', 'not used']];
+
+function lightScene(row, dev, group) {
+  const key = group.w + 'x' + group.h;
+  const mine = () => { const e = entry(dev); e.light = e.light || {}; return e.light[key] || (e.light[key] = { roles: {} }); };
+  const was = (entry(dev).light || {})[key] || { roles: {} };
+  const baseOf = () => ((entry(dev).light || {})[key] || {}).base || group.base;
+  const roleOf = l => (((entry(dev).light || {})[key] || {}).roles || {})[l.src] || l.kind;
+  const c = makeCanvas(group.w, group.h), ctx = c.getContext('2d');
+  const tmp = makeCanvas(group.w, group.h), tx = tmp.getContext('2d');
+  let solo = null;
+  const box = document.createElement('div');
+  box.append(c);
+  const cap = figure(row, box, '');
+  const say = () => {
+    const n = group.layers.filter(l => ['alpha', 'luma'].includes(roleOf(l))).length;
+    cap.textContent = `lighting: ${baseOf().split('/').pop()} + ${n} zone${n === 1 ? '' : 's'}`;
+  };
+  say();
+
+  // the knobs: which picture is underneath, and for every layer what it is. hovering a layer name shows that layer alone, in white
+  const panel = document.createElement('details');
+  panel.innerHTML = '<summary class="hint">base picture and layers (change them if the guess is wrong)</summary>';
+  const pick = document.createElement('select');
+  group.bases.forEach(b => pick.add(new Option('base: ' + b.split('/').slice(1).join('/'), b)));
+  pick.value = baseOf();
+  pick.onchange = () => { mine().base = pick.value; persist(); say(); };
+  panel.append(pick);
+  group.layers.forEach(l => {
+    const line = document.createElement('label');
+    line.className = 'layer';
+    const sel = document.createElement('select');
+    ROLES.forEach(r => sel.add(new Option(r[1], r[0])));
+    sel.value = roleOf(l);
+    sel.onchange = () => { mine().roles[l.src] = sel.value; persist(); say(); };
+    line.append(sel, ' ' + l.src.split('/').pop());
+    line.onmouseenter = () => { solo = l; };
+    line.onmouseleave = () => { solo = null; };
+    panel.append(line);
+  });
+  const reset = document.createElement('button');
+  reset.textContent = 'back to the guess';
+  reset.onclick = () => { if (entry(dev).light) delete entry(dev).light[key]; persist(); pick.value = group.base; panel.querySelectorAll('.layer select').forEach((sel, i) => { sel.value = group.layers[i].kind; }); say(); };
+  panel.append(reset);
+  box.append(panel);
+
+  const tint = (im, kind, colour) => {
+    tx.globalCompositeOperation = 'source-over';
+    tx.clearRect(0, 0, tmp.width, tmp.height);
+    if (kind === 'luma') {
+      tx.drawImage(im, 0, 0);
+      tx.globalCompositeOperation = 'multiply';
+      tx.fillStyle = colour;
+      tx.fillRect(0, 0, tmp.width, tmp.height);
+      ctx.globalCompositeOperation = 'lighter';
+    } else {
+      tx.fillStyle = colour;
+      tx.fillRect(0, 0, tmp.width, tmp.height);
+      tx.globalCompositeOperation = 'destination-in';
+      tx.drawImage(im, 0, 0);
+    }
+    ctx.drawImage(tmp, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+  };
+  addScene(c, t => {
+    ctx.clearRect(0, 0, c.width, c.height);
+    const base = picture(baseOf());
+    if (ready(base)) ctx.drawImage(base, 0, 0);
+    if (solo) {
+      const im = picture(solo.src);
+      if (ready(im)) tint(im, solo.auto === 'luma' ? 'luma' : 'alpha', '#fff');
+      return;
+    }
+    const zones = group.layers.filter(l => ['alpha', 'luma'].includes(roleOf(l)));
+    zones.forEach((l, i) => {
+      const im = picture(l.src);
+      if (ready(im)) tint(im, roleOf(l), state.rainbow ? hue(t * 60 * state.speed + i * 360 / zones.length) : '#65c3f7');
+    });
+    group.layers.filter(l => roleOf(l) === 'overlay').forEach(l => { const im = picture(l.src); if (ready(im)) ctx.drawImage(im, 0, 0); });
+  });
+}
+
+// the button page: picture plus the spots Swarm puts its markers on, with the number Swarm prints on each. some devices have
+// more than one picture there (top and side), each gets its own drawing with its own markers. drag a picture to move it under
+// the markers (where it sits could not be read out of the module), drag a single marker if that one is in the wrong place,
+// and pick another picture from the list where a device has several of the same size (colours, side grips).
+// a picture with parts taken off (Kiro without side buttons) loses the markers that sat on them
+function buttonScene(row, dev) {
+  const b = dev.buttons, M = 50, r = b.marker[0] / 2;
+  const spot = i => (entry(dev).markers || {})[i] || b.positions[i];
+  const number = i => b.numbers ? b.numbers[i] : i + 1;
+  const called = i => (b.names || {})[number(i)];
+  b.views.forEach((v, vi) => {
+    const mine = () => { const e = entry(dev); e.views = e.views || {}; return e.views[vi] || (e.views[vi] = {}); };
+    const get = () => (entry(dev).views || {})[vi] || {};
+    const origin = () => get().origin || v.origin, image = () => get().image || v.image;
+    const shown = () => { const gone = (v.hides || {})[image()] || []; return v.markers.filter(i => !gone.includes(i)); };
+    // loose buttons that get laid over the picture (Nyth side grid): which set of them, and the one under the mouse
+    const sets = v.pieces ? Object.keys(v.pieces.sets) : [];
+    const pieces = () => v.pieces ? v.pieces.sets[get().pieces || sets[0]] || [] : [];
+    let piece = null;
+    const xs = v.markers.map(i => b.positions[i][0] + b.marker[0]), ys = v.markers.map(i => b.positions[i][1] + b.marker[1]);
+    // the margin is there because pictures usually end up a bit above and left of where the markers count from
+    const c = makeCanvas(Math.max(v.origin[0] + v.w, ...xs) + 2 * M, Math.max(v.origin[1] + v.h, ...ys) + 2 * M), ctx = c.getContext('2d');
+    let hover = -1, drag = null;
+    const box = document.createElement('div');
+    box.append(c);
+    const cap = figure(row, box, '');
+    const say = () => {
+      const o = origin(), moved = v.markers.filter(i => (entry(dev).markers || {})[i]).length, n = shown().length, gone = v.markers.length - n;
+      const on = hover >= 0 ? `button ${number(hover)}${called(hover) ? ': ' + called(hover) : ''}. ` : piece ? `${(get().pieces || sets[0]).replace(/^\d+ /, '').replace(/s$/, '')} ${piece.n}. ` : '';
+      cap.textContent = on + `buttons${b.views.length > 1 ? ' (picture ' + (vi + 1) + ' of ' + b.views.length + ')' : ''}: ${image().split('/').pop()}, ` +
+        (v.markers.length ? `${n} markers${gone ? ' (' + gone + ' more have nothing under them on this picture)' : ''}, ` +
+          (b.numbered ? 'numbered the way Swarm numbers them. ' : 'in the order Swarm creates them (not button numbers). ') :
+          v.pieces ? `${pieces().length} loose buttons laid on top, Swarm lets you mix them per slot. ` : 'no markers of its own. ') +
+        `picture at ${o[0]}, ${o[1]}${get().origin ? ' (moved by you, was ' + v.origin.join(', ') + ')' : ' (' + (v.trust || b.trust) + ')'}` +
+        `${moved ? ', ' + moved + ' marker' + (moved === 1 ? '' : 's') + ' moved' : ''}. drag the picture or a single marker to fix it`;
+    };
+    if (v.images.length > 1) {
+      const pick = document.createElement('select');
+      v.images.forEach(i => pick.add(new Option(i.split('/').slice(1).join('/'), i)));
+      pick.value = image();
+      pick.onchange = () => { mine().image = pick.value; persist(); say(); };
+      box.append(pick);
+    }
+    if (sets.length > 1) {
+      const pick = document.createElement('select');
+      sets.forEach(s => pick.add(new Option(s, s)));
+      pick.value = get().pieces || sets[0];
+      pick.onchange = () => { mine().pieces = pick.value; persist(); say(); };
+      box.append(pick);
+    }
+    const reset = document.createElement('button');
+    reset.textContent = 'back to how it was';
+    reset.onclick = () => {
+      if (entry(dev).views) delete entry(dev).views[vi];
+      v.markers.forEach(i => { if (entry(dev).markers) delete entry(dev).markers[i]; });
+      persist(); say();
+      box.querySelectorAll('select').forEach((p, k) => { p.value = k === 0 && v.images.length > 1 ? v.image : sets[0]; });
+    };
+    box.append(reset);
+    say();
+    const at = e => { const q = c.getBoundingClientRect(), s = c.width / q.width; return [(e.clientX - q.left) * s - M, (e.clientY - q.top) * s - M]; };
+    const under = (x, y) => shown().find(i => Math.hypot(spot(i)[0] + r - x, spot(i)[1] + r - y) <= r + 3);
+    const pieceAt = (x, y) => {
+      if (!v.pieces) return null;
+      const px = x - origin()[0] - v.pieces.at[0], py = y - origin()[1] - v.pieces.at[1];
+      return pieces().find(q => q.box && px >= q.box[0] && px < q.box[2] && py >= q.box[1] && py < q.box[3]) || null;
+    };
+    c.addEventListener('mousemove', e => {
+      const [x, y] = at(e);
+      if (drag) {
+        const to = [Math.round(drag.from[0] + x - drag.x), Math.round(drag.from[1] + y - drag.y)];
+        if (drag.marker >= 0) { entry(dev).markers = entry(dev).markers || {}; entry(dev).markers[drag.marker] = to; } else mine().origin = to;
+        persist();
+        say();
+        return;
+      }
+      const i = under(x, y), was = hover, had = piece;
+      hover = i === undefined ? -1 : i;
+      piece = hover < 0 ? pieceAt(x, y) : null;
+      c.style.cursor = hover >= 0 ? 'pointer' : 'grab';
+      if (hover !== was || piece !== had) say();
+    });
+    c.addEventListener('mousedown', e => {
+      const [x, y] = at(e), i = under(x, y);
+      drag = { x, y, marker: i === undefined ? -1 : i, from: [...(i === undefined ? origin() : spot(i))] };
+      e.preventDefault();
+    });
+    window.addEventListener('mouseup', () => { drag = null; });
+    c.addEventListener('mouseleave', () => { hover = -1; piece = null; say(); });
+    addScene(c, () => {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, c.width, c.height);
+      ctx.translate(M, M);
+      const im = picture(image()), o = origin();
+      if (ready(im)) ctx.drawImage(im, o[0], o[1]);
+      pieces().forEach(q => { const p = picture(q.src); if (ready(p)) ctx.drawImage(p, o[0] + v.pieces.at[0], o[1] + v.pieces.at[1]); });
+      if (piece && piece.box && state.markers) {
+        ctx.strokeStyle = '#65c3f7'; ctx.lineWidth = 2;
+        ctx.strokeRect(o[0] + v.pieces.at[0] + piece.box[0], o[1] + v.pieces.at[1] + piece.box[1], piece.box[2] - piece.box[0], piece.box[3] - piece.box[1]);
+      }
+      if (!state.markers) return;
+      ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      shown().forEach(i => {
+        const p = spot(i), on = i === hover || (drag && drag.marker === i), moved = !!(entry(dev).markers || {})[i];
+        ctx.beginPath();
+        ctx.arc(p[0] + r, p[1] + r, r - 1, 0, 7);
+        ctx.fillStyle = on ? 'rgba(101,195,247,.55)' : 'rgba(23,24,28,.55)';
+        ctx.fill();
+        ctx.lineWidth = on ? 3 : 1.5;
+        // a marker somebody moved by hand is drawn in yellow so its obvious which ones are no longer Swarms numbers
+        ctx.strokeStyle = on ? '#fff' : moved ? '#f2c14e' : '#65c3f7';
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.fillText(number(i), p[0] + r, p[1] + r + 1);
+      });
+    });
+  });
+}
+
+// a keyboard put together the way Swarm does it: the board, the keycaps for the chosen layout, the print on them,
+// and a colour per key from the key matrix. keys that are not rectangles (ISO enter, thumb keys) come with their outline.
+// hovering a key shows its name and led number
+function keyboardScene(row, dev) {
+  const k = dev.keyboard, c = makeCanvas(k.w, k.h, 'wide'), ctx = c.getContext('2d');
+  let hover = null;
+  const cap = figure(row, c, '');
+  const region = () => k.regions[state.region] ? state.region : Object.keys(k.regions)[0];
+  const at = e => { const q = c.getBoundingClientRect(), s = c.width / q.width; return [(e.clientX - q.left) * s, (e.clientY - q.top) * s]; };
+  // the outline of a key as a path, in picture pixels. inset pulls it in a little so neighbours dont touch
+  const shape = (q, inset) => {
+    const p = new Path2D();
+    if (q[6] && /wheel|dial|knob/i.test(q[0])) {
+      // Swarm outlines a volume dial as a square with a little key stuck to its side. the square part is the dial, so thats
+      // drawn round, and whats left of the outline stays a box
+      const xs = q[6].filter((_, i) => i % 2 === 0), ys = q[6].filter((_, i) => i % 2 === 1);
+      const cut = [...new Set(xs)].sort((a, b) => a - b);
+      let best = null;
+      const slabs = [];
+      for (let i = 0; i + 1 < cut.length; i++) {
+        const mid = (cut[i] + cut[i + 1]) / 2, inside = [];
+        // which of the outlines horizontal edges cross this slab, gives its top and bottom
+        for (let j = 0; j < xs.length; j++) {
+          const n = (j + 1) % xs.length;
+          if (ys[j] === ys[n] && Math.min(xs[j], xs[n]) < mid && mid < Math.max(xs[j], xs[n])) inside.push(ys[j]);
+        }
+        if (inside.length < 2) continue;
+        const slab = [cut[i], Math.min(...inside), cut[i + 1] - cut[i], Math.max(...inside) - Math.min(...inside)];
+        slabs.push(slab);
+        if (!best || slab[2] * slab[3] > best[2] * best[3]) best = slab;
+      }
+      slabs.forEach(sl => {
+        if (sl === best) p.ellipse((sl[0] + sl[2] / 2) * k.sx, (sl[1] + sl[3] / 2) * k.sy, sl[2] / 2 * k.sx - inset, sl[3] / 2 * k.sy - inset, 0, 0, 7);
+        else p.rect(sl[0] * k.sx + inset, sl[1] * k.sy + inset, sl[2] * k.sx - 2 * inset, sl[3] * k.sy - 2 * inset);
+      });
+      if (!slabs.length) p.rect(q[2] * k.sx, q[3] * k.sy, q[4] * k.sx, q[5] * k.sy);
+    } else if (q[6]) {
+      for (let i = 0; i < q[6].length; i += 2) p[i ? 'lineTo' : 'moveTo'](q[6][i] * k.sx, q[6][i + 1] * k.sy);
+      p.closePath();
+    } else {
+      p.rect(q[2] * k.sx + inset, q[3] * k.sy + inset, q[4] * k.sx - 2 * inset, q[5] * k.sy - 2 * inset);
+    }
+    return p;
+  };
+  c.addEventListener('mousemove', e => {
+    const [x, y] = at(e), keys = k.regions[region()].keys;
+    hover = keys.find(q => ctx.isPointInPath(shape(q, 0), x, y)) || null;
+  });
+  c.addEventListener('mouseleave', () => { hover = null; });
+  addScene(c, t => {
+    const reg = region(), set = k.sets[k.regions[reg].set] || Object.values(k.sets)[0] || {}, keys = k.regions[reg].keys;
+    ctx.clearRect(0, 0, c.width, c.height);
+    const body = set.body && picture(set.body);
+    if (body && ready(body)) ctx.drawImage(body, 0, 0, k.w, k.h);
+    const caps = set.caps && picture(set.caps);
+    if (caps && ready(caps)) ctx.drawImage(caps, 0, 0, k.w, k.h);
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = 0.6;
+    keys.forEach(q => {
+      ctx.fillStyle = state.rainbow ? hue(t * 60 * state.speed - q[2] * k.sx / k.w * 360) : '#65c3f7';
+      ctx.fill(shape(q, 1));
+    });
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    const text = set.legends && picture(set.legends);
+    if (text && ready(text)) {
+      // some of ROCCATs legend pictures still have the designers red crop marks in two corners, keep those out
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(30, 30, k.w - 60, k.h - 60);
+      ctx.clip();
+      ctx.drawImage(text, 0, 0, k.w, k.h);
+      ctx.restore();
+    }
+    if (state.markers) {
+      ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 1;
+      keys.forEach(q => ctx.stroke(shape(q, 0.5)));
+    }
+    if (hover) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke(shape(hover, 0)); }
+    cap.textContent = `keyboard: layout ${reg} (${keys.length} keys, pictures from the ${k.regions[reg].set || '?'} set)` + (hover ? `. key "${hover[0]}", led ${hover[1]}` : '. hover a key');
+  });
+}
+
+// a picture from the views row. on a lot of devices the logo is a led zone and not part of the picture, so a view that the
+// lighting layers were made for can get them drawn on without any colour: light (the way it looks on the box), gray (lights off,
+// the logo still there but quiet), dark (a black logo, what a white shell wants) or not at all. which one is right differs per picture, so its a list under each and goes into the notes
+const LOOKS = [['light', 'led layers on top: light'], ['gray', 'led layers on top: gray'], ['dark', 'led layers on top: dark'],
+  ['print', 'printed logo only, no led zones'], ['none', 'led layers: not used']];
+
+function viewPicture(row, dev, src) {
+  const group = (dev.lighting || []).find(g => g.bases.includes(src));
+  const name = src.split('/').pop();
+  if (!group) {
+    const i = document.createElement('img');
+    i.src = src; i.loading = 'lazy';
+    figure(row, i, name);
+    return;
+  }
+  const c = makeCanvas(group.w, group.h), ctx = c.getContext('2d'), tmp = makeCanvas(group.w, group.h), tx = tmp.getContext('2d');
+  const role = l => ((((entry(dev).light || {})[group.w + 'x' + group.h] || {}).roles || {})[l.src]) || l.kind;
+  const start = (dev.looks || {})[src] || 'light';
+  const look = () => (entry(dev).looks || {})[src] || start;
+  const box = document.createElement('div');
+  box.append(c);
+  const cap = figure(row, box, '');
+  const say = () => {
+    cap.textContent = name + (look() === 'none' ? ', the picture alone' : look() === 'print' ? ', with the logo that is printed on (led zones left out)' :
+      `, led layers drawn on in ${look()} (the logo is one of them, the picture alone has none)`);
+  };
+  const pick = document.createElement('select');
+  LOOKS.forEach(o => pick.add(new Option(o[1], o[0])));
+  pick.value = look();
+  pick.onchange = () => { const e = entry(dev); e.looks = e.looks || {}; e.looks[src] = pick.value; persist(); say(); };
+  box.append(pick);
+  say();
+  addScene(c, () => {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, c.width, c.height);
+    const base = picture(src), how = look();
+    if (ready(base)) ctx.drawImage(base, 0, 0);
+    if (how === 'none') return;
+    group.layers.forEach(l => {
+      const im = picture(l.src), kind = role(l);
+      if (!ready(im) || kind === 'off') return;
+      // a layer that is a finished picture of its own (a white logo overlay) is drawn as it is for light, half see through for gray
+      // and left out for dark
+      if (how === 'print') { if (kind === 'overlay') ctx.drawImage(im, 0, 0); return; }
+      if (kind === 'overlay') {
+        if (how !== 'dark') { ctx.globalAlpha = how === 'gray' ? 0.5 : 1; ctx.drawImage(im, 0, 0); ctx.globalAlpha = 1; }
+        return;
+      }
+      tx.globalCompositeOperation = 'source-over';
+      tx.clearRect(0, 0, tmp.width, tmp.height);
+      if (kind === 'luma') {
+        // grey on black: added on for light (at half strength for gray). for dark its turned into black on white first and then multiplied in
+        tx.drawImage(im, 0, 0);
+        if (how === 'dark') { tx.globalCompositeOperation = 'difference'; tx.fillStyle = '#fff'; tx.fillRect(0, 0, tmp.width, tmp.height); }
+        ctx.globalCompositeOperation = how === 'dark' ? 'multiply' : 'lighter';
+        if (how === 'gray') ctx.globalAlpha = 0.45;
+      } else {
+        tx.fillStyle = how === 'dark' ? '#0c0d10' : how === 'gray' ? '#7e828c' : '#e9ecf2';
+        tx.fillRect(0, 0, tmp.width, tmp.height);
+        tx.globalCompositeOperation = 'destination-in';
+        tx.drawImage(im, 0, 0);
+      }
+      ctx.drawImage(tmp, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    });
+  });
+}
+
+function progress() {
+  const n = DEVICES.filter(d => saved[d.folder] && (saved[d.folder].ok || saved[d.folder].note)).length;
+  document.getElementById('progress').textContent = `${n} of ${DEVICES.length} looked at`;
+}
+
+function build() {
+  const toc = document.getElementById('toc'), main = document.getElementById('devices'), regions = new Set();
+  DEVICES.forEach((dev, n) => {
+    const link = document.createElement('div');
+    link.innerHTML = `<a href="#d${n}">${dev.name}</a>`;
+    toc.append(link);
+    const s = document.createElement('section');
+    s.id = 'd' + n;
+    s.innerHTML = `<h2>${dev.icon ? `<img src="${dev.icon}">` : ''}${dev.name}</h2><small>${dev.aliases.join(', ')} &middot; folder ${dev.folder}/</small>`;
+    const grid = document.createElement('div'), left = document.createElement('div'), notes = document.createElement('div');
+    grid.className = 'device';
+    notes.className = 'notes';
+    notes.innerHTML = '<label><input type="checkbox"> looks right</label><textarea placeholder="whats wrong, whats missing, what belongs somewhere else ..."></textarea>';
+    const tick = notes.querySelector('input'), text = notes.querySelector('textarea');
+    tick.checked = !!entry(dev).ok;
+    text.value = entry(dev).note || '';
+    const mark = () => { link.className = entry(dev).note ? 'noted' : entry(dev).ok ? 'ok' : ''; progress(); };
+    tick.onchange = () => { entry(dev).ok = tick.checked; persist(); mark(); };
+    text.oninput = () => { entry(dev).note = text.value; persist(); mark(); };
+    grid.append(left, notes);
+    s.append(grid);
+    const row = document.createElement('div');
+    row.className = 'row';
+    left.append(row);
+    mark();
+    (dev.lighting || []).forEach(g => lightScene(row, dev, g));
+    if (dev.buttons) buttonScene(row, dev);
+    if (dev.keyboard) { keyboardScene(row, dev); Object.keys(dev.keyboard.regions).forEach(r => regions.add(r)); }
+    if (dev.views.length) {
+      const views = document.createElement('div');
+      views.className = 'row';
+      dev.views.forEach(v => viewPicture(views, dev, v));
+      left.append(views);
+    }
+    main.append(s);
+  });
+  const select = document.getElementById('region');
+  [...regions].sort().forEach(r => select.add(new Option(r, r)));
+  const asked = (new URLSearchParams(location.search).get('layout') || '').toUpperCase();
+  state.region = regions.has(asked) ? asked : regions.has('DE') ? 'DE' : [...regions][0];
+  select.value = state.region;
+  select.onchange = () => { state.region = select.value; };
+  document.getElementById('rainbow').onchange = e => { state.rainbow = e.target.checked; };
+  document.getElementById('speed').oninput = e => { state.speed = +e.target.value; };
+  document.getElementById('markers').onchange = e => { state.markers = e.target.checked; };
+  document.getElementById('export-button').onclick = () => {
+    // only devices something was said about, in page order, with the dragged picture position if there is one
+    const report = DEVICES.map(d => ({ d, e: saved[d.folder] || {} })).filter(x => x.e.ok || x.e.note || Object.keys(x.e.views || {}).length || Object.keys(x.e.markers || {}).length || Object.keys(x.e.light || {}).length || Object.keys(x.e.looks || {}).length).map(x => {
+      const line = { device: x.d.name, folder: x.d.folder, looks_right: !!x.e.ok };
+      if (x.e.note) line.note = x.e.note;
+      const pics = Object.entries(x.e.views || {}).filter(([i]) => x.d.buttons && x.d.buttons.views[i]).map(([i, c]) => {
+        const v = x.d.buttons.views[i], one = { picture: +i + 1, file: c.image || v.image };
+        if (c.image && c.image !== v.image) one.file_was = v.image;
+        if (c.origin) { one.origin = c.origin; one.origin_was = v.origin; }
+        if (c.pieces) one.side_buttons = c.pieces;
+        return one;
+      }).filter(o => o.origin || o.file_was || o.side_buttons);
+      if (pics.length) line.button_pictures = pics;
+      const moved = Object.entries(x.e.markers || {});
+      if (moved.length && x.d.buttons) line.markers_moved = moved.map(([i, to]) => ({ marker: x.d.buttons.numbers ? x.d.buttons.numbers[i] : +i + 1, to, was: x.d.buttons.positions[i] }));
+      // lighting: only what differs from the guess, per picture size
+      const light = [];
+      (x.d.lighting || []).forEach(g => {
+        const mine = (x.e.light || {})[g.w + 'x' + g.h];
+        if (!mine) return;
+        const change = { pictures: g.w + 'x' + g.h };
+        if (mine.base && mine.base !== g.base) { change.base = mine.base; change.base_was = g.base; }
+        const layers = g.layers.filter(l => mine.roles && mine.roles[l.src] && mine.roles[l.src] !== l.kind).map(l => ({ file: l.src, now: mine.roles[l.src], was: l.kind }));
+        if (layers.length) change.layers = layers;
+        if (change.base || change.layers) light.push(change);
+      });
+      if (light.length) line.lighting_changed = light;
+      // the plain pictures: led layers light, dark or none. only the ones that were set by hand, light is what the page starts with
+      const looks = Object.entries(x.e.looks || {}).filter(([file]) => x.d.views.includes(file)).filter(([file, led_layers]) => led_layers !== ((x.d.looks || {})[file] || 'light')).map(([file, led_layers]) => ({ file, led_layers, was: (x.d.looks || {})[file] || 'light' }));
+      if (looks.length) line.view_pictures = looks;
+      return line;
+    });
+    const out = JSON.stringify({ round: ROUND, reviewed: report.length, of: DEVICES.length, devices: report }, null, 1);
+    document.getElementById('export').style.display = 'block';
+    const box = document.getElementById('export-text');
+    box.value = out;
+    box.select();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([out], { type: 'application/json' }));
+    a.download = 'asset-notes-round' + ROUND + '.json';
+    a.click();
+  };
+  // typing in the box (or opening index.html?only=kova) hides everything that doesnt match
+  const find = document.getElementById('find');
+  const filter = () => {
+    const q = find.value.trim().toLowerCase();
+    DEVICES.forEach((d, n) => { document.getElementById('d' + n).style.display = !q || (d.name + ' ' + d.aliases.join(' ')).toLowerCase().includes(q) ? '' : 'none'; });
+  };
+  find.oninput = filter;
+  find.value = new URLSearchParams(location.search).get('only') || '';
+  filter();
+  const tick = now => {
+    scenes.forEach(s => { if (s.visible) s.draw(now / 1000); });
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+build();
+</script>
