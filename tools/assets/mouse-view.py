@@ -4,10 +4,11 @@
 # where the marker of every button sits
 # usage: tools/assets/mouse-view.py SORTED_ASSETS [PID...]      (no PID = every recipe in tools/assets/views.json)
 #   SORTED_ASSETS  the folder tools/assets/sort-swarm.py wrote (it has manifest.json and one folder per device)
-# writes assets/roccat/views/PID/{top.png, lightN.png, view.ini} and copies view.ini to assets/free/views/PID/
+# writes DEV/roccat-assets-original/views/PID/{top.png, lightN.png, view.ini} and copies view.ini to assets/free/views/PID/
 # (the numbers in it are ours to give away, the pictures are not: run tools/assets/placeholders.py for stand ins)
 # needs python3-pil. safe to run again, it overwrites what it wrote last time
 # the artwork belongs to ROCCAT / Turtle Beach, see assets/roccat/ATTRIBUTION.md before you add more of it
+# the pngs land in DEV/roccat-assets-original (the originals, outside of git), tools/assets/to-webp.py makes the webp the build uses out of them
 import json, os, sys
 from PIL import Image
 
@@ -128,7 +129,7 @@ def build(pid):
     x1 = int(max(bx[2] for bx in boxes) + PAD + .5)
     y1 = int(max(bx[3] for bx in boxes) + PAD + .5)
     size = (x1 - x0, y1 - y0)
-    out = os.path.join(ROOT, 'assets', 'roccat', 'views', pid)
+    out = os.path.join(ROOT, 'DEV', 'roccat-assets-original', 'views', pid)
     os.makedirs(out, exist_ok=True)
     for old in os.listdir(out):
         os.remove(os.path.join(out, old))

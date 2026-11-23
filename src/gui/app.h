@@ -126,11 +126,16 @@ struct app_state {
     GtkWidget *calib_button = nullptr;
 
     // application preferences (~/.config/rockcat/gui.ini)
+    GtkWidget *pref_tray_icon = nullptr;
+    GtkWidget *pref_tray_style = nullptr;
+    GtkWidget *pref_tray_style_row = nullptr;
     GtkWidget *pref_tray = nullptr;
     GtkWidget *pref_start_min = nullptr;
     GtkWidget *dpi_panel = nullptr;
     GtkWidget *polling_panel = nullptr;
-    bool tray_enabled = false;     // effective for this run (pref or --minimized)
+    bool tray_icon = false;        // the icon is there, effective for this run (pref or --minimized)
+    int tray_style = 0;            // 0 coloured, 1 white, 2 black
+    bool tray_enabled = false;     // closing the window hides it to that icon, same deal
     GtkWidget *auto_apply = nullptr;
     guint auto_apply_source = 0;
     bool quitting = false;
@@ -201,6 +206,8 @@ inline bool has_setting(const app_state *s, rockcat_setting which)
 }
 
 struct gui_prefs {
+    bool tray_icon = true;
+    int tray_style = 0;
     bool tray = false;
     bool start_minimized = false;
     bool auto_apply = false;
@@ -209,6 +216,9 @@ struct gui_prefs {
 struct calib_state;
 
 GtkWidget *label(const char *text, const char *cls = nullptr, float xalign = 0.0f);
+// a picture out of the built in assets, webp or png whichever the build has (assets.cpp). width > 0 fits it into width x height
+GdkPixbuf *asset_pixbuf(const std::string &resource, int width = 0, int height = 0);
+cairo_surface_t *asset_surface(const std::string &resource);
 void add_class(GtkWidget *w, const char *cls);
 // every child of a box keeps its natural height in the middle of the row instead of stretching to it
 void center_children(GtkWidget *box);
@@ -294,7 +304,9 @@ void on_backup(GtkButton *, gpointer data);
 void on_restore(GtkButton *, gpointer data);
 GtkWidget *files_panel(app_state *s);
 bool settle_changes(app_state *s);
+void on_pref_tray_icon(GtkToggleButton *b, gpointer data);
 void on_pref_tray(GtkToggleButton *b, gpointer data);
+void on_pref_tray_style(GtkComboBox *box, gpointer data);
 void on_pref_start_min(GtkToggleButton *, gpointer data);
 gboolean auto_apply_fire(gpointer data);
 void schedule_auto_apply(app_state *s);

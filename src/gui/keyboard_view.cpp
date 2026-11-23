@@ -31,8 +31,8 @@ namespace {
 cairo_surface_t *load(int pid, const char *name, int *box = nullptr)
 {
     char path[128];
-    std::snprintf(path, sizeof path, "/org/rockcat/swarm/assets/keyboards/%04x/%s.png", pid, name);
-    GdkPixbuf *pix = gdk_pixbuf_new_from_resource(path, nullptr);
+    std::snprintf(path, sizeof path, "/org/rockcat/swarm/assets/keyboards/%04x/%s", pid, name);
+    GdkPixbuf *pix = asset_pixbuf(path);
     if (!pix)
         return nullptr;
     if (box && gdk_pixbuf_get_has_alpha(pix) && gdk_pixbuf_get_n_channels(pix) == 4) {

@@ -13,6 +13,7 @@ pkgbase = rockcat-swarm-bin
 	depends = glib2
 	depends = cairo
 	depends = gdk-pixbuf2
+	depends = libwebp
 	depends = libayatana-appindicator
 	provides = rockcat-swarm
 	conflicts = rockcat-swarm

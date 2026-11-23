@@ -922,9 +922,14 @@ int direct_end(rockcat_device *dev)
     return light_control(dev, false, true);
 }
 
+// the MK FX is done with the switch by the time anybody could ask (measured, a frame right behind it gets taken).
+// nobody has timed the older boards, those get asked, just without the 150 ms of doing nothing first
 int direct_switch_fast(rockcat_device *dev, bool host)
 {
-    return light_control(dev, host, false);
+    int r = light_control(dev, host, false);
+    if (r != ROCKCAT_OK || (dev->desc && model_of(dev->desc->pid).light == LIGHT_RGB))
+        return r;
+    return wait_ready_after(dev, 0);
 }
 
 // the older boards: [18 14 profile] and a bit per key, the profile byte is ignored by the firmware says roccat-tools.

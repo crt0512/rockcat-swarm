@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(rockcat-swarm VERSION 2.0.0 LANGUAGES C CXX)
+project(rockcat-swarm VERSION 2.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -96,6 +96,7 @@ if(ROCKCAT_BUILD_GUI)
     COMMAND ${GLIB_COMPILE_RESOURCES} --target=${GRESOURCE_C} --generate-source
             --sourcedir=${CMAKE_CURRENT_SOURCE_DIR}/data ${GRESOURCE_XML}
     DEPENDS ${GRESOURCE_XML} data/rockcat.css data/rockcat-swarm.svg data/rc-bug.svg
+            data/rockcat-swarm-tray-white.svg data/rockcat-swarm-tray-black.svg
     VERBATIM)
   # device pictures come from one of two folders with identical file names, the gui never knows which one it got
   if(ROCKCAT_ROCCAT_ASSETS)
@@ -104,7 +105,8 @@ if(ROCKCAT_BUILD_GUI)
     set(ASSET_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/free)
   endif()
   # device icons, per mouse its picture with light masks and marker positions (views/), per keyboard the board, its keycaps and prints
-  file(GLOB ASSET_FILES RELATIVE ${ASSET_DIR} CONFIGURE_DEPENDS ${ASSET_DIR}/devices/*.png ${ASSET_DIR}/views/*/*.png ${ASSET_DIR}/views/*/*.ini ${ASSET_DIR}/keyboards/*/*.png)
+  file(GLOB ASSET_FILES RELATIVE ${ASSET_DIR} CONFIGURE_DEPENDS ${ASSET_DIR}/devices/*.png ${ASSET_DIR}/views/*/*.png ${ASSET_DIR}/views/*/*.ini ${ASSET_DIR}/keyboards/*/*.png
+       ${ASSET_DIR}/devices/*.webp ${ASSET_DIR}/views/*/*.webp ${ASSET_DIR}/keyboards/*/*.webp)
   set(ASSET_XML ${CMAKE_CURRENT_BINARY_DIR}/rockcat-assets.gresource.xml)
   set(ASSET_C ${CMAKE_CURRENT_BINARY_DIR}/rockcat-assets.c)
   set(ASSET_ENTRIES "")
@@ -129,6 +131,7 @@ if(ROCKCAT_BUILD_GUI)
     src/gui/files.cpp
     src/gui/tray.cpp
     src/gui/util.cpp
+    src/gui/assets.cpp
     src/gui/mouse_view.cpp
     src/gui/device_view.cpp
     src/gui/keyboard_view.cpp
@@ -142,7 +145,9 @@ if(ROCKCAT_BUILD_GUI)
   if(ROCKCAT_ROCCAT_ASSETS)
     target_compile_definitions(rockcat-swarm PRIVATE ROCKCAT_ROCCAT_ASSETS)
   endif()
-  target_link_libraries(rockcat-swarm PRIVATE rockcat PkgConfig::GTK3)
+  # the ROCCAT pictures are webp (tools/assets/to-webp.py), decoded by us so nobody needs the gdk-pixbuf webp loader
+  pkg_check_modules(WEBP REQUIRED IMPORTED_TARGET libwebp)
+  target_link_libraries(rockcat-swarm PRIVATE rockcat PkgConfig::GTK3 PkgConfig::WEBP)
   # System tray via StatusNotifierItem (works on Wayland bars like waybar)
   pkg_check_modules(APPINDICATOR IMPORTED_TARGET ayatana-appindicator3-0.1)
   if(APPINDICATOR_FOUND)

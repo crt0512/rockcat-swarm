@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# draws a stand in for every picture in assets/roccat that assets/free doesnt have yet, same name and same size
+# draws a stand in for every picture in the ROCCAT originals (DEV/roccat-assets-original) that assets/free doesnt have yet, same name and same size
 # usage: tools/assets/placeholders.py        (add --force to redraw the ones that exist)
 # for now they are all empty: transparent, same size, nothing on them. nothing in there came from ROCCAT
 # needs python3-pil
 import os, sys
 from PIL import Image
 
-SRC, DST = 'assets/roccat', 'assets/free'
+SRC, DST = 'DEV/roccat-assets-original', 'assets/free'
 force = '--force' in sys.argv
 
 made = 0

@@ -3,6 +3,8 @@
   <gresource prefix="/org/rockcat/swarm">
     <file>rockcat.css</file>
     <file>rockcat-swarm.svg</file>
+    <file>rockcat-swarm-tray-white.svg</file>
+    <file>rockcat-swarm-tray-black.svg</file>
     <file>rc-bug.svg</file>
   </gresource>
 </gresources>

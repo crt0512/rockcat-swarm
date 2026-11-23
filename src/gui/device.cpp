@@ -87,8 +87,8 @@ bool load_profile(app_state *s)
 void show_device_icon(app_state *s, int pid)
 {
     char path[96];
-    std::snprintf(path, sizeof path, "/org/rockcat/swarm/assets/devices/%04x.png", pid);
-    GdkPixbuf *pix = pid < 0 ? nullptr : gdk_pixbuf_new_from_resource_at_scale(path, 56, 56, TRUE, nullptr);
+    std::snprintf(path, sizeof path, "/org/rockcat/swarm/assets/devices/%04x", pid);
+    GdkPixbuf *pix = pid < 0 ? nullptr : asset_pixbuf(path, 56, 56);
     gtk_image_set_from_pixbuf(GTK_IMAGE(s->device_icon), pix);
     gtk_widget_set_visible(s->device_icon, pix != nullptr);
     if (pix)
@@ -308,8 +308,8 @@ void refresh_device_list(app_state *s)
             add_class(tab, "rc-device-tab");
             GtkWidget *in = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
             char res[96];
-            std::snprintf(res, sizeof res, "/org/rockcat/swarm/assets/devices/%04x.png", infos[i].product_id);
-            if (GdkPixbuf *pix = gdk_pixbuf_new_from_resource_at_scale(res, 30, 30, TRUE, nullptr)) {
+            std::snprintf(res, sizeof res, "/org/rockcat/swarm/assets/devices/%04x", infos[i].product_id);
+            if (GdkPixbuf *pix = asset_pixbuf(res, 30, 30)) {
                 gtk_box_pack_start(GTK_BOX(in), gtk_image_new_from_pixbuf(pix), FALSE, FALSE, 0);
                 g_object_unref(pix);
             }
@@ -330,8 +330,8 @@ void refresh_device_list(app_state *s)
             add_class(tab, "rc-device-tab");
             GtkWidget *in = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
             char res[96];
-            std::snprintf(res, sizeof res, "/org/rockcat/swarm/assets/devices/%04x.png", u.first);
-            if (GdkPixbuf *pix = gdk_pixbuf_new_from_resource_at_scale(res, 30, 30, TRUE, nullptr)) {
+            std::snprintf(res, sizeof res, "/org/rockcat/swarm/assets/devices/%04x", u.first);
+            if (GdkPixbuf *pix = asset_pixbuf(res, 30, 30)) {
                 gtk_box_pack_start(GTK_BOX(in), gtk_image_new_from_pixbuf(pix), FALSE, FALSE, 0);
                 g_object_unref(pix);
             }

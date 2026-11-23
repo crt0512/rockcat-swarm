@@ -2,8 +2,9 @@
 # the mouse view of the Lua, which has no Swarm module to take one from: ROCCATs top render off the old product page,
 # its blue logo cut out as the mask of the one light, and the six buttons placed by hand
 # usage: tools/assets/lua-view.py TOP_PNG      (DEV/roccat-shill/Extras/Lua/top.png, the render via the Internet Archive)
-# writes assets/roccat/views/2c2e/{top.png, light0.png, view.ini} and the view.ini to assets/free/views/2c2e/. safe to run again
+# writes DEV/roccat-assets-original/views/2c2e/{top.png, light0.png, view.ini} and the view.ini to assets/free/views/2c2e/. safe to run again
 # needs python3-pil. the picture belongs to ROCCAT / Turtle Beach, see assets/roccat/ATTRIBUTION.md
+# the pngs land in DEV/roccat-assets-original (the originals, outside of git), tools/assets/to-webp.py makes the webp the build uses out of them
 import colorsys, os, sys
 from PIL import Image
 
@@ -32,7 +33,7 @@ for y in range(canvas.height * 2 // 3, canvas.height):
         if 0.47 < h < 0.64 and s > 0.35 and v > 0.3:
             mp[x, y] = (255, 255, 255, round(255 * min(1, v * 1.4) * a / 255))
 
-out = os.path.join(ROOT, 'assets', 'roccat', 'views', '2c2e')
+out = os.path.join(ROOT, 'DEV', 'roccat-assets-original', 'views', '2c2e')
 os.makedirs(out, exist_ok=True)
 canvas.save(os.path.join(out, 'top.png'))
 mask.save(os.path.join(out, 'light0.png'))

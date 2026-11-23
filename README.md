@@ -55,18 +55,18 @@ Next up: the Suora FX and Horde lights, Arvo, Kova[+], Pyra out of roccat-tools,
 
 ## Building
 
-You need CMake 3.16 or newer, a C++17 compiler, `hidapi` 0.14 or newer (the hidraw backend), GTK 3 and `glib-compile-resources`. `libayatana-appindicator3` is optional and gets you the tray icon.
+You need CMake 3.16 or newer, a C++17 compiler, `hidapi` 0.14 or newer (the hidraw backend), GTK 3, `libwebp` (the device pictures) and `glib-compile-resources`. `libayatana-appindicator3` is optional and gets you the tray icon.
 
 Arch:
 
 ```bash
-sudo pacman -S cmake hidapi gtk3 libayatana-appindicator
+sudo pacman -S cmake hidapi gtk3 libwebp libayatana-appindicator
 ```
 
 Debian and friends:
 
 ```bash
-sudo apt install build-essential cmake pkg-config libhidapi-dev libgtk-3-dev libayatana-appindicator3-dev
+sudo apt install build-essential cmake pkg-config libhidapi-dev libgtk-3-dev libwebp-dev libayatana-appindicator3-dev
 ```
 
 Gentoo or whatever you use: you know what to do.

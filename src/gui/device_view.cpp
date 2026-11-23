@@ -21,16 +21,6 @@ struct device_view {
 
 namespace {
 
-cairo_surface_t *load_surface(const std::string &resource)
-{
-    GdkPixbuf *pix = gdk_pixbuf_new_from_resource(resource.c_str(), nullptr);
-    if (!pix)
-        return nullptr;
-    cairo_surface_t *surface = gdk_cairo_surface_create_from_pixbuf(pix, 1, nullptr);
-    g_object_unref(pix);
-    return surface;
-}
-
 // fits the picture into the widget and leaves cairo in picture coordinates. returns the scale
 double fit(const device_view *v, GtkWidget *w, cairo_t *cr, double *left = nullptr, double *top = nullptr)
 {
@@ -92,7 +82,7 @@ device_view *view_load(int pid)
     auto *v = new device_view;
     if (ok) {
         char *name = g_key_file_get_string(kf, "view", "picture", nullptr);
-        v->picture = name ? load_surface(std::string(dir) + name) : nullptr;
+        v->picture = name ? asset_surface(std::string(dir) + name) : nullptr;
         g_free(name);
         v->width = g_key_file_get_integer(kf, "view", "width", nullptr);
         v->height = g_key_file_get_integer(kf, "view", "height", nullptr);
@@ -141,7 +131,7 @@ device_view *view_load(int pid)
             if (value && led >= 0 && led < 256) {
                 if (v->lights.size() <= static_cast<size_t>(led))
                     v->lights.resize(static_cast<size_t>(led) + 1, nullptr);
-                v->lights[static_cast<size_t>(led)] = load_surface(std::string(dir) + value);
+                v->lights[static_cast<size_t>(led)] = asset_surface(std::string(dir) + value);
                 v->painted.resize(v->lights.size(), 0);
                 v->painted[static_cast<size_t>(led)] = static_cast<char>(g_key_file_get_integer(kf, "painted", keys[i], nullptr) != 0);
             }

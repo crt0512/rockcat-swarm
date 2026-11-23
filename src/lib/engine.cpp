@@ -779,11 +779,15 @@ void run_keyboard(rockcat_engine *e)
         // keyboard draws itself, and gives them back when it is let go
         const bool showing_shift = shift_on && shift_down;
         if (showing_shift != shift_taken) {
+            // the quick switch where the family has one: begin and end sit out 150 ms before they even ask the device,
+            // and the keyboard is dark for all of it (it shows nothing until the first frame is there). measured on
+            // the MK FX: ready right after the switch, a frame sent straight behind it gets taken. sending the frame
+            // before the switch does not work btw, the keyboard says no to it
+            const family_ops *fam = dev->desc->family;
             int r = ROCKCAT_OK;
-            if (showing_shift && !rendering)
-                r = rockcat_direct_begin(dev);
-            else if (!showing_shift && !rendering)
-                r = rockcat_direct_end(dev);
+            if (!rendering)
+                r = fam->direct_switch_fast ? fam->direct_switch_fast(dev, showing_shift)
+                                            : showing_shift ? rockcat_direct_begin(dev) : rockcat_direct_end(dev);
             if (r != ROCKCAT_OK) {
                 drop(r);
                 continue;

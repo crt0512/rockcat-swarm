@@ -244,11 +244,24 @@ void on_app_settings(GtkButton *, gpointer data)
     gtk_box_set_spacing(GTK_BOX(area), 14);
 
     GtkWidget *abox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+    s->pref_tray_icon = gtk_check_button_new_with_label("Register Tray Icon");
+    gtk_widget_set_tooltip_text(s->pref_tray_icon, "Show rockcat-swarm in the system tray while it runs");
+    s->pref_tray_style_row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    gtk_widget_set_margin_start(s->pref_tray_style_row, 24);
+    s->pref_tray_style = gtk_combo_box_text_new();
+    for (const char *name : {"Colored", "White", "Black"})
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(s->pref_tray_style), name);
+    gtk_widget_set_tooltip_text(s->pref_tray_style, "White or black fit a panel that only has plain icons");
+    gtk_box_pack_start(GTK_BOX(s->pref_tray_style_row), label("Tray icon"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(s->pref_tray_style_row), s->pref_tray_style, FALSE, FALSE, 0);
     s->pref_tray = gtk_check_button_new_with_label("Keep running in the system tray");
+    gtk_widget_set_margin_start(s->pref_tray, 24);
     gtk_widget_set_tooltip_text(s->pref_tray, "Closing the window hides it to the tray, the lighting engine keeps running");
     s->pref_start_min = gtk_check_button_new_with_label("Start minimized to the tray");
-    gtk_widget_set_margin_start(s->pref_start_min, 24);
+    gtk_widget_set_margin_start(s->pref_start_min, 48);
     gtk_widget_set_tooltip_text(s->pref_start_min, "Start without opening the window (same as --minimized)");
+    gtk_box_pack_start(GTK_BOX(abox), s->pref_tray_icon, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(abox), s->pref_tray_style_row, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(abox), s->pref_tray, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(abox), s->pref_start_min, FALSE, FALSE, 0);
 #ifndef ROCKCAT_HAVE_TRAY
@@ -274,16 +287,22 @@ void on_app_settings(GtkButton *, gpointer data)
     gui_prefs prefs = load_prefs();
     bool busy = s->updating;
     s->updating = true;
+    g_signal_connect(s->pref_tray_icon, "toggled", G_CALLBACK(on_pref_tray_icon), s);
     g_signal_connect(s->pref_tray, "toggled", G_CALLBACK(on_pref_tray), s);
+    g_signal_connect(s->pref_tray_style, "changed", G_CALLBACK(on_pref_tray_style), s);
     g_signal_connect(s->pref_start_min, "toggled", G_CALLBACK(on_pref_start_min), s);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->pref_tray_icon), prefs.tray_icon);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->pref_tray), prefs.tray);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(s->pref_tray_style), prefs.tray_style);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(s->pref_start_min), prefs.start_minimized);
-    gtk_widget_set_sensitive(s->pref_start_min, prefs.tray);
+    gtk_widget_set_sensitive(s->pref_tray, prefs.tray_icon);
+    gtk_widget_set_sensitive(s->pref_tray_style_row, prefs.tray_icon);
+    gtk_widget_set_sensitive(s->pref_start_min, prefs.tray_icon && prefs.tray);
     s->updating = busy;
 
     gtk_widget_show_all(d);
     gtk_dialog_run(GTK_DIALOG(d));
-    s->pref_tray = s->pref_start_min = nullptr;
+    s->pref_tray_icon = s->pref_tray = s->pref_start_min = s->pref_tray_style = s->pref_tray_style_row = nullptr;
     gtk_widget_destroy(d);
 }
 

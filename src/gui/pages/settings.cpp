@@ -43,8 +43,8 @@ GtkWidget *device_panel(app_state *s)
     const rockcat_caps *caps = s->caps;
     GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 18);
     char res[96];
-    std::snprintf(res, sizeof res, "/org/rockcat/swarm/assets/devices/%04x.png", s->info.product_id);
-    if (GdkPixbuf *pix = gdk_pixbuf_new_from_resource_at_scale(res, 110, 110, TRUE, nullptr)) {
+    std::snprintf(res, sizeof res, "/org/rockcat/swarm/assets/devices/%04x", s->info.product_id);
+    if (GdkPixbuf *pix = asset_pixbuf(res, 110, 110)) {
         GtkWidget *img = gtk_image_new_from_pixbuf(pix);
         gtk_widget_set_valign(img, GTK_ALIGN_START);
         gtk_box_pack_start(GTK_BOX(row), img, FALSE, FALSE, 0);
@@ -223,8 +223,8 @@ GtkWidget *build_settings_page(app_state *s)
     } else if (s->unsupported_pid) {
         GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 18);
         char res[96];
-        std::snprintf(res, sizeof res, "/org/rockcat/swarm/assets/devices/%04x.png", s->unsupported_pid);
-        if (GdkPixbuf *pix = gdk_pixbuf_new_from_resource_at_scale(res, 110, 110, TRUE, nullptr)) {
+        std::snprintf(res, sizeof res, "/org/rockcat/swarm/assets/devices/%04x", s->unsupported_pid);
+        if (GdkPixbuf *pix = asset_pixbuf(res, 110, 110)) {
             GtkWidget *img = gtk_image_new_from_pixbuf(pix);
             gtk_widget_set_valign(img, GTK_ALIGN_START);
             gtk_box_pack_start(GTK_BOX(row), img, FALSE, FALSE, 0);

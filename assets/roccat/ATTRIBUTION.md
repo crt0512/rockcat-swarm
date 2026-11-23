@@ -44,3 +44,12 @@ Then add a line to the table above, and run `tools/assets/placeholders.py` so th
 | `devices/2c2e.png` (Lua) | the Lua has no Swarm module. cut by `tools/assets/icon-from.py` out of ROCCATs own top view render from the old product page (`media.roccat.org/img/products/Lua/images/Lua-top-2-5x-1.png`, via the Internet Archive) |
 | `views/2c2e/` (Lua) | the same render, cropped and scaled by `tools/assets/lua-view.py`, the logo mask cut out of it by its colour, button markers placed by hand |
 | `devices/` 2ced, 30d4, 2d50, 2c24, 2cf6, 316a, 3106, 2d5a, 2e4a, 2e4b, 3a56, 2d51, 2e22, 2e23, 2dbe, 2dbf, 2db4, 2dc2, 3138, 31ce, 3232, 319c, 3264 | ROCCATs own transparent top view renders from their old product pages (`media.roccat.org/img/products/...`, via the Internet Archive), cut by `tools/assets/icon-from.py`. the Ryos TKL (3106) has no render of its own and shows the TKL Pro. these replace the icons the pre-Swarm devices borrowed from a sibling before |
+
+
+## Why webp
+
+The table says `.png` because thats what came out of Swarm, and the originals are kept that way outside of git (in `DEV/roccat-assets-original/`, where all the tools above write to). What ends up in this folder and in the build is webp, made by `tools/assets/to-webp.py` (lossy quality 80 by default, the see-through part always lossless). The pngs made the binary about 50 MB, the webp about 9. After adding or changing pictures:
+
+```bash
+tools/assets/to-webp.py            # or -q 90, or --lossless
+```

@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 # pulls the artwork we use out of a Swarm device module: the device icon, and for keyboards the layout pictures + key matrix
-# usage: tools/assets/extract.py MODULE_DIR NAME [--out assets/roccat]
+# usage: tools/assets/extract.py MODULE_DIR NAME [--out DEV/roccat-assets-original]
 #   MODULE_DIR  a module folder as Swarm has them on disk (the one with device_meta_data/ and maybe graphics/ in it)
 #   NAME        what to call the device in our tree, its usb product id (2cee), keyboards too (2fda)
 # needs cabextract in PATH. safe to run again, it just overwrites what it wrote last time
 # the artwork belongs to ROCCAT / Turtle Beach, see assets/roccat/ATTRIBUTION.md before you add more of it
+# the pngs land in DEV/roccat-assets-original (the originals, outside of git), tools/assets/to-webp.py makes the webp the build uses out of them
 import glob, os, shutil, struct, subprocess, sys, tempfile
 
 if len(sys.argv) < 3:
     sys.exit(__doc__ or 'usage: extract.py MODULE_DIR NAME [--out DIR]')
 module, name = sys.argv[1], sys.argv[2]
-out = sys.argv[sys.argv.index('--out') + 1] if '--out' in sys.argv else 'assets/roccat'
+out = sys.argv[sys.argv.index('--out') + 1] if '--out' in sys.argv else 'DEV/roccat-assets-original'
 
 def biggest_png(ico_path):
     # an .ico is a little directory of pictures. the 256 px one is a complete png file sitting in there,

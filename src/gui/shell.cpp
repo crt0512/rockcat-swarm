@@ -339,7 +339,9 @@ GtkWidget *rockcat_window_new(GtkApplication *app, bool force_minimized)
     gtk_switch_set_active(GTK_SWITCH(s->auto_apply), prefs.auto_apply);
     gtk_widget_set_sensitive(s->apply_button, !prefs.auto_apply);
 #ifdef ROCKCAT_HAVE_TRAY
-    s->tray_enabled = prefs.tray || force_minimized;
+    s->tray_icon = prefs.tray_icon || force_minimized;
+    s->tray_style = prefs.tray_style;
+    s->tray_enabled = (prefs.tray_icon && prefs.tray) || force_minimized;
 #endif
     s->updating = false;
 
