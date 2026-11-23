@@ -1,8 +1,10 @@
 # rockcat-swarm
 
-ROCCAT Swarm, but open source and on linux, because Turtle Beach took Swarm behind the shed and you cant even download it anymore.
+ROCCAT Swarm, but open source and on linux, because Turtle Beach kinda killed Swarm and you cant even download it anymore without extracting links from their CDN.
 
 <p align="center"><img src="data/rockcat-swarm.svg" alt="rockcat-swarm icon" width="128"></p>
+
+![alt text](docs/images/screenshot.png)
 
 This is a fork of [rossat-swarm](https://github.com/TheElevatedOne/rossat-swarm) by TheElevatedOne, who reverse engineered Swarm 1.9482 to get his Kone AIMO Remastered working and then (fair enough) called it a day. The goal here is bigger: every device Swarm supported plus the older ones it never did, in a gui that doesnt make you want to throw the mouse.
 
@@ -249,6 +251,8 @@ Link it with `pkg-config --cflags --libs rockcat`, or from CMake with `find_pack
 - the AIMO animation is my own take on Swarms (same themes, led groups and activity reaction), not a byte exact copy of `aimo.dll`.
 - Swarms "sensitivity" slider was the windows pointer speed and not a mouse setting, so its not here. Your desktop has a slider for that.
 - writes always start from the bytes last read from the mouse so fields I dont understand go back unchanged. Thats on purpose, not meh, but good to know.
+- This repo and the resulting executable is very very fat (I love bundeling PNGs ...)
+    - Atleast now I understand why Roccat distributed everything as a module in Swarm
 
 ## Credits and legal stuff
 
