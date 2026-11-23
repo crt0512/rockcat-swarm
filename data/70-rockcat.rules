@@ -10,6 +10,38 @@ KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cef", MODE="0660
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cf0", MODE="0660", TAG+="uaccess"
 # ROCCAT Ryos MK FX
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2fda", MODE="0660", TAG+="uaccess"
+# ROCCAT Nyth Black
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e7c", MODE="0660", TAG+="uaccess"
+# ROCCAT Nyth White
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e7d", MODE="0660", TAG+="uaccess"
+# ROCCAT Tyon Black
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e4a", MODE="0660", TAG+="uaccess"
+# ROCCAT Tyon White
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e4b", MODE="0660", TAG+="uaccess"
+# ROCCAT Kiro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2c38", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone EMP
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e24", MODE="0660", TAG+="uaccess"
+# ROCCAT Kone Pure Owl-Eye
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dcd", MODE="0660", TAG+="uaccess"
+# ROCCAT Leadr
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e4c", MODE="0660", TAG+="uaccess"
+# ROCCAT Leadr
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e4e", MODE="0660", TAG+="uaccess"
+# ROCCAT Kova AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cf1", MODE="0660", TAG+="uaccess"
+# ROCCAT Kova AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cf2", MODE="0660", TAG+="uaccess"
+# ROCCAT Kova AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cf3", MODE="0660", TAG+="uaccess"
+# ROCCAT Savu
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2d5a", MODE="0660", TAG+="uaccess"
+# ROCCAT Isku
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="319c", MODE="0660", TAG+="uaccess"
+# ROCCAT Isku FX
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3264", MODE="0660", TAG+="uaccess"
+# ROCCAT Isku+
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="31e2", MODE="0660", TAG+="uaccess"
 # ROCCAT Kone AIMO
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e27", MODE="0660", TAG+="uaccess"
 # ROCCAT Kone[+]
@@ -26,52 +58,34 @@ KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2db4", MODE="0660
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dbf", MODE="0660", TAG+="uaccess"
 # ROCCAT Kone Pure Optical Black
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dc2", MODE="0660", TAG+="uaccess"
-# ROCCAT Vulcan 80
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="305c", MODE="0660", TAG+="uaccess"
-# ROCCAT Vulcan TKL AIMO
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2fee", MODE="0660", TAG+="uaccess"
-# ROCCAT Vulcan Pro
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="30f7", MODE="0660", TAG+="uaccess"
-# ROCCAT Vulcan TKL Pro
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="311a", MODE="0660", TAG+="uaccess"
-# ROCCAT Vulcan TKL Pro
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3167", MODE="0660", TAG+="uaccess"
-# ROCCAT Vulcan II
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2f4e", MODE="0660", TAG+="uaccess"
-# ROCCAT Vulcan II Max
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2ee2", MODE="0660", TAG+="uaccess"
-# ROCCAT Vulcan II Mini
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2f09", MODE="0660", TAG+="uaccess"
+# ROCCAT Lua
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2c2e", MODE="0660", TAG+="uaccess"
+# ROCCAT Ryos MK
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3138", MODE="0660", TAG+="uaccess"
+# ROCCAT Ryos MK Glow
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="31ce", MODE="0660", TAG+="uaccess"
+# ROCCAT Ryos MK Pro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3232", MODE="0660", TAG+="uaccess"
+# ROCCAT Ryos TKL
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3106", MODE="0660", TAG+="uaccess"
+# ROCCAT Ryos TKL Pro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="316a", MODE="0660", TAG+="uaccess"
+# ROCCAT Skeltr
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2fc6", MODE="0660", TAG+="uaccess"
+# ROCCAT Isku+ Force FX
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3214", MODE="0660", TAG+="uaccess"
+# ROCCAT Sova Membrane
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2f76", MODE="0660", TAG+="uaccess"
+# ROCCAT Sova MK
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2f94", MODE="0660", TAG+="uaccess"
+# ROCCAT Suora
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2fa8", MODE="0660", TAG+="uaccess"
+# ROCCAT Suora FX
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3246", MODE="0660", TAG+="uaccess"
 # ROCCAT Vulcan II Mini Air
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3aa9", MODE="0660", TAG+="uaccess"
 # ROCCAT Vulcan II Mini Air
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="6978", MODE="0660", TAG+="uaccess"
-# ROCCAT Horde
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="300c", MODE="0660", TAG+="uaccess"
-# ROCCAT Horde AIMO
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="303e", MODE="0660", TAG+="uaccess"
-# ROCCAT Isku+
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="31e2", MODE="0660", TAG+="uaccess"
-# ROCCAT Isku+ Force FX
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3214", MODE="0660", TAG+="uaccess"
-# ROCCAT Suora FX
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3246", MODE="0660", TAG+="uaccess"
-# ROCCAT Magma
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3124", MODE="0660", TAG+="uaccess"
-# ROCCAT Magma Mini
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="69a0", MODE="0660", TAG+="uaccess"
-# ROCCAT Pyro
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="314c", MODE="0660", TAG+="uaccess"
-# ROCCAT Kova AIMO
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cf1", MODE="0660", TAG+="uaccess"
-# ROCCAT Kova AIMO
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cf2", MODE="0660", TAG+="uaccess"
-# ROCCAT Kova AIMO
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2cf3", MODE="0660", TAG+="uaccess"
-# ROCCAT Kone EMP
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e24", MODE="0660", TAG+="uaccess"
-# ROCCAT Kone Pure Owl-Eye
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dcd", MODE="0660", TAG+="uaccess"
 # ROCCAT Kone Pure SE
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dca", MODE="0660", TAG+="uaccess"
 # ROCCAT Kone Pure SEL
@@ -80,10 +94,6 @@ KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dcb", MODE="0660
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dd2", MODE="0660", TAG+="uaccess"
 # ROCCAT Kone Pure Ultra iCafe
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2dd7", MODE="0660", TAG+="uaccess"
-# ROCCAT Leadr
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e4c", MODE="0660", TAG+="uaccess"
-# ROCCAT Leadr
-KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2e4e", MODE="0660", TAG+="uaccess"
 # ROCCAT Kone Pro
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2c88", MODE="0660", TAG+="uaccess"
 # ROCCAT Kone Pro Air
@@ -150,3 +160,29 @@ KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3a56", MODE="0660
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="307a", MODE="0660", TAG+="uaccess"
 # ROCCAT Vulcan 120 AIMO
 KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3098", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan 80
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="305c", MODE="0660", TAG+="uaccess"
+# ROCCAT Horde
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="300c", MODE="0660", TAG+="uaccess"
+# ROCCAT Horde AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="303e", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan TKL AIMO
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2fee", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan Pro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="30f7", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan TKL Pro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="311a", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan TKL Pro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3167", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan II
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2f4e", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan II Max
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2ee2", MODE="0660", TAG+="uaccess"
+# ROCCAT Vulcan II Mini
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="2f09", MODE="0660", TAG+="uaccess"
+# ROCCAT Pyro
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="314c", MODE="0660", TAG+="uaccess"
+# ROCCAT Magma
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="3124", MODE="0660", TAG+="uaccess"
+# ROCCAT Magma Mini
+KERNEL=="hidraw*", ATTRS{idVendor}=="1e7d", ATTRS{idProduct}=="69a0", MODE="0660", TAG+="uaccess"

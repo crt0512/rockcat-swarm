@@ -145,6 +145,10 @@ void say_picked(app_state *s)
 {
     if (!s->kb_hint)
         return;
+    if (s->caps && s->caps->led_count == 0) {
+        gtk_label_set_text(GTK_LABEL(s->kb_hint), "One light for the whole board. The picture shows what effect and brightness do to it");
+        return;
+    }
     int n = picked_count(s->kb);
     char text[160];
     if (n == 0)
@@ -208,27 +212,55 @@ gboolean on_draw_keyboard(GtkWidget *w, cairo_t *cr, gpointer data)
         return FALSE;
     fit(k, w, cr);
     const int set = k->region == 0 ? 1 : 0;
-    const int leds = s->caps->led_count;
+    // one light for the whole board (Sova membrane, MK Glow): every key on the picture is a "led" of its own here and they
+    // all show the same, so the board still looks like what it does
+    const bool whole = s->caps->led_count == 0;
+    int leds = s->caps->led_count;
+    if (whole)
+        for (int i = 0; i < k->key_count; ++i)
+            leds = std::max(leds, k->keys[i].led + 1);
 
     // what every key shows right now. the library knows how blinking, breathing and heartbeat go, anything else stands still
     std::vector<rockcat_color> frame(static_cast<size_t>(leds), rockcat_color{255, 0, 0, 0});
     std::vector<char> on(static_cast<size_t>(leds), 0);
     int effect = s->effect ? static_cast<int>(current_effect(s)) : static_cast<int>(ROCKCAT_EFFECT_FULLY_LIT);
     bool moving = effect == ROCKCAT_EFFECT_BLINKING || effect == ROCKCAT_EFFECT_BREATHING || effect == ROCKCAT_EFFECT_HEARTBEAT;
-    if (rockcat_profile *p = preview_profile(s)) {
+    if (whole) {
+        // our own drawing of the firmware effects, the rhythm is a guess. a board without any light setting (Ryos MK, TKL)
+        // has no light at all and stays dark
+        const double t = s->preview_t;
+        double f = has_setting(s, ROCKCAT_SET_BRIGHTNESS) || has_setting(s, ROCKCAT_SET_EFFECT) ? 1 : 0;
+        switch (effect) {
+        case ROCKCAT_EFFECT_OFF:       f = 0; break;
+        case ROCKCAT_EFFECT_BLINKING:  f *= std::fmod(t, 1.0) < 0.5; break;
+        case ROCKCAT_EFFECT_BREATHING: f *= 0.5 - 0.5 * std::cos(2 * M_PI * t / 3); break;
+        case ROCKCAT_EFFECT_HEARTBEAT: {
+            double p = std::fmod(t, 1.4);
+            f *= std::max(std::exp(-std::pow((p - 0.15) / 0.07, 2)), 0.7 * std::exp(-std::pow((p - 0.42) / 0.07, 2)));
+            break;
+        }
+        case ROCKCAT_EFFECT_IMPULSE:   f *= std::exp(-3 * std::fmod(t, 1.5)); break;
+        default:                       break;
+        }
+        const rockcat_color glow{static_cast<uint8_t>(255 * f), 0x20, 0x60, 0xff};
+        for (int i = 0; i < leds; ++i) {
+            frame[static_cast<size_t>(i)] = glow;
+            on[static_cast<size_t>(i)] = glow.a > 6;
+        }
+    } else if (rockcat_profile *p = preview_profile(s)) {
         rockcat_profile_set_int(p, ROCKCAT_SET_BRIGHTNESS, 255);
         rockcat_profile_render(p, effect == ROCKCAT_EFFECT_OFF ? effect : moving ? effect : static_cast<int>(ROCKCAT_EFFECT_FULLY_LIT),
                                s->preview_t, 0.0, frame.data(), leds);
         rockcat_profile_free(p);
     }
-    for (int i = 0; i < leds; ++i) {
+    for (int i = 0; i < leds && !whole; ++i) {
         int en = 0;
         rockcat_profile_get_led(s->profile, i, nullptr, &en);
         on[static_cast<size_t>(i)] = en && (frame[static_cast<size_t>(i)].r || frame[static_cast<size_t>(i)].g || frame[static_cast<size_t>(i)].b);
     }
     // an effect the engine draws: when the profile showing is the one thats active, the picture simply shows what the
     // engine is sending to the keyboard right now. for another profile (or before APPLY) it stays the plain colours
-    if (pc_only(s, effect)) {
+    if (!whole && pc_only(s, effect)) {
         rockcat_engine_status st{};
         rockcat_engine *engine = keyboard_engine(s);
         if (engine)
@@ -239,7 +271,7 @@ gboolean on_draw_keyboard(GtkWidget *w, cairo_t *cr, gpointer data)
                 on[static_cast<size_t>(i)] = frame[static_cast<size_t>(i)].r || frame[static_cast<size_t>(i)].g || frame[static_cast<size_t>(i)].b;
     }
     // the Easy-Shift layer: just its colours, standing still
-    if (s->kb_layer == 1) {
+    if (s->kb_layer == 1 && !whole) {
         for (int i = 0; i < leds && i < static_cast<int>(s->es_colors.size()); ++i) {
             const rockcat_color &c = s->es_colors[static_cast<size_t>(i)];
             frame[static_cast<size_t>(i)] = rockcat_color{255, c.r, c.g, c.b};
@@ -284,7 +316,7 @@ gboolean on_draw_keyboard(GtkWidget *w, cairo_t *cr, gpointer data)
     // light under the keys
     for (int i = 0; i < k->key_count; ++i) {
         const rockcat_key &key = k->keys[i];
-        if (!has_light(s, key) || !on[static_cast<size_t>(key.led)])
+        if (!(key.led >= 0 && key.led < leds) || !on[static_cast<size_t>(key.led)])
             continue;
         const rockcat_color &c = frame[static_cast<size_t>(key.led)];
         cairo_set_source_rgba(cr, c.r / 255.0, c.g / 255.0, c.b / 255.0, 0.55 * level * c.a / 255.0);
@@ -296,7 +328,7 @@ gboolean on_draw_keyboard(GtkWidget *w, cairo_t *cr, gpointer data)
     // then the name of the key gets written on it
     for (int i = 0; i < k->key_count; ++i) {
         const rockcat_key &key = k->keys[i];
-        bool lit = has_light(s, key) && on[static_cast<size_t>(key.led)];
+        bool lit = (key.led >= 0 && key.led < leds) && on[static_cast<size_t>(key.led)];
         double r = 0.33, g = 0.34, b = 0.36;
         if (lit) {
             const rockcat_color &c = frame[static_cast<size_t>(key.led)];
@@ -318,7 +350,7 @@ gboolean on_draw_keyboard(GtkWidget *w, cairo_t *cr, gpointer data)
     // the keys that are picked, and the one under the pointer
     for (int i = 0; i < k->key_count; ++i) {
         const rockcat_key &key = k->keys[i];
-        bool picked = has_light(s, key) && k->picked[static_cast<size_t>(key.led)];
+        bool picked = (key.led >= 0 && key.led < leds) && k->picked[static_cast<size_t>(key.led)];
         bool hover = s->kb_hover == key.led;
         if (!picked && !hover)
             continue;
@@ -349,8 +381,19 @@ static void on_board_allocate(GtkWidget *w, GdkRectangle *a, gpointer data)
     auto *s = static_cast<app_state *>(data);
     int want = static_cast<int>(a->width * keyboard_aspect(s) + 0.5), now = 0;
     gtk_widget_get_size_request(w, nullptr, &now);
-    if (std::abs(want - now) > 2)
-        gtk_widget_set_size_request(w, 480, want);
+    if (std::abs(want - now) <= 2)
+        return;
+    // the board getting taller can make the page grow a scrollbar, which makes the board narrower, so it gets shorter, the
+    // scrollbar goes away, wider again, and round it goes (any hover or relayout kicks it off, it looked like an earthquake).
+    // going straight back to the height it had a moment ago is that loop, so it stays where it is
+    const int before = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(w), "rc-board-before"));
+    const gint64 when = static_cast<gint64>(reinterpret_cast<intptr_t>(g_object_get_data(G_OBJECT(w), "rc-board-when")));
+    const gint64 t = g_get_monotonic_time() / 1000;
+    if (before && std::abs(want - before) <= 2 && t - when < 1000)
+        return;
+    g_object_set_data(G_OBJECT(w), "rc-board-before", GINT_TO_POINTER(now));
+    g_object_set_data(G_OBJECT(w), "rc-board-when", reinterpret_cast<gpointer>(static_cast<intptr_t>(t)));
+    gtk_widget_set_size_request(w, 480, want);
 }
 
 void keyboard_keep_shape(app_state *s, GtkWidget *w)
@@ -410,7 +453,8 @@ void update_keyboard_preview(app_state *s)
     if (!s->kb || !s->kb_view)
         return;
     int effect = s->effect ? static_cast<int>(current_effect(s)) : static_cast<int>(ROCKCAT_EFFECT_FULLY_LIT);
-    bool moving = effect == ROCKCAT_EFFECT_BLINKING || effect == ROCKCAT_EFFECT_BREATHING || effect == ROCKCAT_EFFECT_HEARTBEAT;
+    bool moving = effect == ROCKCAT_EFFECT_BLINKING || effect == ROCKCAT_EFFECT_BREATHING || effect == ROCKCAT_EFFECT_HEARTBEAT ||
+                  effect == ROCKCAT_EFFECT_IMPULSE;
     moving = moving || s->idle_preview_t0 >= 0 || pc_only(s, effect);
     if (moving && !s->preview_source)
         s->preview_source = g_timeout_add(40, preview_tick, s);
@@ -530,16 +574,11 @@ static std::vector<int> targets(app_state *s)
     return leds;
 }
 
-// a colour got chosen: it goes into the profile right away (onto the picked keys), APPLY sends it to the keyboard
-void on_keyboard_colour(GtkColorButton *button, gpointer data)
+// a colour goes into the profile right away (onto the picked keys), APPLY sends it to the keyboard
+static void paint_picked(app_state *s, rockcat_color c)
 {
-    auto *s = static_cast<app_state *>(data);
     if (!s->kb || !s->profile || s->updating)
         return;
-    GdkRGBA rgba;
-    gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(button), &rgba);
-    rockcat_color c = from_rgba(rgba);
-    c.a = 255;
     if (s->kb_layer == 1) {
         for (int led : targets(s))
             if (led < static_cast<int>(s->es_colors.size()))
@@ -552,6 +591,21 @@ void on_keyboard_colour(GtkColorButton *button, gpointer data)
         rockcat_profile_set_led(s->profile, led, c, 1);
     gtk_widget_queue_draw(s->kb_view);
     schedule_auto_apply(s);
+}
+
+void on_keyboard_colour(GtkColorButton *button, gpointer data)
+{
+    GdkRGBA rgba;
+    gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(button), &rgba);
+    rockcat_color c = from_rgba(rgba);
+    c.a = 255;
+    paint_picked(static_cast<app_state *>(data), c);
+}
+
+// the LIGHT ON button of a one colour board. its blue, the only thing it can do
+static void on_keyboard_light_on(GtkButton *, gpointer data)
+{
+    paint_picked(static_cast<app_state *>(data), rockcat_color{255, 0x20, 0x60, 0xff});
 }
 
 void on_keyboard_dark(GtkButton *, gpointer data)
@@ -730,23 +784,42 @@ GtkWidget *build_keyboard_view(app_state *s)
     g_signal_connect(s->kb_view, "button-release-event", G_CALLBACK(on_keyboard_release), s);
     g_signal_connect(s->kb_view, "motion-notify-event", G_CALLBACK(on_keyboard_motion), s);
     g_signal_connect(s->kb_view, "leave-notify-event", G_CALLBACK(on_keyboard_leave), s);
+    // second row: the hint on the left and the layout on the right, the way the key assignment page has its row
     GtkWidget *bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-    s->all_color = gtk_color_button_new();
-    add_class(s->all_color, "rc-swatch");
-    gtk_widget_set_tooltip_text(s->all_color, "Colour for the picked keys (all keys if none is picked)");
-    g_signal_connect(s->all_color, "color-set", G_CALLBACK(on_keyboard_colour), s);
-    gtk_box_pack_start(GTK_BOX(bar), label("COLOUR"), FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(bar), s->all_color, FALSE, FALSE, 0);
-    GtkWidget *dark = gtk_button_new_with_label("LIGHT OFF");
-    gtk_widget_set_tooltip_text(dark, "Switch the light of the picked keys off (all keys if none is picked)");
-    g_signal_connect(dark, "clicked", G_CALLBACK(on_keyboard_dark), s);
-    gtk_box_pack_start(GTK_BOX(bar), dark, FALSE, FALSE, 0);
-    GtkWidget *all = gtk_button_new_with_label("PICK ALL / NONE");
-    g_signal_connect(all, "clicked", G_CALLBACK(on_keyboard_pick_all), s);
-    gtk_box_pack_start(GTK_BOX(bar), all, FALSE, FALSE, 0);
+    // the paint buttons sit up in the first row, right aligned next to the layer switch (same place as nothing on the
+    // key page, so both pages keep the board at the same spot)
+    GtkWidget *paint = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    // a board with one light for everything has no keys to paint, it just gets the picture (and the layout to show it in)
+    if (s->caps->led_count > 0) {
+        if (one_colour(s)) {
+            // blue or nothing, so a picker would only lie. one button to light keys and the one next to it to put them out
+            GtkWidget *on = gtk_button_new_with_label("LIGHT ON");
+            gtk_widget_set_tooltip_text(on, "Switch the light of the picked keys on (all keys if none is picked). This board only does blue");
+            g_signal_connect(on, "clicked", G_CALLBACK(on_keyboard_light_on), s);
+            gtk_box_pack_start(GTK_BOX(paint), on, FALSE, FALSE, 0);
+        } else {
+            s->all_color = gtk_color_button_new();
+            add_class(s->all_color, "rc-swatch");
+            gtk_widget_set_tooltip_text(s->all_color, "Colour for the picked keys (all keys if none is picked)");
+            g_signal_connect(s->all_color, "color-set", G_CALLBACK(on_keyboard_colour), s);
+            gtk_box_pack_start(GTK_BOX(paint), label("COLOUR"), FALSE, FALSE, 0);
+            gtk_box_pack_start(GTK_BOX(paint), s->all_color, FALSE, FALSE, 0);
+        }
+        GtkWidget *dark = gtk_button_new_with_label("LIGHT OFF");
+        gtk_widget_set_tooltip_text(dark, "Switch the light of the picked keys off (all keys if none is picked)");
+        g_signal_connect(dark, "clicked", G_CALLBACK(on_keyboard_dark), s);
+        gtk_box_pack_start(GTK_BOX(paint), dark, FALSE, FALSE, 0);
+        GtkWidget *all = gtk_button_new_with_label("PICK ALL / NONE");
+        g_signal_connect(all, "clicked", G_CALLBACK(on_keyboard_pick_all), s);
+        gtk_box_pack_start(GTK_BOX(paint), all, FALSE, FALSE, 0);
+    }
     s->kb_hint = label("", "rc-hint");
-    gtk_label_set_line_wrap(GTK_LABEL(s->kb_hint), TRUE);
+    // always one line, cut short in a narrow window. a wrapping hint changed its height whenever the text did (picking keys
+    // with shift held flips it between the long and the short one), the page got and lost its scrollbar, the board got
+    // narrower and wider with it and the whole thing shook
+    gtk_label_set_ellipsize(GTK_LABEL(s->kb_hint), PANGO_ELLIPSIZE_END);
     gtk_label_set_max_width_chars(GTK_LABEL(s->kb_hint), 90);
+    gtk_box_pack_start(GTK_BOX(bar), s->kb_hint, TRUE, TRUE, 0);
     gtk_box_pack_end(GTK_BOX(bar), keyboard_region_box(s), FALSE, FALSE, 0);
     // which colours are being painted: the profile ones, or the ones that show while Easy-Shift is held
     GtkWidget *layers = nullptr;
@@ -776,18 +849,21 @@ GtkWidget *build_keyboard_view(app_state *s)
         gtk_widget_show(s->es_enable);
     }
     // the buttons first and the picture under them, so they stay in sight in a small window
+    GtkWidget *top = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     if (layers) {
-        GtkWidget *top = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
         gtk_box_pack_start(GTK_BOX(top), layers, FALSE, FALSE, 0);
         gtk_box_pack_start(GTK_BOX(top), s->es_row, FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(box), top, FALSE, FALSE, 0);
     }
+    gtk_box_pack_end(GTK_BOX(top), paint, FALSE, FALSE, 0);
+    center_children(paint);
+    gtk_box_pack_start(GTK_BOX(box), top, FALSE, FALSE, 0);
     // the second row has the same height as the one on the key assignment page, so the board sits at the same spot
     gtk_size_group_add_widget(s->kb_rows, bar);
+    // the row can end up taller than its buttons (it shares its height with the one on the key page), they stay their size
+    center_children(bar);
     gtk_box_pack_start(GTK_BOX(box), bar, FALSE, FALSE, 0);
     keyboard_keep_shape(s, s->kb_view);
     gtk_box_pack_start(GTK_BOX(box), s->kb_view, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(box), s->kb_hint, FALSE, FALSE, 0);
     say_picked(s);
     return box;
 }

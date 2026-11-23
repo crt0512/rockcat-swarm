@@ -292,9 +292,12 @@ void print_profile(rockcat_device *dev, const rockcat_profile *p)
     if (rockcat_profile_get_int(p, ROCKCAT_SET_IDLE_MINUTES, &v) == ROCKCAT_OK) {
         int style = 0, dim = 0;
         rockcat_profile_get_int(p, ROCKCAT_SET_IDLE_STYLE, &style);
-        rockcat_profile_get_int(p, ROCKCAT_SET_IDLE_BRIGHTNESS, &dim);
+        // (the Sova just goes to sleep, it has no idle brightness to dim to)
+        const bool dims = rockcat_profile_get_int(p, ROCKCAT_SET_IDLE_BRIGHTNESS, &dim) == ROCKCAT_OK;
         if (v == 0)
             std::printf("  When idle:       lights stay as they are\n");
+        else if (!dims)
+            std::printf("  When idle:       lights go to sleep after %d min\n", v);
         else
             std::printf("  When idle:       after %d min %s\n", v,
                         style == ROCKCAT_IDLE_STARLIT_SKY ? "starlit sky" : style == ROCKCAT_IDLE_FALL_ASLEEP ? "fall asleep"
@@ -302,6 +305,9 @@ void print_profile(rockcat_device *dev, const rockcat_profile *p)
     }
     if (rockcat_profile_get_int(p, ROCKCAT_SET_MACRO_FEEDBACK, &v) == ROCKCAT_OK)
         std::printf("  Macro feedback:  %s\n", v ? "on" : "off");
+    // a board without a single led has nothing to say here
+    if (caps->led_count == 0)
+        return;
     if (is_keyboard(caps)) {
         // 120 lines of the same red help nobody: one line per colour with the keys that have it
         std::vector<std::pair<std::string, std::vector<int>>> groups;
@@ -407,6 +413,26 @@ void print_keys(const rockcat_caps *caps, const rockcat_profile *p)
     }
 }
 
+// true for a mouse that brings its own list of what a button can be (the Lua) instead of the shared Swarm one
+bool own_types(const rockcat_caps *caps)
+{
+    for (int t = 0; t < 256; ++t) {
+        const char *shared = rockcat_button_type_name(static_cast<uint8_t>(t));
+        if (std::strcmp(rockcat_assignment_name(caps, static_cast<uint8_t>(t)), shared ? shared : "?") != 0)
+            return true;
+    }
+    return false;
+}
+
+// the type byte of an own list by its name, -1 if there is no such name
+int own_type_from(const rockcat_caps *caps, const std::string &name)
+{
+    for (int t = 0; t < 256; ++t)
+        if (name == rockcat_assignment_name(caps, static_cast<uint8_t>(t)) && name != "?")
+            return t;
+    return -1;
+}
+
 void print_buttons(rockcat_device *dev, const rockcat_profile *p)
 {
     const rockcat_caps *caps = rockcat_get_caps(dev);
@@ -420,7 +446,9 @@ void print_buttons(rockcat_device *dev, const rockcat_profile *p)
             slot sl{layer, input, ""};
             rockcat_assignment bt{};
             rockcat_profile_get_input(p, layer, input, &bt);
-            const char *tn = rockcat_button_type_name(bt.type);
+            const char *tn = own_types(caps) ? rockcat_assignment_name(caps, bt.type) : rockcat_button_type_name(bt.type);
+            if (tn && std::strcmp(tn, "?") == 0)
+                tn = nullptr;
             std::printf("  %-9s %-34s %s", slot_key(sl).c_str(), slot_name(dev, sl).c_str(), tn ? tn : "unknown");
             if (bt.type == ROCKCAT_BT_SHORTCUT) {
                 char sc[64];
@@ -729,8 +757,10 @@ int cmd_info(const options &o)
     rockcat_device *dev = open_device(o);
     rockcat_device_info info;
     rockcat_get_info(dev, &info);
-    char fw[16];
-    rockcat_get_firmware_version(dev, fw, sizeof fw);
+    char fw[16] = "";
+    // some (the Lua) never say which firmware they run
+    if (rockcat_get_firmware_version(dev, fw, sizeof fw) != ROCKCAT_OK)
+        std::snprintf(fw, sizeof fw, "unknown");
     uint8_t p = 0, count = 0;
     int r = rockcat_get_active_profile(dev, &p, &count);
     // a device we only know by name says so instead of dying halfway through
@@ -881,7 +911,8 @@ void apply_setting(rockcat_device *dev, rockcat_profile *p, const std::string &k
             {"colorwave", ROCKCAT_EFFECT_COLORWAVE}, {"fade", ROCKCAT_EFFECT_FADE},
             {"equalizer", ROCKCAT_EFFECT_EQUALIZER}, {"ripple", ROCKCAT_EFFECT_RIPPLE}, {"wave", ROCKCAT_EFFECT_WAVE},
             {"heatmap", ROCKCAT_EFFECT_HEATMAP}, {"game-preset", ROCKCAT_EFFECT_GAME_PRESET},
-            {"fire", ROCKCAT_EFFECT_FIRE}, {"drip", ROCKCAT_EFFECT_DRIP}, {"smooth-flow", ROCKCAT_EFFECT_COLOR_FLOW}};
+            {"fire", ROCKCAT_EFFECT_FIRE}, {"drip", ROCKCAT_EFFECT_DRIP}, {"smooth-flow", ROCKCAT_EFFECT_COLOR_FLOW},
+            {"impulse", ROCKCAT_EFFECT_IMPULSE}};
         bool found = false;
         for (const auto &n : names)
             if (val == n.n) {
@@ -1040,7 +1071,8 @@ int cmd_bind(const options &o)
         rockcat_close(dev);
         return 0;
     }
-    int type = rockcat_button_type_from_string(o.args[1].c_str());
+    const rockcat_caps *mouse_caps = rockcat_get_caps(dev);
+    int type = own_types(mouse_caps) ? own_type_from(mouse_caps, o.args[1]) : rockcat_button_type_from_string(o.args[1].c_str());
     if (type < 0)
         fail("unknown button type '%s' (see 'types')", o.args[1].c_str());
     check_slot(dev, sl);
@@ -1089,6 +1121,15 @@ int cmd_types(const options &o)
             }
             std::printf("\na key can also be set to another key (bind esc a) or, on its Easy-Shift side, to a combination\n"
                         "(bind shift+a ctrl+c). key names are the ones 'buttons' prints.\n");
+            rockcat_close(dev);
+            return 0;
+        }
+        if (own_types(caps)) {
+            for (int c = 0; c < 256; ++c) {
+                const char *name = rockcat_assignment_name(caps, static_cast<uint8_t>(c));
+                if (std::strcmp(name, "?") != 0)
+                    std::printf("  0x%02x  %s\n", c, name);
+            }
             rockcat_close(dev);
             return 0;
         }

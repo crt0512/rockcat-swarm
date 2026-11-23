@@ -1,16 +1,22 @@
 // Ryos MK FX. the same conversation as the mice (select on 04, wait for 04 to say ready) with a lot more reports behind it:
 // six for what the keys do, one for the light settings, one for the colour of every key. docs/protocol/ryos.md has the layouts
-// structs and names come from roccat-tools (ryosmk/libroccatryosmk and ryosmkfx/libroccatryosmkfx), checked against a real
-// Ryos MK FX with firmware 1.31. written as "ryos" and not "ryos mk fx" because MK, Glow, Pro and TKL sit on the same reports,
-// what differs for them is the lighting
+// structs and names come from roccat-tools (ryosmk/libroccatryosmk, ryosmkfx/libroccatryosmkfx, ryostkl/libroccatryostkl),
+// the MK FX checked against a real one with firmware 1.31. written as "ryos" and not "ryos mk fx" because MK, Glow, Pro and TKL
+// sit on the same key reports, what differs between them is the lighting (and the TKL has no M keys, the tiny thing)
 
 #include "../internal.h"
+#include "../keyboards.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <map>
+#include <mutex>
 #include <string>
+#include <thread>
+#include <vector>
 
 namespace {
 
@@ -21,48 +27,102 @@ constexpr uint8_t REPORT_PROFILE = 0x05, REPORT_MACRO = 0x0e, REPORT_INFO = 0x0f
 // report and of its led in a lighting frame. 0 to 119 are the matrix (a few slots have no key), 121 to 123 the thumb keys
 constexpr int INPUTS = 124, LEDS = 120, PROFILES = 5;
 
-// the reports that make up a profile, in the order they get read. request = what goes into the select in front of a read
+// the reports that make up a profile, in the order they get read. request = what goes into the select in front of a read.
+// size 0 = this model doesnt have that one
 struct part {
     uint8_t id, request;
     uint16_t size;
     uint8_t profile_at;
 };
-enum { P_PRIMARY, P_FUNCTION, P_MACROKEYS, P_THUMB, P_EXTRA, P_EASYZONE, P_KEYMASK, P_LIGHT, P_STORED, PARTS };
-constexpr part PART[PARTS] = {
-    {0x06, 0xa0, 125, 2}, // one byte per key: what it is when nothing is held
-    {0x07, 0xa1, 95, 2},  // F1 to F12, Print, Scroll, Pause: 15 keys, 3 bytes each. first what they are, then what they are with
-                          // Fn held (out of the box the one printed on the key: mute, volume, calculator...)
-    {0x08, 0xa2, 35, 2},  // M1 to M5, same idea
-    {0x09, 0xa3, 23, 2},  // T1 to T3
-    {0x0a, 0xa4, 8, 2},   // Caps Lock and Fn
-    {0x0b, 0xa5, 294, 3}, // 96 keys with Easy-Shift held, 3 bytes each. the only one with a two byte size
-    {0x0c, 0xb0, 6, 2},   // which keys the game mode switches off, passed through untouched
-    {0x0d, 0xb1, 32, 2},  // light settings
-    {0x17, 0xb3, 239, 2}, // colour of every key
+// the first eight are the same on every Ryos, the lighting ones come after P_LIGHT and differ per model (see MODELS)
+enum { P_PRIMARY, P_FUNCTION, P_MACROKEYS, P_THUMB, P_EXTRA, P_EASYZONE, P_KEYMASK, P_LIGHT, P_STORED, MAX_PARTS = P_STORED + 14 };
+
+// what sits behind P_STORED:
+//   RGB    MK FX: one report, the colour of every key (palette, see layer_decode)
+//   NONE   MK and TKL: no leds at all, the light report is still there and gets passed through
+//   GLOW   MK Glow: one colour for all keys, only brightness and idle in the light report
+//   SETS   MK Pro: two 1382 byte reports, "manual" (select d0) and "automatic" (select c0), 11 layers each (normal, every
+//          modifier, Easy-Shift, Fn), a byte per key: bit 0 lit, bit 1 blinks. the light report says which set shows
+//   LAYERS TKL Pro: the same 3 + 11 layers but every layer is a report of its own (select c0|layer, d0|layer), 16 bit per key
+enum light_kind : uint8_t { LIGHT_RGB, LIGHT_NONE, LIGHT_GLOW, LIGHT_SETS, LIGHT_LAYERS };
+
+struct model {
+    uint16_t pid;
+    light_kind light;
+    int count;
+    part parts[MAX_PARTS];
 };
 
-constexpr size_t offset_of(int p)
+#define RYOS_KEY_PARTS(macro_keys)                                                                                                 \
+    {0x06, 0xa0, 125, 2}, /* one byte per key: what it is when nothing is held */                                               \
+    {0x07, 0xa1, 95, 2},  /* F1 to F12, Print, Scroll, Pause: 15 keys, 3 bytes each. first what they are, then with Fn held */ \
+    {0x08, 0xa2, macro_keys, 2}, /* M1 to M5, same idea */                                                                     \
+    {0x09, 0xa3, 23, 2},  /* T1 to T3 */                                                                                        \
+    {0x0a, 0xa4, 8, 2},   /* Caps Lock and Fn */                                                                                \
+    {0x0b, 0xa5, 294, 3}, /* 96 keys with Easy-Shift held, 3 bytes each. the only one with a two byte size */                  \
+    {0x0c, 0xb0, 6, 2}    /* which keys the game mode switches off, passed through untouched */
+
+// TKL Pro layer reports: automatic has only normal, Easy-Shift and Fn, manual all eleven
+#define RYOS_TKL_LAYERS                                                                                                             \
+    {0x17, 0xc0, 253, 2}, {0x17, 0xc9, 253, 2}, {0x17, 0xca, 253, 2}, {0x17, 0xd0, 253, 2}, {0x17, 0xd1, 253, 2},                \
+        {0x17, 0xd2, 253, 2}, {0x17, 0xd3, 253, 2}, {0x17, 0xd4, 253, 2}, {0x17, 0xd5, 253, 2}, {0x17, 0xd6, 253, 2},            \
+        {0x17, 0xd7, 253, 2}, {0x17, 0xd8, 253, 2}, {0x17, 0xd9, 253, 2}, {0x17, 0xda, 253, 2}
+
+constexpr uint16_t PID_MK_FX = 0x2fda, PID_MK = 0x3138, PID_MK_GLOW = 0x31ce, PID_MK_PRO = 0x3232, PID_TKL = 0x3106, PID_TKL_PRO = 0x316a;
+
+const model MODELS[] = {
+    {PID_MK_FX, LIGHT_RGB, P_STORED + 1, {RYOS_KEY_PARTS(35), {0x0d, 0xb1, 32, 2}, {0x17, 0xb3, 239, 2}}},
+    {PID_MK, LIGHT_NONE, P_LIGHT + 1, {RYOS_KEY_PARTS(35), {0x0d, 0xb1, 16, 2}}},
+    {PID_MK_GLOW, LIGHT_GLOW, P_LIGHT + 1, {RYOS_KEY_PARTS(35), {0x0d, 0xb1, 16, 2}}},
+    {PID_MK_PRO, LIGHT_SETS, P_STORED + 2, {RYOS_KEY_PARTS(35), {0x0d, 0xb1, 16, 2}, {0x17, 0xd0, 1382, 3}, {0x17, 0xc0, 1382, 3}}},
+    // roccat-tools never asks a TKL for report 08, there are no M keys to ask about
+    {PID_TKL, LIGHT_NONE, P_LIGHT + 1, {RYOS_KEY_PARTS(0), {0x0d, 0xb1, 16, 2}}},
+    {PID_TKL_PRO, LIGHT_LAYERS, P_STORED + 14, {RYOS_KEY_PARTS(0), {0x0d, 0xb1, 16, 2}, RYOS_TKL_LAYERS}},
+};
+
+const model &model_of(uint16_t pid)
+{
+    for (const model &m : MODELS)
+        if (m.pid == pid)
+            return m;
+    return MODELS[0];
+}
+
+size_t offset_of(const model &m, int p)
 {
     size_t at = 0;
     for (int i = 0; i < p; ++i)
-        at += PART[i].size;
+        at += m.parts[i].size;
     return at;
 }
-constexpr size_t TOTAL = offset_of(PARTS);
 
-// light settings report
+// light settings report. the 16 byte one of the older boards has brightness, idle and feedback at the same places,
+// effect, speed and colour only exist on the MK FX
 enum : size_t {
     L_BRIGHTNESS = 3, // 0 to 5
     L_IDLE_BRIGHTNESS = 4,
     L_IDLE_MINUTES = 5,
-    L_MODE = 6, // 0 = every key the colour below, 1 = the colours of report 17
+    L_MODE = 6, // MK FX: 0 = every key the colour below, 1 = the colours of report 17
     L_EFFECT = 7,
     L_SPEED = 9, // 1 to 3
+    L_ILLUMINATION = 10, // older boards: which stored set shows, 0 automatic, 1 manual
     L_FEEDBACK = 11,
     L_IDLE_STYLE = 12,
     L_RED = 14, // 16 bit each, see COLOUR_TO_HARDWARE
 };
 constexpr int BRIGHTNESS_STEPS = 5;
+
+// MK Pro sets: [17 size16 profile mode] then 11 x (effect, fade seconds, 123 key bytes). TKL Pro layers: [17 fd profile mode
+// layer effect delay fade] then 120 x 16 bit big endian (bit 15 lit, the rest blink / breathe per key) and 3 thumb bytes (bit 7)
+constexpr size_t SET_LAYER = 5, SET_KEYS = 7, TKL_EFFECT = 5, TKL_KEYS = 8;
+// the older boards light every key in the one colour their leds have. blue on all of them as far as anyone remembers
+constexpr rockcat_color MONO_ON = ONE_COLOUR_ON;
+// a colour from the pc counts as lit from half brightness on. thats what turns the soft edges of a wave or a fire into
+// keys that are on or off, a lower cut made nearly everything light up because hardly anything an effect draws is that dark
+bool mono_lit(rockcat_color c)
+{
+    return std::max({c.r, c.g, c.b}) * c.a >= 128 * 255;
+}
 
 // the colours of all keys as report 17 (stored) and report 18 (from the pc) carry them. no rgb per key in there: per channel
 // there is a palette of 7 values and every key says which of the 7 it takes. so a frame with more than 7 different reds
@@ -263,44 +323,86 @@ bool has_key(int led)
 }
 
 struct ryos_profile final : rockcat_profile {
-    uint8_t raw[TOTAL] = {};
-    bool dirty[PARTS] = {};
+    const model &m;
+    std::vector<uint8_t> raw;
+    bool dirty[MAX_PARTS] = {};
     // the colours as the api hands them out. filled from the reports after a read, written back into them before a write
     lit_key keys[LEDS] = {};
     bool keys_changed = false;
     std::vector<rockcat_macro> macros; // parked until the next write
 
-    using rockcat_profile::rockcat_profile;
+    ryos_profile(const device_desc *d, int i) : rockcat_profile(d, i), m(model_of(d->pid)), raw(offset_of(m, m.count)) {}
 
-    uint8_t *at(int p) { return raw + offset_of(p); }
-    const uint8_t *at(int p) const { return raw + offset_of(p); }
+    uint8_t *at(int p) { return raw.data() + offset_of(m, p); }
+    const uint8_t *at(int p) const { return raw.data() + offset_of(m, p); }
+    const part &pt(int p) const { return m.parts[p]; }
+    bool have(int p) const { return p < m.count && m.parts[p].size != 0; }
     const rockcat_caps &caps() const { return desc->caps; }
     rockcat_profile *clone() const override { return new ryos_profile(*this); }
 
     int fetch(rockcat_device *dev, int p)
     {
-        int r = select_data(dev, static_cast<uint8_t>(index), PART[p].request);
+        int r = select_data(dev, static_cast<uint8_t>(index), pt(p).request);
         if (r != ROCKCAT_OK)
             return r;
         uint8_t *b = at(p);
-        std::memset(b, 0, PART[p].size);
-        b[0] = PART[p].id;
-        r = get_raw(dev, b, PART[p].size);
+        std::memset(b, 0, pt(p).size);
+        b[0] = pt(p).id;
+        r = get_raw(dev, b, pt(p).size);
         if (r != ROCKCAT_OK)
             return r;
-        if (!shaped(b, p) || b[PART[p].profile_at] != index)
+        if (!shaped(b, pt(p)) || b[pt(p).profile_at] != index)
             return ROCKCAT_ERR_PROTOCOL;
-        return checksum_ok(b, PART[p].size) ? ROCKCAT_OK : ROCKCAT_ERR_CHECKSUM;
+        return checksum_ok(b, pt(p).size) ? ROCKCAT_OK : ROCKCAT_ERR_CHECKSUM;
     }
 
     // report id and size where they belong
-    static bool shaped(const uint8_t *b, int p)
+    static bool shaped(const uint8_t *b, const part &p)
     {
-        return b[0] == PART[p].id && b[1] == (PART[p].size & 0xff) && (PART[p].profile_at == 2 || b[2] == PART[p].size >> 8);
+        return b[0] == p.id && b[1] == (p.size & 0xff) && (p.profile_at == 2 || b[2] == p.size >> 8);
+    }
+
+    // the stored light reports of the older boards say which set and layer they are, roccat-tools fills that in on every write.
+    // we do the same out of the select byte, so a set never lands in the wrong place because somebody imported a weird file
+    void finalize(int p)
+    {
+        if (p < P_STORED)
+            return;
+        uint8_t *b = at(p);
+        const uint8_t mode = (pt(p).request & 0xf0) == 0xd0 ? 1 : 0;
+        if (m.light == LIGHT_SETS) {
+            b[4] = mode;
+        } else if (m.light == LIGHT_LAYERS) {
+            b[3] = mode;
+            b[4] = pt(p).request & 0x0f;
+        }
+    }
+
+    // the layer the keyboard shows when nothing is held, in whichever set the light report picks
+    int shown() const
+    {
+        const bool manual = at(P_LIGHT)[L_ILLUMINATION] != 0;
+        if (m.light == LIGHT_SETS)
+            return manual ? P_STORED : P_STORED + 1;
+        return manual ? P_STORED + 3 : P_STORED;
     }
 
     void lights_from_reports()
     {
+        if (m.light == LIGHT_SETS || m.light == LIGHT_LAYERS) {
+            const uint8_t *s = at(shown());
+            for (int k = 0; k < LEDS; ++k) {
+                bool on = m.light == LIGHT_SETS ? (s[SET_KEYS + k] & 1) : (s[TKL_KEYS + 2 * k] & 0x80);
+                keys[k] = on ? lit_key{MONO_ON.r, MONO_ON.g, MONO_ON.b, true} : lit_key{0, 0, 0, false};
+            }
+            keys_changed = false;
+            return;
+        }
+        if (m.light != LIGHT_RGB) {
+            std::fill(keys, keys + LEDS, lit_key{0, 0, 0, false});
+            keys_changed = false;
+            return;
+        }
         const uint8_t *l = at(P_LIGHT);
         if (l[L_MODE]) {
             layer_decode(at(P_STORED) + 3, keys);
@@ -313,6 +415,23 @@ struct ryos_profile final : rockcat_profile {
 
     void lights_to_reports()
     {
+        if (m.light == LIGHT_SETS || m.light == LIGHT_LAYERS) {
+            // only the lit bit moves, blink and breathe per key stay what they were
+            const int p = shown();
+            uint8_t *s = at(p);
+            for (int k = 0; k < LEDS; ++k) {
+                uint8_t &b = m.light == LIGHT_SETS ? s[SET_KEYS + k] : s[TKL_KEYS + 2 * k];
+                const uint8_t bit = m.light == LIGHT_SETS ? 0x01 : 0x80;
+                b = static_cast<uint8_t>(keys[k].on ? b | bit : b & ~bit);
+            }
+            dirty[p] = true;
+            keys_changed = false;
+            return;
+        }
+        if (m.light != LIGHT_RGB) {
+            keys_changed = false;
+            return;
+        }
         // every key the same colour is what the keyboard calls plain mode, one colour in the settings and thats it.
         // the per key report gets the same picture either way, so whoever looks there sees no stale colours
         // (only the slots with a key count, the others are dark whatever was asked for. slot 0 is M1)
@@ -333,9 +452,11 @@ struct ryos_profile final : rockcat_profile {
 
     int read(rockcat_device *dev) override
     {
-        std::fill(dirty, dirty + PARTS, false);
+        std::fill(dirty, dirty + MAX_PARTS, false);
         macros.clear();
-        for (int p = 0; p < PARTS; ++p) {
+        for (int p = 0; p < m.count; ++p) {
+            if (!have(p))
+                continue;
             int r = fetch(dev, p);
             if (r != ROCKCAT_OK)
                 return r;
@@ -346,11 +467,14 @@ struct ryos_profile final : rockcat_profile {
 
     int read_light(rockcat_device *dev) override
     {
-        for (int p : {P_LIGHT, P_STORED}) {
-            int r = fetch(dev, p);
-            if (r != ROCKCAT_OK)
-                return r;
-        }
+        int r = fetch(dev, P_LIGHT);
+        if (r != ROCKCAT_OK)
+            return r;
+        // the older boards first have to say which set shows before we know what to fetch
+        if (m.light == LIGHT_RGB || m.light == LIGHT_SETS || m.light == LIGHT_LAYERS)
+            r = fetch(dev, m.light == LIGHT_RGB ? P_STORED : shown());
+        if (r != ROCKCAT_OK)
+            return r;
         lights_from_reports();
         return ROCKCAT_OK;
     }
@@ -366,11 +490,12 @@ struct ryos_profile final : rockcat_profile {
                 return r;
             macros.erase(macros.begin());
         }
-        for (int p = 0; p < PARTS; ++p) {
-            if (!dirty[p])
+        for (int p = 0; p < m.count; ++p) {
+            if (!dirty[p] || !have(p))
                 continue;
-            put_checksum(at(p), PART[p].size);
-            int r = set_raw(dev, at(p), PART[p].size, true);
+            finalize(p);
+            put_checksum(at(p), pt(p).size);
+            int r = set_raw(dev, at(p), pt(p).size, true);
             if (r != ROCKCAT_OK)
                 return r;
             dirty[p] = false;
@@ -383,12 +508,14 @@ struct ryos_profile final : rockcat_profile {
         if (i < 0 || i >= caps().profile_count)
             return ROCKCAT_ERR_ARGUMENT;
         index = i;
-        for (int p = 0; p < PARTS; ++p) {
-            at(p)[PART[p].profile_at] = static_cast<uint8_t>(i);
+        for (int p = 0; p < m.count; ++p) {
+            if (!have(p))
+                continue;
+            at(p)[pt(p).profile_at] = static_cast<uint8_t>(i);
             dirty[p] = true;
         }
-        for (rockcat_macro &m : macros)
-            m.profile = static_cast<uint8_t>(i);
+        for (rockcat_macro &mac : macros)
+            mac.profile = static_cast<uint8_t>(i);
         return ROCKCAT_OK;
     }
 
@@ -397,27 +524,57 @@ struct ryos_profile final : rockcat_profile {
         ryos_profile copy(*this);
         if (copy.keys_changed)
             copy.lights_to_reports();
-        for (int p = 0; p < PARTS; ++p)
-            put_checksum(copy.at(p), PART[p].size);
-        out.insert(out.end(), copy.raw, copy.raw + TOTAL);
+        for (int p = 0; p < m.count; ++p) {
+            if (!have(p))
+                continue;
+            copy.finalize(p);
+            put_checksum(copy.at(p), pt(p).size);
+        }
+        out.insert(out.end(), copy.raw.begin(), copy.raw.end());
     }
 
     int import_payload(const uint8_t *buf, size_t len) override
     {
-        if (len != TOTAL)
+        if (len != raw.size())
             return ROCKCAT_ERR_ARGUMENT;
-        for (int p = 0; p < PARTS; ++p)
-            if (!shaped(buf + offset_of(p), p))
+        for (int p = 0; p < m.count; ++p)
+            if (have(p) && !shaped(buf + offset_of(m, p), pt(p)))
                 return ROCKCAT_ERR_ARGUMENT;
-        std::memcpy(raw, buf, TOTAL);
+        std::memcpy(raw.data(), buf, raw.size());
         lights_from_reports();
         return set_index(index);
     }
+
+    // which settings the light report of this model has a byte for
+    bool light_setting(rockcat_setting which) const
+    {
+        switch (which) {
+        case ROCKCAT_SET_BRIGHTNESS:
+        case ROCKCAT_SET_IDLE_BRIGHTNESS:
+        case ROCKCAT_SET_IDLE_MINUTES:
+        case ROCKCAT_SET_IDLE_STYLE:
+        case ROCKCAT_SET_MACRO_FEEDBACK: return m.light != LIGHT_NONE;
+        case ROCKCAT_SET_EFFECT:         return m.light == LIGHT_RGB || m.light == LIGHT_SETS || m.light == LIGHT_LAYERS;
+        case ROCKCAT_SET_EFFECT_SPEED:   return m.light == LIGHT_RGB;
+        default:                         return false;
+        }
+    }
+
+    // the effect byte of the shown layer on the older boards: 0 nothing moves, 1 a pressed key fades out, 2 ripple
+    uint8_t *layer_effect() { return at(shown()) + (m.light == LIGHT_SETS ? SET_LAYER : TKL_EFFECT); }
+    const uint8_t *layer_effect() const { return at(shown()) + (m.light == LIGHT_SETS ? SET_LAYER : TKL_EFFECT); }
 
     int get_int(rockcat_setting which, int *value) const override
     {
         if (!value)
             return ROCKCAT_ERR_ARGUMENT;
+        if (!light_setting(which))
+            return ROCKCAT_ERR_UNSUPPORTED;
+        if (which == ROCKCAT_SET_EFFECT && m.light != LIGHT_RGB) {
+            uint8_t e = *layer_effect();
+            *value = e == 1 ? ROCKCAT_EFFECT_FADE : e == 2 ? ROCKCAT_EFFECT_RIPPLE : ROCKCAT_EFFECT_FULLY_LIT;
+            return ROCKCAT_OK;
+        }
         const uint8_t *l = at(P_LIGHT);
         switch (which) {
         case ROCKCAT_SET_BRIGHTNESS:      *value = std::min<int>(l[L_BRIGHTNESS], BRIGHTNESS_STEPS) * 255 / BRIGHTNESS_STEPS; break;
@@ -441,6 +598,16 @@ struct ryos_profile final : rockcat_profile {
 
     int set_int(rockcat_setting which, int value) override
     {
+        if (!light_setting(which))
+            return ROCKCAT_ERR_UNSUPPORTED;
+        if (which == ROCKCAT_SET_EFFECT && m.light != LIGHT_RGB) {
+            if (value != ROCKCAT_EFFECT_FULLY_LIT && value != ROCKCAT_EFFECT_FADE && value != ROCKCAT_EFFECT_RIPPLE)
+                // one the pc draws: the keyboard has no number for it, rockcat_profile_select_effect stores the carrier
+                return value >= 0 && value < 32 && (caps().software_effects >> value) & 1 ? ROCKCAT_ERR_UNSUPPORTED : ROCKCAT_ERR_ARGUMENT;
+            *layer_effect() = value == ROCKCAT_EFFECT_FADE ? 1 : value == ROCKCAT_EFFECT_RIPPLE ? 2 : 0;
+            dirty[shown()] = true;
+            return ROCKCAT_OK;
+        }
         uint8_t *l = at(P_LIGHT);
         switch (which) {
         case ROCKCAT_SET_BRIGHTNESS:
@@ -491,7 +658,7 @@ struct ryos_profile final : rockcat_profile {
 
     int get_led(int led, rockcat_color *c, int *enabled) const override
     {
-        if (led < 0 || led >= LEDS)
+        if (led < 0 || led >= caps().led_count)
             return ROCKCAT_ERR_ARGUMENT;
         if (c)
             *c = rockcat_color{255, keys[led].r, keys[led].g, keys[led].b};
@@ -502,8 +669,15 @@ struct ryos_profile final : rockcat_profile {
 
     int set_led(int led, rockcat_color c, int enabled) override
     {
-        if (led < 0 || led >= LEDS)
+        if (led < 0 || led >= caps().led_count)
             return ROCKCAT_ERR_ARGUMENT;
+        // one colour boards: a key is lit or it isnt, whatever colour got asked for
+        if (m.light != LIGHT_RGB) {
+            const bool on = enabled && mono_lit(c);
+            keys[led] = on ? lit_key{MONO_ON.r, MONO_ON.g, MONO_ON.b, true} : lit_key{0, 0, 0, false};
+            keys_changed = true;
+            return ROCKCAT_OK;
+        }
         // no brightness per key, there is one for the whole board. so alpha gets folded into the colour
         keys[led] = lit_key{static_cast<uint8_t>((c.r * c.a + 127) / 255), static_cast<uint8_t>((c.g * c.a + 127) / 255),
                             static_cast<uint8_t>((c.b * c.a + 127) / 255), enabled != 0};
@@ -518,7 +692,13 @@ struct ryos_profile final : rockcat_profile {
         bool wide = false; // three bytes and not one
     };
 
-    static spot find(int layer, int input)
+    spot find(int layer, int input) const
+    {
+        spot s = find_any(layer, input);
+        return s.part >= 0 && !have(s.part) ? spot{} : s;
+    }
+
+    static spot find_any(int layer, int input)
     {
         const key_place &k = place(input);
         if (layer == 0) {
@@ -584,12 +764,13 @@ struct ryos_profile final : rockcat_profile {
     {
         std::memcpy(at(P_PRIMARY) + 3, FACTORY_PRIMARY, sizeof FACTORY_PRIMARY);
         std::memcpy(at(P_FUNCTION) + 3, FACTORY_FUNCTION, sizeof FACTORY_FUNCTION);
-        std::memcpy(at(P_MACROKEYS) + 3, FACTORY_MACROKEYS, sizeof FACTORY_MACROKEYS);
+        if (have(P_MACROKEYS))
+            std::memcpy(at(P_MACROKEYS) + 3, FACTORY_MACROKEYS, sizeof FACTORY_MACROKEYS);
         std::memcpy(at(P_THUMB) + 3, FACTORY_THUMB, sizeof FACTORY_THUMB);
         std::memcpy(at(P_EXTRA) + 3, FACTORY_EXTRA, sizeof FACTORY_EXTRA);
         std::memcpy(at(P_EASYZONE) + 4, FACTORY_EASYZONE, sizeof FACTORY_EASYZONE);
         for (int p : {P_PRIMARY, P_FUNCTION, P_MACROKEYS, P_THUMB, P_EXTRA, P_EASYZONE})
-            dirty[p] = true;
+            dirty[p] = have(p);
         return ROCKCAT_OK;
     }
 
@@ -635,7 +816,7 @@ struct ryos_profile final : rockcat_profile {
     int macro_slot(int layer, int input) const
     {
         const key_place &k = place(input);
-        if (layer < 0 || layer >= caps().layer_count)
+        if (layer < 0 || layer >= caps().layer_count || find(layer, input).part < 0)
             return -1;
         switch (k.kind) {
         case K_MACRO: return layer * MACRO_KEYS + k.at;
@@ -703,8 +884,9 @@ int get_active(rockcat_device *dev, uint8_t *profile, uint8_t *count)
         return r;
     if (profile)
         *profile = rep[2] & 0x0f;
+    // the MK Pro (firmware 1.26) leaves the count empty, it has five like everybody else
     if (count)
-        *count = rep[2] >> 4;
+        *count = rep[2] >> 4 ? rep[2] >> 4 : PROFILES;
     return ROCKCAT_OK;
 }
 
@@ -745,10 +927,25 @@ int direct_switch_fast(rockcat_device *dev, bool host)
     return light_control(dev, host, false);
 }
 
+// the older boards: [18 14 profile] and a bit per key, the profile byte is ignored by the firmware says roccat-tools.
+// no fast "took it" check on those, its the usual wait on 04, just started sooner
+int mono_frame(rockcat_device *dev, const rockcat_color *colors)
+{
+    uint8_t rep[20] = {REPORT_CUSTOM_LIGHTS, sizeof rep};
+    for (int k = 0; k < LEDS; ++k)
+        if (has_key(k) && mono_lit(colors[k]))
+            rep[3 + (k >> 3)] = static_cast<uint8_t>(rep[3 + (k >> 3)] | (1 << (k & 7)));
+    put_checksum(rep, sizeof rep);
+    int r = set_raw(dev, rep, sizeof rep, false);
+    return r != ROCKCAT_OK ? r : wait_ready_after(dev, 10);
+}
+
 int direct_frame(rockcat_device *dev, const rockcat_color *colors, int count)
 {
     if (!colors || count != LEDS)
         return ROCKCAT_ERR_ARGUMENT;
+    if (dev->desc && model_of(dev->desc->pid).light != LIGHT_RGB)
+        return mono_frame(dev, colors);
     lit_key keys[LEDS];
     for (int k = 0; k < LEDS; ++k) {
         const rockcat_color &c = colors[k];
@@ -894,3 +1091,36 @@ bool type_is_function(uint8_t type)
 const family_ops RYOS_FAMILY = {firmware,     get_active,   set_active,         new_profile,   direct_begin, direct_frame, direct_end,
                                 direct_switch_fast, direct_active, decode_event, input_label, led_label,    layer_label,  type_label,
                                 type_is_function};
+
+namespace {
+
+constexpr uint32_t bit(int n)
+{
+    return 1u << n;
+}
+
+// the older Ryos boards. the MK FX stays in devices.cpp. the MK Pro was read, written back and sent frames on a real one
+// (firmware 1.26), what its lights look like after a change nobody has watched yet. it gets the 2 ms select wait, measured. all of them borrow the key table and
+// pictures of the MK FX: same matrix, the TKL just has no numpad and no M keys on it (those report "no such key" here)
+constexpr uint32_t KEYS = ROCKCAT_HAS_MACROS | ROCKCAT_HAS_EASYSHIFT;
+constexpr uint32_t LAYER_EFFECTS = bit(ROCKCAT_EFFECT_FULLY_LIT) | bit(ROCKCAT_EFFECT_FADE) | bit(ROCKCAT_EFFECT_RIPPLE);
+// the boards with per key leds also get what the engine draws, squashed into on and off. while it draws the keyboard has
+// "fully lit" stored (the carrier), so with the pc off it just shows the keys that are lit in the profile
+constexpr uint32_t ENGINE_EFFECTS = bit(ROCKCAT_EFFECT_WAVE) | bit(ROCKCAT_EFFECT_HEATMAP) | bit(ROCKCAT_EFFECT_EQUALIZER) |
+                                    bit(ROCKCAT_EFFECT_FIRE) | bit(ROCKCAT_EFFECT_DRIP);
+#define RYOS_OLD_CAPS(tested, firmware, features, leds, effects, software)                                                   \
+    {ROCKCAT_KIND_KEYBOARD, "ryos", tested, firmware, features, PROFILES, INPUTS, 3, leds, 0, 0, 0, 0, {0}, effects | software, \
+     software, 0, 0, software ? ROCKCAT_EFFECT_FULLY_LIT : -1}
+
+const device_desc OLD_RYOS[] = {
+    {PID_MK, "ROCCAT Ryos MK", &RYOS_FAMILY, nullptr, 0x06, RYOS_OLD_CAPS(ROCKCAT_TESTED_NO, "", KEYS, 0, 0, 0), &RYOS_MK_FX_KEYBOARD},
+    {PID_MK_GLOW, "ROCCAT Ryos MK Glow", &RYOS_FAMILY, nullptr, 0x06, RYOS_OLD_CAPS(ROCKCAT_TESTED_NO, "", KEYS, 0, 0, 0), &RYOS_MK_FX_KEYBOARD},
+    {PID_MK_PRO, "ROCCAT Ryos MK Pro", &RYOS_FAMILY, nullptr, 0x06, RYOS_OLD_CAPS(ROCKCAT_TESTED_HARDWARE, "1.26", KEYS | ROCKCAT_HAS_DIRECT_LIGHT, LEDS, LAYER_EFFECTS, ENGINE_EFFECTS), &RYOS_MK_FX_KEYBOARD, 2},
+    {PID_TKL, "ROCCAT Ryos TKL", &RYOS_FAMILY, nullptr, 0x06, RYOS_OLD_CAPS(ROCKCAT_TESTED_NO, "", KEYS, 0, 0, 0), &RYOS_MK_FX_KEYBOARD},
+    {PID_TKL_PRO, "ROCCAT Ryos TKL Pro", &RYOS_FAMILY, nullptr, 0x06, RYOS_OLD_CAPS(ROCKCAT_TESTED_NO, "", KEYS | ROCKCAT_HAS_DIRECT_LIGHT, LEDS, LAYER_EFFECTS, ENGINE_EFFECTS), &RYOS_MK_FX_KEYBOARD},
+};
+const device_registration old_ryos_reg(OLD_RYOS, static_cast<int>(sizeof OLD_RYOS / sizeof OLD_RYOS[0]));
+
+#include "ryos_mk_sim.inc"
+
+} // namespace

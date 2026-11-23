@@ -138,7 +138,7 @@ all() {
         run direct off
     done
     # a device known by name only says so and doesnt get anything sent
-    export ROCKCAT_SIM=vulcan-pro
+    export ROCKCAT_SIM=vulcan-ii-mini-air
     run info
     run show
 }

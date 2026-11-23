@@ -17,6 +17,8 @@ struct transport {
     virtual int set_feature(const uint8_t *buf, size_t len) = 0;
     // interrupt reports. 0 = nothing came within timeout_ms
     virtual int read(uint8_t *buf, size_t len, int timeout_ms) = 0;
+    // an output report, buf[0] is the report id (0 on a device without ids). only the Suora needs these so far
+    virtual int write(const uint8_t *, size_t) { return ROCKCAT_ERR_UNSUPPORTED; }
     // goes through here so a replay doesnt sit around waiting for a device that isnt there
     virtual void sleep_ms(int ms);
     // only a replay has an opinion: ROCKCAT_OK while everything sent matched the recording

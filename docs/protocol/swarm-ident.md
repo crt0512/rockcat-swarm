@@ -1,6 +1,6 @@
 # Swarm era devices we can only name
 
-Code: `src/lib/families/swarm_ident.cpp`, family `swarm-ident`. Every device below is in the table with its product id (from Swarms module list, `MODULES.md`), its name and its kind, so `rockcat-cli list` and the gui recognise it and udev lets us open it. Thats all. Firmware shows bcdDevice, every other call answers "unsupported", nothing gets sent to the device. `ROCKCAT_SIM=vulcan-pro` is a pretend one that answers nothing, to see how the gui copes.
+Code: `src/lib/families/swarm_ident.cpp`, family `swarm-ident`. Every device below is in the table with its product id (from Swarms module list, `MODULES.md`), its name and its kind, so `rockcat-cli list` and the gui recognise it and udev lets us open it. Thats all. Firmware shows bcdDevice, every other call answers "unsupported", nothing gets sent to the device. `ROCKCAT_SIM=vulcan-ii-mini-air` is a pretend one that answers nothing, to see how the gui copes.
 
 None of these got the same treatment as [vulcan.md](vulcan.md) or [kone-aimo-original.md](kone-aimo-original.md) yet. What follows is what turned up along the way, as a head start, NOT checked.
 
@@ -16,22 +16,9 @@ Default profiles are Qt resources. The monitor has `config/<device>/...` (`tools
 
 | device | pid | kind | what turned up |
 |---|---|---|---|
-| Vulcan 80 | `305c` | keyboard | module `vulcan_80.dll`, `vulcan_config/default.dat`: the Vulcan 100/120 key reports (`06` 133, `07` 95, `0a` 8, `0b` 294) and a 156 byte light report (one colour board). Probably the vulcan family with another light layout |
-| Vulcan TKL AIMO | `2fee` | keyboard | module `VULCAN`, `vulcan_aimo_config/tkl/default.dat`: `06` 133, `0a` 8, `0b` 294, light 443 like the big one, but `fn_key_data` 147 and `custom_key_data` 47 instead of `f_key_data`. Monitor class `vulcan_tkl_device_c` |
-| Vulcan Pro | `30f7` | keyboard | `config/full_size/default.dat`: `full_size_backlit_default_data` (371 per profile), `full_size_fn_default_data`, `full_size_m_default_data`, `es_zone_default_data`, `game_mode_default_data`, `caps_default_data`. Monitor: `config/vulcan_pro/` with `rgb_led_mapping.ini` and `rgb_backlight_table.ini` ("Backlight Setting (ID 0x11)") |
-| Vulcan TKL Pro | `311a`, `3167` | keyboard | same module as the Pro, `config/tkl/`, backlit 299 per profile |
-| Vulcan II | `2f4e` | keyboard | `vulcan_ii_mk_config/default.dat`, backlit 377, monitor `config/vulcan2_mk/` (pwm and backlight red tables) |
-| Vulcan II Max | `2ee2` | keyboard | backlit 542, `smart_key_rgb_data`, monitor `config/vulcan2_max/` |
-| Vulcan II Mini | `2f09` | keyboard | backlit 332, monitor `config/vulcan2_mini/` |
 | Vulcan II Mini Air | `3aa9`, `6978` | keyboard | wireless with a dongle, monitor `config/vulcan2_mini_air/` and a lot of `pre_check_*` logging around the dongle |
-| Horde | `300c` | keyboard | module `HORDE` |
-| Horde AIMO | `303e` | keyboard | module resources `horde_aimo_config/` (`default.dat`, `key_data_mapping.txt`, ...), monitor `config/horde_aimo/key_led.ini` |
 | Isku+ | `31e2` | keyboard | module resources `isku_plus_config/` |
 | Isku+ Force FX | `3214` | keyboard | module `ISKU+_FORCE_FX` |
-| Suora FX | `3246` | keyboard | monitor `config/suora_fx/default_profile.dat`, module ships USBCmdLib (firmware updates only, see above) |
-| Magma | `3124` | keyboard | membrane, monitor `config/core_kb/membrane/` (`key_list.txt`, `rgb_led_mapping.ini`, `default.dat`) |
-| Magma Mini | `69a0` | keyboard | monitor `config/core_kb/magma_mini/` |
-| Pyro | `314c` | keyboard | mechanical, monitor `config/core_kb/mechanical/` (GUESS that Pyro is the "mechanical" one of `core_kb`) |
 | Kova AIMO | `2cf1`, `2cf2`, `2cf3` | mouse | module `KOVA_AIMO.dll`, firmware `Kova_Aimo_Black_V1.03.bin` in the module (24 KiB). Monitor classes `kova_aimo_device_c`, `kova_aimo_gray_device_c` |
 | Kone EMP | `2e24` | mouse | module `kone_emp.dll`, monitor `kone_emp_device_c` |
 | Kone Pure Owl-Eye | `2dcd` | mouse | module `kone_pure_owl-eye.dll` |

@@ -82,6 +82,11 @@ std::vector<rockcat_device_info> scan()
             continue;
         if (!replay)
             std::snprintf(info.name, sizeof info.name, "%s", m->name);
+        if (m->interface_number >= 0) {
+            if (replay || info.interface_number == m->interface_number)
+                found.push_back(info);
+            continue;
+        }
         std::vector<uint8_t> ids;
         if (!replay)
             ids = hid_report_ids(info.path);
@@ -346,6 +351,7 @@ const char *rockcat_effect_name(uint8_t effect)
     case ROCKCAT_EFFECT_FIRE:        return "Fire";
     case ROCKCAT_EFFECT_DRIP:        return "Drip";
     case ROCKCAT_EFFECT_COLOR_FLOW:  return "Colour flow, smooth";
+    case ROCKCAT_EFFECT_IMPULSE:     return "Impulse";
     default:                        return nullptr;
     }
 }

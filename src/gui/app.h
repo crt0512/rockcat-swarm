@@ -165,6 +165,7 @@ struct app_state {
     double idle_preview_t0 = -1; // when the idle preview started on the preview clock, below 0 = not playing
     // more than one device plugged in: a row of tabs, one per device, says which one the window shows
     GtkWidget *device_bar = nullptr;
+    GtkWidget *device_scroll = nullptr; // what device_bar sits in, this is the one that gets shown and hidden
     std::string want_path, listed;
     // asked for on the command line: the profile to open instead of the active one. -1 = nobody asked
     int want_profile = -1;
@@ -183,6 +184,8 @@ inline int n_inputs(const app_state *s) { return s->caps ? s->caps->input_count 
 inline int n_layers(const app_state *s) { return s->caps ? s->caps->layer_count : 0; }
 inline bool is_kone(const app_state *s) { return s->caps && s->caps == kone_caps(); }
 inline bool is_keyboard(const app_state *s) { return s->caps && s->caps->kind == ROCKCAT_KIND_KEYBOARD; }
+// leds that are on or off and have the one colour they were born with (Ryos MK Pro, TKL Pro). no colour pickers for those
+inline bool one_colour(const app_state *s) { return s->caps && s->caps->led_count > 0 && !(s->caps->features & ROCKCAT_HAS_RGB); }
 // "mouse" or "keyboard", for sentences
 // how many profiles the device has, the footer has buttons for up to N_PROFILES of them
 inline int n_profiles(const app_state *s)
@@ -207,6 +210,10 @@ struct calib_state;
 
 GtkWidget *label(const char *text, const char *cls = nullptr, float xalign = 0.0f);
 void add_class(GtkWidget *w, const char *cls);
+// every child of a box keeps its natural height in the middle of the row instead of stretching to it
+void center_children(GtkWidget *box);
+// true for a mouse with its own list of what a button can be (the Lua) and not the shared Swarm one
+bool own_button_types(const rockcat_caps *caps);
 GtkWidget *box_panel(const char *title, GtkWidget *content);
 void set_status(app_state *s, const char *text, const char *cls);
 void report_error(app_state *s, const char *what, int err);
@@ -310,6 +317,8 @@ double keyboard_aspect(app_state *s);
 void keyboard_keep_shape(app_state *s, GtkWidget *w);
 GtkWidget *keyboard_region_box(app_state *s);
 GtkWidget *panel_title(GtkWidget *panel);
+// a box title (bold, spaced out, underlined)
+GtkWidget *title_label(const char *text);
 GtkWidget *build_keys_page(app_state *s);
 void keys_refresh(app_state *s);
 void keys_forget(app_state *s);

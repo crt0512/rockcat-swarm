@@ -725,6 +725,7 @@ GtkWidget *build_keys_page(app_state *s)
     gtk_box_pack_start(GTK_BOX(row2), k->picked, FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(row2), keyboard_region_box(s), FALSE, FALSE, 0);
     gtk_size_group_add_widget(s->kb_rows, row2);
+    center_children(row2);
     gtk_box_pack_start(GTK_BOX(left), row2, FALSE, FALSE, 0);
     k->view = gtk_drawing_area_new();
     gtk_widget_set_size_request(k->view, 480, static_cast<int>(480 * keyboard_aspect(s)));
@@ -741,8 +742,9 @@ GtkWidget *build_keys_page(app_state *s)
     gtk_label_set_line_wrap(GTK_LABEL(k->hint), TRUE);
     gtk_label_set_xalign(GTK_LABEL(k->hint), 0);
     gtk_box_pack_start(GTK_BOX(left), k->hint, FALSE, FALSE, 0);
+    // (the titles stay out of the size group: same style on both pages anyway, and in there they made every row of the group
+    // as tall as the tallest thing in it)
     GtkWidget *panel = box_panel("KEYS", left);
-    gtk_size_group_add_widget(s->kb_rows, panel_title(panel));
     gtk_box_pack_start(GTK_BOX(all), panel, TRUE, TRUE, 0);
 
     // right: the key

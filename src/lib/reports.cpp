@@ -89,6 +89,48 @@ static_assert(M_SIZE <= 2 * HALF, "a macro has to fit into its two halves");
 
 } // namespace
 
+namespace {
+
+// the macro without whatever report it travels in: profile, slot, loop, the two names, count, keystrokes
+void macro_decode(const uint8_t *b, int profile, int slot, rockcat_macro *m)
+{
+    std::memset(m, 0, sizeof *m);
+    // a slot nobody ever wrote to is erased flash, all ff. thats "no macro" and not 480 presses of key ff
+    if (b[M_PROFILE] == 0xff && b[M_BUTTON] == 0xff) {
+        m->profile = static_cast<uint8_t>(profile);
+        m->button = static_cast<uint8_t>(slot);
+        return;
+    }
+    m->profile = b[M_PROFILE];
+    m->button = b[M_BUTTON];
+    m->loop = b[M_LOOP];
+    std::memcpy(m->set_name, b + M_SET_NAME, 40);
+    std::memcpy(m->name, b + M_NAME, 32);
+    m->count = std::min<uint16_t>(get16(b + M_COUNT), ROCKCAT_MACRO_KEYSTROKES);
+    for (int k = 0; k < m->count; ++k) {
+        const uint8_t *e = b + M_KEYS + 4 * k;
+        m->keys[k] = rockcat_keystroke{e[0], e[1], get16(e + 2)};
+    }
+}
+
+void macro_encode(const rockcat_macro &m, uint8_t *b)
+{
+    b[M_PROFILE] = m.profile;
+    b[M_BUTTON] = m.button;
+    b[M_LOOP] = m.loop;
+    std::memcpy(b + M_SET_NAME, m.set_name, strnlen(m.set_name, 40));
+    std::memcpy(b + M_NAME, m.name, strnlen(m.name, 32));
+    put16(b + M_COUNT, m.count);
+    for (int k = 0; k < m.count; ++k) {
+        uint8_t *e = b + M_KEYS + 4 * k;
+        e[0] = m.keys[k].key;
+        e[1] = m.keys[k].action;
+        put16(e + 2, m.keys[k].delay_ms);
+    }
+}
+
+} // namespace
+
 int macro_halves_read(rockcat_device *dev, uint8_t report, int profile, int slot, rockcat_macro *m)
 {
     std::vector<uint8_t> blob(2 * HALF, 0);
@@ -104,24 +146,7 @@ int macro_halves_read(rockcat_device *dev, uint8_t report, int profile, int slot
             return r;
         std::memcpy(blob.data() + half * HALF, rep.data() + 2, HALF);
     }
-    std::memset(m, 0, sizeof *m);
-    const uint8_t *b = blob.data();
-    // a slot nobody ever wrote to is erased flash, all ff. thats "no macro" and not 480 presses of key ff
-    if (b[M_PROFILE] == 0xff && b[M_BUTTON] == 0xff) {
-        m->profile = static_cast<uint8_t>(profile);
-        m->button = static_cast<uint8_t>(slot);
-        return ROCKCAT_OK;
-    }
-    m->profile = b[M_PROFILE];
-    m->button = b[M_BUTTON];
-    m->loop = b[M_LOOP];
-    std::memcpy(m->set_name, b + M_SET_NAME, 40);
-    std::memcpy(m->name, b + M_NAME, 32);
-    m->count = std::min<uint16_t>(get16(b + M_COUNT), ROCKCAT_MACRO_KEYSTROKES);
-    for (int k = 0; k < m->count; ++k) {
-        const uint8_t *e = b + M_KEYS + 4 * k;
-        m->keys[k] = rockcat_keystroke{e[0], e[1], get16(e + 2)};
-    }
+    macro_decode(blob.data(), profile, slot, m);
     return ROCKCAT_OK;
 }
 
@@ -129,18 +154,7 @@ int macro_halves_write(rockcat_device *dev, uint8_t report, const rockcat_macro 
 {
     std::vector<uint8_t> blob(2 * HALF, 0);
     uint8_t *b = blob.data();
-    b[M_PROFILE] = m.profile;
-    b[M_BUTTON] = m.button;
-    b[M_LOOP] = m.loop;
-    std::memcpy(b + M_SET_NAME, m.set_name, strnlen(m.set_name, 40));
-    std::memcpy(b + M_NAME, m.name, strnlen(m.name, 32));
-    put16(b + M_COUNT, m.count);
-    for (int k = 0; k < m.count; ++k) {
-        uint8_t *e = b + M_KEYS + 4 * k;
-        e[0] = m.keys[k].key;
-        e[1] = m.keys[k].action;
-        put16(e + 2, m.keys[k].delay_ms);
-    }
+    macro_encode(m, b);
     for (int half = 0; half < 2; ++half) {
         std::vector<uint8_t> rep(HALF_REPORT, 0);
         rep[0] = report;
@@ -151,4 +165,31 @@ int macro_halves_write(rockcat_device *dev, uint8_t report, const rockcat_macro 
             return r;
     }
     return ROCKCAT_OK;
+}
+
+int macro_single_read(rockcat_device *dev, uint8_t report, int profile, int slot, rockcat_macro *m)
+{
+    int r = select_data(dev, static_cast<uint8_t>(profile), static_cast<uint8_t>(slot));
+    if (r != ROCKCAT_OK)
+        return r;
+    std::vector<uint8_t> rep(MACRO_SINGLE_SIZE, 0);
+    rep[0] = report;
+    r = get_raw(dev, rep.data(), rep.size());
+    if (r != ROCKCAT_OK)
+        return r;
+    // erased flash has no checksum to speak of, a written macro has one
+    if (!(rep[3] == 0xff && rep[4] == 0xff) && !checksum_ok(rep.data(), rep.size()))
+        return ROCKCAT_ERR_CHECKSUM;
+    macro_decode(rep.data() + 3, profile, slot, m);
+    return ROCKCAT_OK;
+}
+
+int macro_single_write(rockcat_device *dev, uint8_t report, const rockcat_macro &m)
+{
+    std::vector<uint8_t> rep(MACRO_SINGLE_SIZE, 0);
+    rep[0] = report;
+    put16(rep.data() + 1, static_cast<uint16_t>(rep.size()));
+    macro_encode(m, rep.data() + 3);
+    put_checksum(rep.data(), rep.size());
+    return set_raw(dev, rep.data(), rep.size(), true);
 }

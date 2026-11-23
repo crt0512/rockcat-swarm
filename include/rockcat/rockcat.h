@@ -146,7 +146,9 @@ typedef enum rockcat_effect {
     /* effects ROCCAT never shipped, all software */
     ROCKCAT_EFFECT_FIRE         = 17, /* flames rise from the bottom row */
     ROCKCAT_EFFECT_DRIP         = 18, /* every key press lets a drop fall, they collect at the bottom */
-    ROCKCAT_EFFECT_COLOR_FLOW   = 19  /* the whole device wanders smoothly through the colours */
+    ROCKCAT_EFFECT_COLOR_FLOW   = 19, /* the whole device wanders smoothly through the colours */
+    /* more firmware ones of the older keyboards */
+    ROCKCAT_EFFECT_IMPULSE      = 20  /* firmware (Sova): the light flares up and dies down again, over and over */
 } rockcat_effect;
 
 /* Effects the pc draws have settings of their own (how fast, which colours, ...). They live on the pc, per device

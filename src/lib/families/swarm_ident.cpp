@@ -47,35 +47,12 @@ const family_ops IDENT_FAMILY = {firmware,      get_active,    set_active,   new
 // report 04 is the control report of every Swarm era device that talks the old way, the node that has it is the right one.
 // the ones that go through USBCmdLib.dll may not have it, then the first interface gets used (rockcat.cpp falls back to it)
 const device_desc DEVICES[] = {
-    {0x305c, "ROCCAT Vulcan 80", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x2fee, "ROCCAT Vulcan TKL AIMO", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x30f7, "ROCCAT Vulcan Pro", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x311a, "ROCCAT Vulcan TKL Pro", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x3167, "ROCCAT Vulcan TKL Pro", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x2f4e, "ROCCAT Vulcan II", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x2ee2, "ROCCAT Vulcan II Max", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x2f09, "ROCCAT Vulcan II Mini", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
     {0x3aa9, "ROCCAT Vulcan II Mini Air", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
     {0x6978, "ROCCAT Vulcan II Mini Air", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x300c, "ROCCAT Horde", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x303e, "ROCCAT Horde AIMO", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x31e2, "ROCCAT Isku+", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x3214, "ROCCAT Isku+ Force FX", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x3246, "ROCCAT Suora FX", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x3124, "ROCCAT Magma", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x69a0, "ROCCAT Magma Mini", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x314c, "ROCCAT Pyro", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_KEYBOARD)},
-    {0x2cf1, "ROCCAT Kova AIMO", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
-    {0x2cf2, "ROCCAT Kova AIMO", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
-    {0x2cf3, "ROCCAT Kova AIMO", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
-    {0x2e24, "ROCCAT Kone EMP", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
-    {0x2dcd, "ROCCAT Kone Pure Owl-Eye", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
     {0x2dca, "ROCCAT Kone Pure SE", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
     {0x2dcb, "ROCCAT Kone Pure SEL", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
     {0x2dd2, "ROCCAT Kone Pure Ultra", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
     {0x2dd7, "ROCCAT Kone Pure Ultra iCafe", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
-    {0x2e4c, "ROCCAT Leadr", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
-    {0x2e4e, "ROCCAT Leadr", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
     {0x2c88, "ROCCAT Kone Pro", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
     {0x2c8e, "ROCCAT Kone Pro Air", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
     {0x2c92, "ROCCAT Kone Pro Air", &IDENT_FAMILY, nullptr, 0x04, IDENT(ROCKCAT_KIND_MOUSE)},
@@ -124,6 +101,6 @@ struct mute_sim final : transport {
     void sleep_ms(int) override {}
 };
 
-const sim_registration sim({"vulcan-pro", 0x30f7, "ROCCAT Vulcan Pro", 0, [] { return std::unique_ptr<transport>(new mute_sim); }});
+const sim_registration sim({"vulcan-ii-mini-air", 0x3aa9, "ROCCAT Vulcan II Mini Air", 0, [] { return std::unique_ptr<transport>(new mute_sim); }});
 
 } // namespace

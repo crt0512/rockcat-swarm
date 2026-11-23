@@ -93,6 +93,9 @@ struct device_desc {
     // how long to leave the device alone after a select before asking if its ready. 150 is what Swarm does and what nobody
     // has seen fail. only gets lowered for a device that was measured
     int select_delay_ms = 150;
+    // the hidraw node to talk to by interface number, for a device whose control interface declares no report ids to find it
+    // by (the Suora: interface 2, output reports without an id). -1 = go by probe_report
+    int interface_number = -1;
 };
 
 // a family in a file of its own adds its devices from there, at file scope:
@@ -107,6 +110,21 @@ const device_desc *device_find(uint16_t vid, uint16_t pid);
 const device_desc *device_at(int i);
 // the table entry a caps pointer belongs to, nullptr for a pointer that didnt come from us
 const device_desc *device_of(const rockcat_caps *caps);
+
+// what a lit led of a device without HAS_RGB reports (Ryos MK Pro, TKL Pro: blue and nothing else). the engine sends
+// this or black to those and nothing in between, so whoever shows its frames shows what the device does
+constexpr rockcat_color ONE_COLOUR_ON = {255, 0x20, 0x60, 0xff};
+inline bool one_colour(const rockcat_caps &c)
+{
+    return c.led_count > 0 && !(c.features & ROCKCAT_HAS_RGB);
+}
+
+// a keyboard whose led numbers are its keys (Ryos, Vulcan) and not a handful of zones (Skeltr: keys and four corners).
+// only then a key table says what a led is called and where it sits
+inline bool keys_are_leds(const rockcat_caps &c)
+{
+    return c.kind == ROCKCAT_KIND_KEYBOARD && c.led_count >= 64;
+}
 
 extern const family_ops KONE_AIMO_FAMILY;
 extern const family_ops KOVA_FAMILY;

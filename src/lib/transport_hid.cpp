@@ -42,6 +42,10 @@ struct hid_transport final : transport {
         int r = hid_read_timeout(hid, buf, len, timeout_ms);
         return r < 0 ? ROCKCAT_ERR_IO : r;
     }
+    int write(const uint8_t *buf, size_t len) override
+    {
+        return hid_write(hid, buf, len) < 0 ? ROCKCAT_ERR_IO : ROCKCAT_OK;
+    }
 };
 
 } // namespace

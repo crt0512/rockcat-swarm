@@ -116,7 +116,7 @@ void on_calibrate(GtkButton *, gpointer data)
     GtkWidget *area = gtk_dialog_get_content_area(GTK_DIALOG(c->dialog));
     gtk_container_set_border_width(GTK_CONTAINER(area), 16);
     gtk_box_set_spacing(GTK_BOX(area), 12);
-    gtk_box_pack_start(GTK_BOX(area), label("TRACKING & DISTANCE CONTROL UNIT", "rc-box-title"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(area), title_label("TRACKING & DISTANCE CONTROL UNIT"), FALSE, FALSE, 0);
     c->text = label("Put the mouse on the surface you play on. Press START, then keep moving the mouse "
                     "in large circles and figure-eights until calibration completes (about 10-20 s).");
     gtk_label_set_line_wrap(GTK_LABEL(c->text), TRUE);

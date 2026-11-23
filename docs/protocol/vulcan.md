@@ -1,4 +1,4 @@
-# Vulcan 100 / 120 AIMO
+# Vulcan 100 / 120 AIMO, Vulcan TKL AIMO, Vulcan 80, Horde, Horde AIMO
 
 Vulcan 100 AIMO (`1e7d:307a`) and Vulcan 120/121/122 AIMO (`1e7d:3098`, the three only differ in the palm rest). Code: `src/lib/families/vulcan.cpp`, tables in `vulcan_tables.inc` and `vulcan_keys.inc`, the pretend one in `src/lib/sim_vulcan.h` (`ROCKCAT_SIM=vulcan-120-aimo`).
 
@@ -95,8 +95,72 @@ Not worked out. The firmware has an Easy-Shift callback into the monitor (`vulca
 
 There is no info report we know of. rockcat shows bcdDevice, that it is the firmware version is a GUESS.
 
+## Vulcan TKL AIMO
+
+`1e7d:2fee`. Same code again (`MODELS[]`, tables in `vulcan_tkl_tables.inc` and `vulcan_tkl_keys.inc`), pretend one `ROCKCAT_SIM=vulcan-tkl-aimo`. NOBODY HERE HAS ONE. Out of the `VULCAN` module Turtle Beach still served for it (`vulcan-tkl_220`, `VULCAN.dll` v1.0012, `data/VULCAN_TKL`), which carries the full size board and the TKL side by side: the TKL default profile (compressed Qt resource) and its `key_pos_mapping.txt`, `rgb_led_mapping.ini` and `key_data_mapping.txt` (uncompressed in the dll). The firmware next to it (`FW_V1.16.bin`, loads at `0x2000`) copies `06` 133, `07` 143, `09` 43, `0b` 65 and `0d` 443 bytes on SET_REPORT, so those are the sizes.
+
+Everything is the 100 / 120 one except:
+
+- keys are numbered the way this newer module does it, 1 to 123 (the Vulcan Pro numbering): Esc 1, F1 to F12 2 to 13, `1` is 23, Caps Lock 67, Fn 116. Its `kb_matrix.xml` (the module one and `assets/roccat/keyboards/2fee/` are the same file) has US, DE and JP. The slot table is the full size one, rockcat only takes the keys the picture has
+- `07` is 143 bytes: `[07 8f profile]`, 23 keys x 3 bytes, the same 23 again with Fn held, checksum. The 23 are F1 to F12, Ins Home PgUp Del End PgDn, the arrows and right Ctrl (`[F_KEY]` in `key_data_mapping.txt`). Out of the box Fn puts Print Screen, Scroll Lock and Pause on Ins, Home and PgUp, media keys on F9 to F12, and codes nobody has names for on the rest (`9c 9e fc a4 fe 8e fd 9a`, probably the light and volume functions)
+- Easy-Shift: the same 20 keys under their new numbers (23 to 27, 46 to 50, 68 to 72, 88 to 92)
+- key 14 (`MUTE` in the picture) sits where Print Screen is on the full size board and has `46` (Print Screen) in `06` out of the box. What the knob does was not looked at
+- the colour slots come from `rgb_led_mapping.ini` with the same formula as the big one (every key checked)
+
+A backup of a Vulcan holds its reports back to back, each as long as that board has it, so the 100 / 120 ones still have their old size.
+
+## Vulcan 80
+
+`1e7d:305c`, the board with blue keys and no palm rest. Same code (`MODELS[]` in `vulcan.cpp`, tables in `vulcan_80_tables.inc` and `vulcan_80_keys.inc`), pretend one `ROCKCAT_SIM=vulcan-80`. NOBODY HERE HAS ONE either. Where it comes from:
+
+- the module `VULCAN_80/vulcan_80.dll` v1.0027: its default profile (Qt resource, compressed, `tools/re/qrcblobs.py` gets it), `vulcan_config/key_pos_mapping.txt`, `led_mapping.ini`, `key_data_mapping.txt` and `kb_matrix.xml` (those sit uncompressed in the dll as `[u32 length][text]`), and the decompile (`DEV/Roccat-Swarm/Decompiled/vulcan_80.c`) for which byte of `0d` is what
+- the firmware `VULCAN_80/firmware/VULCAN_80_V1.19.bin` (Cortex-M, loads at `0x2000` like the AIMO one) for the light report and the effects
+- `ROCCAT_Swarm_Monitor.exe` 1.9477, class `vulcan_device_c` (vtable `0x8ca26c`, one colour, `config/vulcan/led_mapping.ini`): writes `0d` with 156 bytes (`FUN_0057b980`)
+
+Key reports: exactly the AIMO ones. Same ids, sizes and selects (the firmware copies 133, 95, 8, 65, 43 bytes for `06 07 0a 0b 09`, `FUN_00002cb0`), the same one setup instead of five (one flash page per report), and the same slot table for keys 1 to 111. The four keys above the numpad are new: Mute (112), Volume down (113), Volume up (114) and the light key (115), one byte each in `06` (slots 96, 104, 112, 120, out of the box `d2 d1 d0 aa`). The module's `kb_matrix.xml` numbers keys 1 to 115 and that is what rockcat uses. The `kb_matrix.xml` under `assets/roccat/keyboards/305c/` is the one of a later Swarm with the 1 to 123 numbering of the Vulcan Pro, dont mix them up. `aa` on the light key has no name in the Ryos table rockcat borrows, it shows as whatever the Ryos calls it.
+
+Lights, report `0d`, 156 bytes:
+
+| offset | what |
+|---|---|
+| 0 | `0d 9c` |
+| 2 | profile (the module writes it here, not at 3) |
+| 3 | unknown, 0 |
+| 4 | effect |
+| 5 | speed 0 to 11, bigger is faster. rockcat stays with 1 to 11 like on the AIMO |
+| 6 | 5 out of the box. the firmware multiplies the brightness by it and divides by 5 (`FUN_00008194`), kept |
+| 7 to 10 | 0, 10 is where the firmware keeps the pwm value it worked out |
+| 11 | brightness step 0 to 9, through the table `00 0f 1e 32 46 64 82 a0 c8 ff` (firmware `0xa682`). The keyboard writes its own step back here when it was changed on the keyboard (`FUN_000022e4`, saved to flash after a while) |
+| 12, 13 | `01 0f`, unknown, kept |
+| 14 to 139 | one brightness per key, 126 of them: byte 14 + the keys slot in `06` (`FUN_00003318` copies them to the leds through its own table) |
+| 140 to 153 | `ff` then zeros, unknown |
+| 154 | checksum |
+
+The module writes a key's byte at `13 + pos - (pos > 64)` with `pos` out of `led_mapping.ini`. That `pos` is the slot + 1 below 64 and the slot + 2 from there on, so it all comes out as 14 + slot. One line of the ini breaks the rule: the US `\` (key 53) has the `pos` of End. Looks like a typo, rockcat goes by the rule.
+
+The colour can't be chosen, how bright every key is can. rockcat shows a key as the blue every one-colour board gets with its byte as alpha. Painting LIGHT ON gives 255, LIGHT OFF 0, the api takes any alpha (the brightest channel times alpha is what gets stored).
+
+Effects, as the firmware does them (`FUN_00008788` starts one, `FUN_00002144` runs it): 0 off, 1 the bytes per key as they are, 7 a band of light running across the board and back, 8 the board filling up column by column and emptying again with a pause, `0x11` keys light up when pressed and fade out. Anything else turns into 7. Swarms shared effect list (see the AIMO part above) has 7 as breathing and 8 as heartbeat, so rockcat calls them that, `0x11` is Fade FX. The monitor draws every other number from the pc (`FUN_0057beb0`: 1, 7, 8 and `0x11` are the keyboards own), which is how Swarm did Ripple and the like. That part is not done.
+
+## Horde, Horde AIMO
+
+`1e7d:300c` and `1e7d:303e`, pretend ones `ROCKCAT_SIM=horde`, `horde-aimo`. More `MODELS[]` in `vulcan.cpp`, tables in `horde_tables.inc`, key picture `horde_keys.inc`. NOBODY HERE HAS ONE. Out of their modules (`HORDE` v1.0032, `HORDE_AIMO` v1.0136): the default profile and `key_data_mapping.txt`.
+
+The AIMO generation of reports with other sizes:
+
+| id | select | bytes | what |
+|---|---|---|---|
+| `06` | `a0` | 149 | `[06 95 profile]` + 144 slots + checksum. The key number (Swarms `kb_matrix.xml` index) IS the slot: Esc 127, A 120, F1 15, Fn 69 ... every key looked at has its own usage there |
+| `07` | `a1` | 95 | F1 to F12, Print, Scroll, Pause (keys 15 23 31 39 14 22 30 38 13 21 29 37 55 62 111) and the same with Fn |
+| `08` | `a2` | 35 | the M keys M1 to M5 (125 133 143 142 141), then the same with Easy-Shift. Out of the box the Ryos `d3` to `d7` and `d8` to `dc` |
+| `0a` | `a4` | 8 | Caps Lock (key 258, it has no slot) and Fn |
+| `0b` | `a5` | 294 / 65 | Easy-Shift for 1 to 5, Q to T, A to G, Z to B |
+| `0d` | `b1` | 58 | light, `[0d 3a profile ? effect speed ...]` then what looks like zones. Not untangled, rockcat reads it and writes it back as it is |
+
+No `09`. The dial (259) has no byte we know of. One stored setup like the AIMO boards (GUESS: Swarms defaults have five lights but one of everything else). The Horde AIMO has the same keys and the same `06 07 0a 0b`, only its factory M keys and light differ (Swarms file had a wrong checksum on its `08`, the factory table has it summed again).
+
+A backup keeps the parts in the old order with `08` last, so the AIMO boards backups keep their size.
+
 ## Not done, and what is known about the neighbours
 
-- Vulcan TKL AIMO (`2fee`): same module family, but its default has `fn_key_data` (147 bytes) and `custom_key_data` (47) where the big one has `f_key_data`. Needs its own key places
-- Vulcan 80 (`305c`): same key reports as the 100/120, but `backlight_setting` is 156 bytes (single colour board). Its module is `VULCAN_80/vulcan_80.dll`, resources under `vulcan_config/`
 - Vulcan Pro / TKL Pro / II / II Max / II Mini: a different report set altogether (`backlit_default_data`, `es_zone_default_data`, `game_mode_default_data`, `caps_default_data`, the monitor calls the class `core_kb_base_device_c` for some of them). See [swarm-ident.md](swarm-ident.md)

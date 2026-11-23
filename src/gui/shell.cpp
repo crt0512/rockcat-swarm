@@ -146,7 +146,8 @@ void build_pages(app_state *s)
         add("buttons", "BUTTON ASSIGNMENT", build_buttons_page(s));
     else if (caps && is_keyboard(s) && s->kb)
         add("buttons", "KEY ASSIGNMENT", build_keys_page(s));
-    if (caps && caps->led_count > 0)
+    // also for boards with one light for everything (MK Glow, Sova membrane): no keys to paint, but effect and brightness
+    if (caps && (caps->led_count > 0 || has_setting(s, ROCKCAT_SET_EFFECT) || has_setting(s, ROCKCAT_SET_BRIGHTNESS)))
         add("illumination", "ILLUMINATION", build_illumination_page(s));
     if (caps && caps->profile_count > 0)
         add("advanced", "ADVANCED SETTINGS", build_advanced_page(s));
@@ -262,8 +263,15 @@ GtkWidget *rockcat_window_new(GtkApplication *app, bool force_minimized)
     // one tab per plugged in device, filled by refresh_device_list. out of sight while there is only one
     s->device_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     add_class(s->device_bar, "rc-device-bar");
-    gtk_widget_set_no_show_all(s->device_bar, TRUE);
-    gtk_box_pack_start(GTK_BOX(root), s->device_bar, FALSE, FALSE, 0);
+    // in a scroller because some of us own way too many of these things and the bar would otherwise push the window wider
+    // than the screen. sideways only, the wheel scrolls it sideways too (gtk does that by itself when there is no vertical bar)
+    s->device_scroll = gtk_scrolled_window_new(nullptr, nullptr);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(s->device_scroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_NEVER);
+    gtk_scrolled_window_set_propagate_natural_height(GTK_SCROLLED_WINDOW(s->device_scroll), TRUE);
+    gtk_container_add(GTK_CONTAINER(s->device_scroll), s->device_bar);
+    gtk_widget_show(s->device_bar);
+    gtk_widget_set_no_show_all(s->device_scroll, TRUE);
+    gtk_box_pack_start(GTK_BOX(root), s->device_scroll, FALSE, FALSE, 0);
 
     // pages
     s->notebook = gtk_notebook_new();
@@ -284,7 +292,7 @@ GtkWidget *rockcat_window_new(GtkApplication *app, bool force_minimized)
     GtkWidget *right = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     gtk_widget_set_halign(left, GTK_ALIGN_START);
     gtk_widget_set_halign(right, GTK_ALIGN_END);
-    gtk_box_pack_start(GTK_BOX(left), label("PROFILE", "rc-box-title"), FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(left), title_label("PROFILE"), FALSE, FALSE, 4);
     for (int i = 0; i < N_PROFILES; ++i) {
         GtkWidget *b = gtk_toggle_button_new_with_label("");
         add_class(b, "rc-profile");

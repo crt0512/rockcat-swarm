@@ -563,6 +563,9 @@ void run_keyboard(rockcat_engine *e)
     kb_board board;
     kb_fx *fx = kb_fx_new();
     std::vector<rockcat_color> frame, sent;
+    // one colour boards (on or off per key): which keys are lit right now, for the hysteresis below
+    bool mono = false;
+    std::vector<char> lit;
     // the Easy-Shift light layer of the active profile, and whether Easy-Shift is down right now
     std::vector<rockcat_color> shift_colors;
     int shift_on = 0, shift_effect = ROCKCAT_EFFECT_FULLY_LIT;
@@ -598,11 +601,20 @@ void run_keyboard(rockcat_engine *e)
     };
     // which effect the profile wants (the one kept on the pc if the keyboard only has the carrier) and its settings.
     // no talking to the keyboard in here, so this is cheap enough to do whenever the config file changes
+    // a board that only knows lit and dark cant show a hue. the modes that only differ in hue get swapped for the one that
+    // works in brightness: a rainbow wave would just light every key, rainbow bars are plain bars
+    auto fit = [&](int which, std::map<std::string, int> o) {
+        if (mono && which == ROCKCAT_EFFECT_WAVE)
+            o["colours"] = 3;
+        if (mono && which == ROCKCAT_EFFECT_EQUALIZER && o["style"] == 1)
+            o["style"] = 0;
+        return o;
+    };
     auto look = [&] {
         int by_engine = 0;
         rockcat_profile_get_effect(prof, &effect, &by_engine);
         stamp = config_stamp(dev->desc->pid);
-        kb_fx_setup(fx, effect, kb_fx_options(dev->desc->pid, static_cast<uint8_t>(st.profile), effect));
+        kb_fx_setup(fx, effect, fit(effect, kb_fx_options(dev->desc->pid, static_cast<uint8_t>(st.profile), effect)));
         st.effect = static_cast<uint8_t>(effect);
         shift_colors.assign(static_cast<size_t>(board.leds), rockcat_color{0, 0, 0, 0});
         rockcat_shift_layer_get(dev->desc->pid, static_cast<uint8_t>(st.profile), &shift_on, shift_colors.data(), board.leds);
@@ -615,7 +627,7 @@ void run_keyboard(rockcat_engine *e)
             shift_board.base[static_cast<size_t>(i)] = c.a ? rockcat_color{255, c.r, c.g, c.b} : rockcat_color{255, 0, 0, 0};
         }
         const uint8_t slot = static_cast<uint8_t>(st.profile | ROCKCAT_SHIFT_LAYER);
-        kb_fx_setup(shift_fx, shift_effect, kb_fx_options(dev->desc->pid, slot, shift_effect));
+        kb_fx_setup(shift_fx, shift_effect, fit(shift_effect, kb_fx_options(dev->desc->pid, slot, shift_effect)));
         return effect >= 0 && effect < 32 && ((dev->desc->caps.software_effects >> effect) & 1);
     };
 
@@ -634,6 +646,8 @@ void run_keyboard(rockcat_engine *e)
             }
             board = kb_board{};
             board.leds = dev->desc->caps.led_count;
+            mono = one_colour(dev->desc->caps);
+            lit.assign(static_cast<size_t>(board.leds), 0);
             board.x.assign(static_cast<size_t>(board.leds), -1);
             board.y.assign(static_cast<size_t>(board.leds), -1);
             // a device without a key table (a mouse) just has its lights in a row
@@ -693,7 +707,9 @@ void run_keyboard(rockcat_engine *e)
                 st.profile = active;
                 int brightness = 255;
                 rockcat_profile_get_int(prof, ROCKCAT_SET_BRIGHTNESS, &brightness);
-                board.level = brightness / 255.0;
+                // the brightness of a one colour board is the keyboards own business (its 6 steps dim whatever is lit,
+                // ours included). dimming the frame here would only push keys under the cut below and switch them off
+                board.level = mono ? 1.0 : brightness / 255.0;
                 board.base.assign(static_cast<size_t>(board.leds), rockcat_color{255, 0, 0, 0});
                 for (int i = 0; i < board.leds; ++i) {
                     int on = 0;
@@ -793,6 +809,16 @@ void run_keyboard(rockcat_engine *e)
             for (int i = 0; i < board.leds; ++i)
                 frame[static_cast<size_t>(i)] = shift_board.base[static_cast<size_t>(i)];
         }
+        // one colour boards: every key lit or dark. a key goes on above 55 % and only off again below 45 %, otherwise the
+        // keys right at the edge of a wave or a flame flicker on every frame
+        if (mono)
+            for (int i = 0; i < board.leds; ++i) {
+                rockcat_color &c = frame[static_cast<size_t>(i)];
+                const int level = std::max({c.r, c.g, c.b}) * c.a / 255;
+                char &on = lit[static_cast<size_t>(i)];
+                on = on ? level >= 115 : level >= 140;
+                c = on ? ONE_COLOUR_ON : rockcat_color{255, 0, 0, 0};
+            }
         // a picture that did not change is not sent again (a heatmap nobody types on, a slow colour flow between two
         // steps): less for the device to chew on. once a second it goes out regardless, in case something else
         // painted over it

@@ -52,11 +52,23 @@ gboolean on_button_row_focus(GtkWidget *w, GdkEvent *, gpointer data)
 GtkWidget *button_combo(app_state *s, int idx)
 {
     GtkWidget *combo = gtk_combo_box_text_new();
-    for (int i = 0; i < rockcat_button_type_count(); ++i) {
-        int t = rockcat_button_type_at(i);
-        char id[8];
-        std::snprintf(id, sizeof id, "%d", t);
-        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), id, rockcat_button_type_name(static_cast<uint8_t>(t)));
+    if (own_button_types(s->caps)) {
+        // a mouse with a list of its own (the Lua): only what it knows, under its names
+        for (int t = 0; t < 256; ++t) {
+            const char *name = rockcat_assignment_name(s->caps, static_cast<uint8_t>(t));
+            if (std::strcmp(name, "?") == 0)
+                continue;
+            char id[8];
+            std::snprintf(id, sizeof id, "%d", t);
+            gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), id, name);
+        }
+    } else {
+        for (int i = 0; i < rockcat_button_type_count(); ++i) {
+            int t = rockcat_button_type_at(i);
+            char id[8];
+            std::snprintf(id, sizeof id, "%d", t);
+            gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), id, rockcat_button_type_name(static_cast<uint8_t>(t)));
+        }
     }
     // long names get cut short in a narrow window instead of making the window wide
     GList *cells = gtk_cell_layout_get_cells(GTK_CELL_LAYOUT(combo));

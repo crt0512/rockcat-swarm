@@ -123,8 +123,10 @@ void connect_device(app_state *s)
     keyboard_free(s->kb);
     s->kb = nullptr;
     keyboard_load(s);
-    char fw[16], title[128];
-    rockcat_get_firmware_version(s->dev, fw, sizeof fw);
+    char fw[16] = "", title[128];
+    // some never say (the Lua), then the buffer would show whatever was lying around
+    if (rockcat_get_firmware_version(s->dev, fw, sizeof fw) != ROCKCAT_OK)
+        std::snprintf(fw, sizeof fw, "unknown");
     s->firmware = fw;
     std::snprintf(title, sizeof title, "%s   |   FW %s", s->info.name, fw);
     gtk_label_set_text(GTK_LABEL(s->device_label), title);
@@ -221,6 +223,21 @@ void show_unsupported(app_state *s, const char *path)
 }
 
 // what is plugged in, as a row of tabs under the header. with one device there is nothing to choose and the row stays away
+// the tab of the device on screen has to be visible in the bar even when the device got picked from the tray. waits for an idle
+// because a fresh tab has no size yet and an adjustment cant clamp to nothing
+static gboolean scroll_tab_into_view(gpointer data)
+{
+    GtkWidget *tab = GTK_WIDGET(data);
+    GtkWidget *scroll = gtk_widget_get_ancestor(tab, GTK_TYPE_SCROLLED_WINDOW);
+    if (scroll && gtk_widget_get_mapped(tab)) {
+        GtkAllocation a;
+        gtk_widget_get_allocation(tab, &a);
+        gtk_adjustment_clamp_page(gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(scroll)), a.x, a.x + a.width);
+    }
+    g_object_unref(tab);
+    return G_SOURCE_REMOVE;
+}
+
 void refresh_device_list(app_state *s)
 {
     rockcat_device_info infos[16];
@@ -330,13 +347,15 @@ void refresh_device_list(app_state *s)
             gtk_box_pack_start(GTK_BOX(s->device_bar), tab, FALSE, FALSE, 0);
             gtk_widget_show_all(tab);
         }
-        gtk_widget_set_visible(s->device_bar, n + static_cast<int>(unknown.size()) > 1);
+        gtk_widget_set_visible(s->device_scroll, n + static_cast<int>(unknown.size()) > 1);
     }
     GList *tabs = gtk_container_get_children(GTK_CONTAINER(s->device_bar));
     for (GList *c = tabs; c; c = c->next) {
         const char *path = static_cast<const char *>(g_object_get_data(G_OBJECT(c->data), "path"));
         bool on = path && ((s->dev && std::strcmp(path, s->info.path) == 0) || (!s->dev && s->unsupported_pid && s->unsupported_path == path));
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(c->data), on);
+        if (on)
+            g_idle_add(scroll_tab_into_view, g_object_ref(c->data));
     }
     g_list_free(tabs);
     s->updating = false;

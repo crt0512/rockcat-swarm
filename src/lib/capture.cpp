@@ -74,6 +74,12 @@ struct record_transport final : transport {
             out << "R ! @" << ms() << '\n' << std::flush;
         return r;
     }
+    int write(const uint8_t *buf, size_t len) override
+    {
+        int r = inner->write(buf, len);
+        out << "W " << hex(buf, len) << (r < 0 ? " : !" : "") << " @" << ms() << '\n' << std::flush;
+        return r;
+    }
     void sleep_ms(int n) override { inner->sleep_ms(n); }
 };
 
@@ -120,6 +126,13 @@ struct replay_transport final : transport {
         if (diverged || pos >= entries.size() || entries[pos].op != 'S' || entries[pos].data.size() != len ||
             std::memcmp(entries[pos].data.data(), buf, len) != 0)
             return complain("S", hex(buf, len));
+        return entries[pos++].failed ? ROCKCAT_ERR_IO : ROCKCAT_OK;
+    }
+    int write(const uint8_t *buf, size_t len) override
+    {
+        if (diverged || pos >= entries.size() || entries[pos].op != 'W' || entries[pos].data.size() != len ||
+            std::memcmp(entries[pos].data.data(), buf, len) != 0)
+            return complain("W", hex(buf, len));
         return entries[pos++].failed ? ROCKCAT_ERR_IO : ROCKCAT_OK;
     }
     int read(uint8_t *buf, size_t len, int) override
@@ -211,7 +224,7 @@ std::unique_ptr<transport> transport_replay(const std::string &file, rockcat_dev
             e.id = static_cast<uint8_t>(id);
             if (colon != ":")
                 return nullptr;
-        } else if (op != "S" && op != "R") {
+        } else if (op != "S" && op != "R" && op != "W") {
             return nullptr;
         }
         // whats left is the bytes, or a "!" where the transfer failed while recording

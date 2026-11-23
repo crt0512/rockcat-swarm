@@ -64,7 +64,7 @@ const char *rockcat_input_label(const rockcat_caps *caps, int input)
 const char *rockcat_led_label(const rockcat_caps *caps, int led)
 {
     const device_desc *d = device_of(caps);
-    if (const char *key = key_name(d, led))
+    if (const char *key = d && keys_are_leds(d->caps) ? key_name(d, led) : nullptr)
         return key;
     return d ? d->family->led_label(led) : "?";
 }

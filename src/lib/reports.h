@@ -28,3 +28,8 @@ void put16(uint8_t *p, uint16_t v);
 // a slot nobody ever wrote to comes back as an empty macro and not as an error
 int macro_halves_read(rockcat_device *dev, uint8_t report, int profile, int slot, rockcat_macro *m);
 int macro_halves_write(rockcat_device *dev, uint8_t report, const rockcat_macro &m);
+
+// the same macro as one report (Sova and friends): [id size16 macro... sum sum], 2002 bytes. reading wants [04 profile slot] in front
+constexpr size_t MACRO_SINGLE_SIZE = 3 + 77 + 4 * ROCKCAT_MACRO_KEYSTROKES + 2;
+int macro_single_read(rockcat_device *dev, uint8_t report, int profile, int slot, rockcat_macro *m);
+int macro_single_write(rockcat_device *dev, uint8_t report, const rockcat_macro &m);

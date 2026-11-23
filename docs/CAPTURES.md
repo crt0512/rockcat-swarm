@@ -55,6 +55,7 @@ G 06 28 : 06 1c 00 00 06 ff ... dd 03 @165
 - `S bytes` is a feature report thats sent. First byte is the report id.
 - `G id length : bytes` is a feature report that was asked for (id and how many bytes) and what came back.
 - `R bytes` is an input report the device sent by itself (mouse moved, key pressed, profile switched).
+- `W bytes` is an output report that was sent (only the Suora uses those so far). First byte is the report id, 0 when the device has none.
 - `!` instead of bytes means the transfer failed when it was recorded, the replay fails it the same way.
 - `@number` at the end is milliseconds since the device was opened. Only there for humans, the replay ignores it.
 

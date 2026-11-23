@@ -182,6 +182,12 @@ int fill_options(app_state *s, GtkWidget *box, int effect, int slot = 0)
     gtk_grid_set_row_spacing(GTK_GRID(grid), 6);
     for (int i = 0; i < n; ++i) {
         const rockcat_effect_option &o = options[i];
+        // a colour means nothing to a board that only knows on and off, the brightness ones still do
+        if (o.kind == ROCKCAT_OPTION_COLOR && one_colour(s))
+            continue;
+        // which colours a wave or a fire takes, the engine decides that for these boards (see engine.cpp, fit)
+        if (one_colour(s) && std::strcmp(o.key, "colours") == 0)
+            continue;
         int value = rockcat_effect_option_get(s->info.product_id, static_cast<uint8_t>(s->edit_profile | slot), effect, o.key);
         GtkWidget *w = nullptr;
         const char *signal = "value-changed";
@@ -587,10 +593,13 @@ GtkWidget *build_illumination_page(app_state *s)
     gtk_grid_set_column_spacing(GTK_GRID(cg), 10);
     gtk_grid_set_row_spacing(GTK_GRID(cg), 4);
     const bool alpha = caps->features & ROCKCAT_HAS_LED_BRIGHTNESS;
-    if (is_keyboard(s) && s->kb) {
+    if (caps->led_count == 0) {
+        // one light for the whole board, nothing to paint. a keyboard still gets its picture, every key in the one glow
+        if (is_keyboard(s) && s->kb)
+            s->colors_panel = box_panel("BACKLIGHT", build_keyboard_view(s));
+    } else if (is_keyboard(s) && s->kb && caps->led_count >= 64) {
         // the keyboard with every key in its colour, click keys and choose a colour. sits on top of everything else on this page
         s->colors_panel = box_panel("KEY COLOURS", build_keyboard_view(s));
-        gtk_size_group_add_widget(s->kb_rows, panel_title(s->colors_panel));
     } else {
         const int leds = caps->led_count;
         s->led_color.assign(static_cast<size_t>(leds), nullptr);
@@ -607,6 +616,9 @@ GtkWidget *build_illumination_page(app_state *s)
             g_signal_connect(en, "toggled", G_CALLBACK(on_light_changed), s);
             gtk_grid_attach(GTK_GRID(cg), en, col, r, 1, 1);
             gtk_grid_attach(GTK_GRID(cg), cb, col + 1, r, 1, 1);
+            // a light with one colour of its own (the Lua) only goes on and off. the button stays for sync.cpp, unseen
+            if (one_colour(s))
+                gtk_widget_set_no_show_all(cb, TRUE);
             gtk_grid_attach(GTK_GRID(cg), label(t), col + 2, r, 1, 1);
         }
         GtkWidget *gb = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
@@ -628,9 +640,15 @@ GtkWidget *build_illumination_page(app_state *s)
             gtk_box_pack_start(GTK_BOX(gb), b, FALSE, FALSE, 0);
         }
         gtk_grid_attach(GTK_GRID(cg), gb, 0, (leds + 1) / 2, 6, 1);
-        s->colors_panel = box_panel(alpha ? "COLOURS (checkbox = LED enabled, alpha = LED brightness)" : "COLOURS (checkbox = light on)", cg);
+        // (hidden and not thrown away: shell.cpp and the group buttons still talk to the colour button in there)
+        if (one_colour(s))
+            gtk_widget_set_no_show_all(gb, TRUE);
+        s->colors_panel = box_panel(one_colour(s) ? "LIGHTS (checkbox = light on, they only have their own colour)"
+                                    : alpha       ? "COLOURS (checkbox = LED enabled, alpha = LED brightness)"
+                                                  : "COLOURS (checkbox = light on)",
+                                    cg);
     }
-    if (!s->kb_view)
+    if (!s->kb_view && s->colors_panel)
         gtk_box_pack_start(GTK_BOX(right), s->colors_panel, FALSE, FALSE, 0);
 
     if (has_setting(s, ROCKCAT_SET_IDLE_MINUTES)) {
@@ -687,6 +705,9 @@ GtkWidget *build_illumination_page(app_state *s)
         GtkWidget *srow = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
         gtk_box_pack_start(GTK_BOX(srow), s->shift_enable, FALSE, FALSE, 0);
         gtk_box_pack_start(GTK_BOX(srow), s->shift_color, FALSE, FALSE, 0);
+        // (still there for sync.cpp to read, just out of sight)
+        if (one_colour(s))
+            gtk_widget_set_no_show_all(s->shift_color, TRUE);
         gtk_box_pack_start(GTK_BOX(srow), s->shift_style, FALSE, FALSE, 0);
         gtk_grid_attach(GTK_GRID(sg), srow, 0, 0, 1, 1);
         s->shift_hint = label("", "rc-hint");

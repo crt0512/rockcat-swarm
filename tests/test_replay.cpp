@@ -8,6 +8,7 @@
 //   rockcat-test-replay profile       the profile api against the pretend mouse, no recording involved
 //   rockcat-test-replay events        input reports turned into events
 //   rockcat-test-replay render [FILE] every effect rendered, compared with FILE or printed if there is none
+//   rockcat-test-replay ryos-mk       the older Ryos boards against their pretend selves
 //   rockcat-test-replay regen FILE    rewrites the recording. only do that when the traffic was MEANT to change
 
 #include "internal.h"
@@ -863,12 +864,817 @@ struct own_config {
     ~own_config()
     {
         std::string inner = dir + "/rockcat";
-        for (const char *name : {"/2e2c.ini", "/2cee.ini", "/2fda.ini", "/2e2c.ini.tmp", "/2cee.ini.tmp", "/2fda.ini.tmp"})
+        for (const char *name : {"/2e2c.ini", "/2cee.ini", "/2fda.ini", "/2c2e.ini", "/2e2c.ini.tmp", "/2cee.ini.tmp", "/2fda.ini.tmp", "/2c2e.ini.tmp"})
             unlink((inner + name).c_str());
         rmdir(inner.c_str());
         rmdir(dir.c_str());
     }
 };
+
+// the older Ryos boards against their pretend selves: write, read back, and the bytes nobody knows (light byte 13, the blink
+// bit on Esc) have to come out the way they went in. the TKL has no M keys, asking for one has to say so
+static int ryos_mk_checks()
+{
+    int failures = 0;
+    const char *names[] = {"ryos-mk", "ryos-mk-glow", "ryos-mk-pro", "ryos-tkl", "ryos-tkl-pro"};
+    std::string runtime = "/tmp/rockcat-test-" + std::to_string(getpid());
+    mkdir(runtime.c_str(), 0700);
+    setenv("XDG_RUNTIME_DIR", runtime.c_str(), 1);
+    for (const char *name : names) {
+        setenv("ROCKCAT_SIM", name, 1);
+        rockcat_device *dev = nullptr;
+        CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+        if (!dev)
+            return 1;
+        const rockcat_caps *caps = rockcat_get_caps(dev);
+        const bool lit = caps->led_count == 120, tkl = std::strstr(name, "tkl") != nullptr;
+        const bool pro = std::strcmp(name, "ryos-mk-pro") == 0;
+        std::fprintf(stderr, "%s\n", name);
+
+        rockcat_profile *p = nullptr;
+        CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        int v = 0;
+        CHECK((rockcat_profile_get_int(p, ROCKCAT_SET_BRIGHTNESS, &v) == ROCKCAT_OK) == (std::strcmp(name, "ryos-mk-glow") == 0 || lit));
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT_SPEED, &v) == ROCKCAT_ERR_UNSUPPORTED);
+        if (lit) {
+            // profile 1 of the sim shows the automatic set, fade on, everything lit but the first row
+            CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_FADE);
+            int on = -1;
+            CHECK(rockcat_profile_get_led(p, 0, nullptr, &on) == ROCKCAT_OK && on == 0);
+            CHECK(rockcat_profile_get_led(p, 30, nullptr, &on) == ROCKCAT_OK && on == 1);
+            CHECK(rockcat_profile_set_led(p, 30, rockcat_color{255, 10, 10, 10}, 1) == ROCKCAT_OK); // too dark to count
+            CHECK(rockcat_profile_set_led(p, 0, rockcat_color{255, 0, 0, 255}, 1) == ROCKCAT_OK);
+            CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_RIPPLE) == ROCKCAT_OK);
+            // the engine ones go through the carrier: fully lit on the keyboard, the real pick kept on the pc
+            CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_WAVE) == ROCKCAT_ERR_UNSUPPORTED);
+            CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_SNAKE) == ROCKCAT_ERR_ARGUMENT);
+            int by_engine = 0;
+            CHECK(rockcat_profile_select_effect(p, ROCKCAT_EFFECT_FIRE, 0) == ROCKCAT_OK);
+            CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_FULLY_LIT);
+            CHECK(rockcat_profile_get_effect(p, &v, &by_engine) == ROCKCAT_OK && v == ROCKCAT_EFFECT_FIRE && by_engine == 1);
+            // and picking a firmware one again forgets the fire
+            CHECK(rockcat_profile_select_effect(p, ROCKCAT_EFFECT_FADE, 0) == ROCKCAT_OK);
+            CHECK(rockcat_profile_get_effect(p, &v, &by_engine) == ROCKCAT_OK && v == ROCKCAT_EFFECT_FADE && by_engine == 0);
+            CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_BRIGHTNESS, 102) == ROCKCAT_OK);
+        } else {
+            CHECK(rockcat_profile_set_led(p, 0, rockcat_color{255, 255, 255, 255}, 1) == ROCKCAT_ERR_ARGUMENT);
+        }
+        // M1 is input 0, A is 61 with Easy-Shift on layer 1
+        rockcat_assignment a{0xb0, 0, 0};
+        CHECK((rockcat_profile_set_input(p, 0, 0, &a) == ROCKCAT_OK) == !tkl);
+        rockcat_macro mac;
+        std::memset(&mac, 0, sizeof mac);
+        CHECK((rockcat_profile_set_macro(p, 0, 0, &mac) == ROCKCAT_OK) == !tkl);
+        rockcat_assignment copy{0xb8, 0x06, 0x01};
+        CHECK(rockcat_profile_set_input(p, 1, 61, &copy) == ROCKCAT_OK);
+        CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
+        rockcat_profile_free(p);
+
+        p = nullptr;
+        CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        rockcat_assignment got{};
+        CHECK(rockcat_profile_get_input(p, 1, 61, &got) == ROCKCAT_OK && got.type == 0xb8 && got.param1 == 0x06 && got.param2 == 0x01);
+        CHECK((rockcat_profile_get_input(p, 0, 0, &got) == ROCKCAT_OK && got.type == 0xb0) == !tkl);
+        std::vector<uint8_t> raw;
+        p->export_payload(raw);
+        // light report is right behind the seven key reports, byte 13 is the unknown one
+        size_t light = 125 + 95 + (tkl ? 0 : 35) + 23 + 8 + 294 + 6;
+        CHECK(raw.size() > light + 13 && raw[light + 13] == 0x5a);
+        if (lit) {
+            CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_FADE);
+            CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_BRIGHTNESS, &v) == ROCKCAT_OK && v == 102);
+            int on = -1;
+            rockcat_color c{};
+            CHECK(rockcat_profile_get_led(p, 30, nullptr, &on) == ROCKCAT_OK && on == 0);
+            CHECK(rockcat_profile_get_led(p, 0, &c, &on) == ROCKCAT_OK && on == 1 && c.b == 0xff);
+            // the automatic set (or layer) of profile 1 starts right after the 16 byte light report. Esc is key 1, dark in the sim but blinking
+            size_t set = light + 16;
+            if (pro)
+                CHECK(raw[set + 4] == 1 && raw[set + 1382 + 4] == 0 && (raw[set + 1382 + 7 + 1] & 3) == 2);
+            else
+                CHECK(raw[set + 3] == 0 && raw[set + 4] == 0 && raw[set + 8 + 2] == 0x00 && raw[set + 8 + 3] == 0x04);
+            // a frame from the pc gets taken
+            CHECK(rockcat_direct_begin(dev) == ROCKCAT_OK);
+            std::vector<rockcat_color> frame(120, rockcat_color{255, 0, 0, 255});
+            CHECK(rockcat_direct_frame(dev, frame.data(), 120) == ROCKCAT_OK);
+            CHECK(rockcat_direct_end(dev) == ROCKCAT_OK);
+        }
+        // the engine has to take the leds of a board that only knows on and off too, once fire is picked
+        if (lit) {
+            CHECK(rockcat_profile_select_effect(p, ROCKCAT_EFFECT_FIRE, 0) == ROCKCAT_OK && rockcat_profile_write(dev, p) == ROCKCAT_OK);
+            rockcat_device_info info;
+            rockcat_get_info(dev, &info);
+            rockcat_engine *engine = nullptr;
+            CHECK(rockcat_engine_start(info.path, ROCKCAT_ENGINE_AUTO, &engine) == ROCKCAT_OK && engine);
+            bool drawing = false;
+            for (int i = 0; i < 100 && engine && !drawing; ++i) {
+                rockcat_engine_status st;
+                rockcat_engine_get_status(engine, &st);
+                drawing = st.rendering && st.effect == ROCKCAT_EFFECT_FIRE && st.last_error == ROCKCAT_OK;
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+            CHECK(drawing);
+            // and what it draws there is lit blue or dark, nothing a one colour board cant show
+            if (engine) {
+                std::vector<rockcat_color> shown(120);
+                CHECK(rockcat_engine_get_frame(engine, shown.data(), 120) == 120);
+                bool only_two = true;
+                for (const rockcat_color &c : shown)
+                    only_two = only_two && ((c.r == 0x20 && c.g == 0x60 && c.b == 0xff) || (c.r == 0 && c.g == 0 && c.b == 0));
+                CHECK(only_two);
+            }
+            if (engine)
+                rockcat_engine_stop(engine);
+            CHECK(rockcat_profile_select_effect(p, ROCKCAT_EFFECT_FADE, 0) == ROCKCAT_OK);
+        }
+        // the payload has to go back in and still be the same profile
+        CHECK(p->import_payload(raw.data(), raw.size()) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_index(p, 3) == ROCKCAT_OK && rockcat_profile_write(dev, p) == ROCKCAT_OK);
+        rockcat_profile_free(p);
+        p = nullptr;
+        CHECK(rockcat_profile_read(dev, 3, &p) == ROCKCAT_OK && p);
+        if (p) {
+            CHECK(rockcat_profile_get_input(p, 1, 61, &got) == ROCKCAT_OK && got.type == 0xb8);
+            rockcat_profile_free(p);
+        }
+        rockcat_close(dev);
+    }
+    return failures ? 1 : 0;
+}
+
+// a real Ryos MK Pro (firmware 1.26) read out once with 'backup'. its lights live in the two on/off sets and not in colours,
+// and it says 0 where the profile count should be
+static int ryos_mk_pro_checks(const char *file)
+{
+    int failures = 0;
+    rockcat_device_info info;
+    std::unique_ptr<transport> rep = transport_replay(file, &info);
+    if (!rep)
+        return fail("cant read the recording");
+    rockcat_device *dev = device_from_transport(std::move(rep), info);
+    const rockcat_caps *caps = rockcat_get_caps(dev);
+    CHECK(caps && std::strcmp(caps->family, "ryos") == 0 && caps->led_count == 120 && !(caps->features & ROCKCAT_HAS_RGB));
+    rockcat_profile *p[5] = {};
+    for (int i = 0; i < 5; ++i)
+        CHECK(rockcat_profile_read(dev, i, &p[i]) == ROCKCAT_OK && p[i]);
+    CHECK(rockcat_replay_verdict(dev, 1) == ROCKCAT_OK);
+    if (!p[0] || !p[1])
+        return 1;
+    int v = -1;
+    CHECK(rockcat_profile_get_int(p[0], ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_FULLY_LIT);
+    CHECK(rockcat_profile_get_int(p[0], ROCKCAT_SET_BRIGHTNESS, &v) == ROCKCAT_OK && v == 255);
+    CHECK(rockcat_profile_get_int(p[0], ROCKCAT_SET_IDLE_BRIGHTNESS, &v) == ROCKCAT_OK && v == 204);
+    CHECK(rockcat_profile_get_int(p[0], ROCKCAT_SET_IDLE_MINUTES, &v) == ROCKCAT_OK && v == 15);
+    CHECK(rockcat_profile_get_int(p[0], ROCKCAT_SET_MACRO_FEEDBACK, &v) == ROCKCAT_OK && v == 1);
+    CHECK(rockcat_profile_get_int(p[1], ROCKCAT_SET_BRIGHTNESS, &v) == ROCKCAT_OK && v == 102);
+    int lit = 0;
+    for (int led = 0; led < 120; ++led) {
+        int on = 0;
+        rockcat_profile_get_led(p[0], led, nullptr, &on);
+        lit += on;
+    }
+    // 111 keys of the ISO board plus 5 slots that only have a key on japanese / korean boards, the factory set lights those too
+    CHECK(lit == 116);
+    // the owner put the five profiles on M1 to M5
+    rockcat_assignment a{};
+    CHECK(rockcat_profile_get_input(p[0], 0, 0, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_PROFILE_1);
+    CHECK(rockcat_profile_get_input(p[0], 2, 2, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_MUTE);
+    // what goes out is what came in, the recording was made with the same code that writes
+    std::vector<uint8_t> raw;
+    p[0]->export_payload(raw);
+    CHECK(raw.size() == 586 + 16 + 2 * 1382 && raw[586] == 0x0d && raw[602 + 4] == 1 && raw[602 + 1382 + 4] == 0);
+    for (rockcat_profile *x : p)
+        rockcat_profile_free(x);
+    rockcat_close(dev);
+    return failures ? 1 : 0;
+}
+
+// a real Sova membrane read out with 'backup' (firmware 1.27), then the pretend one: write, read back, macros in one report
+static int sova_checks(const char *file)
+{
+    int failures = 0;
+    rockcat_device_info info;
+    std::unique_ptr<transport> rep = transport_replay(file, &info);
+    if (!rep)
+        return fail("cant read the recording");
+    rockcat_device *dev = device_from_transport(std::move(rep), info);
+    const rockcat_caps *caps = rockcat_get_caps(dev);
+    CHECK(caps && std::strcmp(caps->family, "sova") == 0 && caps->led_count == 0);
+    rockcat_profile *p[5] = {};
+    for (int i = 0; i < 5; ++i)
+        CHECK(rockcat_profile_read(dev, i, &p[i]) == ROCKCAT_OK && p[i]);
+    CHECK(rockcat_replay_verdict(dev, 1) == ROCKCAT_OK);
+    if (!p[0])
+        return 1;
+    int v = -1;
+    CHECK(rockcat_profile_get_int(p[0], ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_FULLY_LIT);
+    CHECK(rockcat_profile_get_int(p[0], ROCKCAT_SET_BRIGHTNESS, &v) == ROCKCAT_OK && v == 255);
+    CHECK(rockcat_profile_get_int(p[0], ROCKCAT_SET_IDLE_MINUTES, &v) == ROCKCAT_OK && v == 30);
+    rockcat_assignment a{};
+    // Q is slot 0, its Easy-Shift side is slot 10 of the Easy-Shift report. Caps Lock is Easy-Shift on this one. F1 with Fn mutes
+    CHECK(rockcat_profile_get_input(p[0], 0, 0, &a) == ROCKCAT_OK && a.type == 0x14);
+    CHECK(rockcat_profile_get_input(p[0], 1, 0, &a) == ROCKCAT_OK && a.type == 0x14);
+    CHECK(rockcat_profile_get_input(p[0], 0, 225, &a) == ROCKCAT_OK && a.type == 0xff);
+    CHECK(rockcat_profile_get_input(p[0], 2, 72, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_MUTE);
+    CHECK(rockcat_profile_get_input(p[0], 0, 120, &a) == ROCKCAT_ERR_ARGUMENT); // Esc stays Esc
+    for (rockcat_profile *x : p)
+        rockcat_profile_free(x);
+    rockcat_close(dev);
+
+    setenv("ROCKCAT_SIM", "sova-membrane", 1);
+    dev = nullptr;
+    CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+    if (!dev)
+        return 1;
+    rockcat_profile *q = nullptr;
+    CHECK(rockcat_profile_read(dev, 2, &q) == ROCKCAT_OK && q);
+    if (!q)
+        return 1;
+    CHECK(rockcat_profile_set_int(q, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_IMPULSE) == ROCKCAT_OK);
+    CHECK(rockcat_profile_set_int(q, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_WAVE) == ROCKCAT_ERR_ARGUMENT);
+    CHECK(rockcat_profile_set_int(q, ROCKCAT_SET_EFFECT_SPEED, 3) == ROCKCAT_OK);
+    rockcat_assignment copy{0xb8, 0x06, 0x01};
+    CHECK(rockcat_profile_set_input(q, 1, 127, &copy) == ROCKCAT_OK); // A with Easy-Shift: ctrl+c
+    rockcat_macro m;
+    std::memset(&m, 0, sizeof m);
+    std::snprintf(m.name, sizeof m.name, "hi");
+    m.count = 2;
+    m.keys[0] = rockcat_keystroke{0x0b, 1, 20};
+    m.keys[1] = rockcat_keystroke{0x0b, 2, 20};
+    CHECK(rockcat_profile_set_macro(q, 1, 0, &m) == ROCKCAT_OK);    // Q with Easy-Shift
+    CHECK(rockcat_profile_set_macro(q, 0, 0, &m) == ROCKCAT_ERR_UNSUPPORTED);
+    CHECK(rockcat_profile_write(dev, q) == ROCKCAT_OK);
+    rockcat_profile_free(q);
+    q = nullptr;
+    CHECK(rockcat_profile_read(dev, 2, &q) == ROCKCAT_OK && q);
+    if (q) {
+        CHECK(rockcat_profile_get_int(q, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_IMPULSE);
+        CHECK(rockcat_profile_get_int(q, ROCKCAT_SET_EFFECT_SPEED, &v) == ROCKCAT_OK && v == 3);
+        CHECK(rockcat_profile_get_input(q, 1, 127, &a) == ROCKCAT_OK && a.type == 0xb8 && a.param1 == 0x06);
+        rockcat_macro back;
+        CHECK(rockcat_profile_get_macro(dev, q, 1, 0, &back) == ROCKCAT_OK && back.count == 2 && back.keys[1].action == 2 &&
+              std::strcmp(back.name, "hi") == 0 && back.profile == 2 && back.button == 10);
+        CHECK(rockcat_profile_reset_inputs(q) == ROCKCAT_OK);
+        CHECK(rockcat_profile_get_input(q, 1, 127, &a) == ROCKCAT_OK && a.type == 0x04 && a.param1 == 0);
+        rockcat_profile_free(q);
+    }
+    uint8_t active = 9, count = 0;
+    CHECK(rockcat_set_active_profile(dev, 3) == ROCKCAT_OK);
+    CHECK(rockcat_get_active_profile(dev, &active, &count) == ROCKCAT_OK && active == 3 && count == 5);
+    rockcat_close(dev);
+    return failures ? 1 : 0;
+}
+
+// the Lua cant be read, its settings come back from the config dir. what was written has to be what gets read
+static int lua_checks()
+{
+    int failures = 0;
+    setenv("ROCKCAT_SIM", "lua", 1);
+    rockcat_device *dev = nullptr;
+    CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+    if (!dev)
+        return 1;
+    rockcat_profile *p = nullptr;
+    CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+    if (!p)
+        return 1;
+    int v = -1, x = 0, en = 0;
+    CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_DPI_ACTIVE, &v) == ROCKCAT_OK && v == 2);
+    CHECK(rockcat_profile_get_dpi(p, 3, &x, nullptr, &en) == ROCKCAT_OK && x == 1250 && en == 1);
+    CHECK(rockcat_profile_set_dpi(p, 3, 1300, 1300, 1) == ROCKCAT_ERR_ARGUMENT); // the steps are fixed
+    CHECK(rockcat_profile_set_dpi(p, 3, 1250, 1250, 0) == ROCKCAT_OK);
+    CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_POLLING_HZ, 250) == ROCKCAT_OK);
+    CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_POLLING_HZ, 333) == ROCKCAT_ERR_ARGUMENT);
+    CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_BREATHING) == ROCKCAT_OK);
+    CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_WAVE) == ROCKCAT_ERR_ARGUMENT);
+    CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_LEFT_HANDED, 1) == ROCKCAT_OK);
+    rockcat_assignment a{0x85, 0, 0};
+    CHECK(rockcat_profile_set_input(p, 0, 5, &a) == ROCKCAT_OK);
+    rockcat_assignment key{0x20, 0, 0}; // nothing the Lua knows
+    CHECK(rockcat_profile_set_input(p, 0, 5, &key) == ROCKCAT_ERR_ARGUMENT);
+    CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
+    rockcat_profile_free(p);
+    p = nullptr;
+    CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+    if (p) {
+        CHECK(rockcat_profile_get_dpi(p, 3, nullptr, nullptr, &en) == ROCKCAT_OK && en == 0);
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_POLLING_HZ, &v) == ROCKCAT_OK && v == 250);
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_BREATHING);
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_LEFT_HANDED, &v) == ROCKCAT_OK && v == 1);
+        CHECK(rockcat_profile_get_input(p, 0, 5, &a) == ROCKCAT_OK && a.type == 0x85);
+        rockcat_profile_free(p);
+    }
+    rockcat_close(dev);
+    return failures ? 1 : 0;
+}
+
+// Nyth, Tyon, Kiro, Savu against their pretend selves: what goes out has to come back, macros where there are some
+static int classic_checks()
+{
+    int failures = 0;
+    const struct {
+        const char *sim;
+        int dpi; // a value the mouse can take on level 1
+        bool macros;
+        int profile;
+    } mice[] = {{"nyth", 1230, true, 3}, {"tyon", 1400, true, 2}, {"kiro", 1250, false, 0}, {"savu", 800, false, 4}, {"kone-emp", 1300, true, 1}, {"kone-pure-owl-eye", 1100, true, 2}, {"leadr", 2400, true, 3}, {"kova-aimo", 1250, true, 1}};
+    for (const auto &m : mice) {
+        std::fprintf(stderr, "%s\n", m.sim);
+        setenv("ROCKCAT_SIM", m.sim, 1);
+        rockcat_device *dev = nullptr;
+        CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+        if (!dev)
+            return 1;
+        rockcat_profile *p = nullptr;
+        CHECK(rockcat_profile_read(dev, m.profile, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        CHECK(rockcat_profile_set_dpi(p, 1, m.dpi, m.dpi, 1) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_BREATHING) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_POLLING_HZ, 500) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_COLOR_FLOW, 0) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_led(p, 0, rockcat_color{255, 255, 0, 0}, 1) == ROCKCAT_OK);
+        rockcat_assignment a{0x07, 0, 0};
+        CHECK(rockcat_profile_set_input(p, 0, 2, &a) == ROCKCAT_OK);
+        rockcat_macro mac;
+        std::memset(&mac, 0, sizeof mac);
+        mac.count = 2;
+        mac.keys[0] = rockcat_keystroke{0x04, 1, 10};
+        mac.keys[1] = rockcat_keystroke{0x04, 2, 10};
+        CHECK((rockcat_profile_set_macro(p, 0, 3, &mac) == ROCKCAT_OK) == m.macros);
+        CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
+        rockcat_profile_free(p);
+        p = nullptr;
+        CHECK(rockcat_profile_read(dev, m.profile, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        int x = 0, en = 0, v = -1;
+        CHECK(rockcat_profile_get_dpi(p, 1, &x, nullptr, &en) == ROCKCAT_OK && x == m.dpi && en == 1);
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_BREATHING);
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_POLLING_HZ, &v) == ROCKCAT_OK && v == 500);
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_COLOR_FLOW, &v) == ROCKCAT_OK && v == 0);
+        rockcat_color c{};
+        CHECK(rockcat_profile_get_led(p, 0, &c, &en) == ROCKCAT_OK && c.r == 255 && c.g == 0 && en == 1);
+        CHECK(rockcat_profile_get_input(p, 0, 2, &a) == ROCKCAT_OK && a.type == 0x07);
+        if (m.macros) {
+            rockcat_macro back;
+            CHECK(rockcat_profile_get_macro(dev, p, 0, 3, &back) == ROCKCAT_OK && back.count == 2 && back.button == 3 && back.profile == m.profile);
+        }
+        // (the Kone EMP has no factory buttons anybody knows, it has to say so and not make some up)
+        if (std::strcmp(m.sim, "kone-emp") == 0 || std::strcmp(m.sim, "kone-pure-owl-eye") == 0 || std::strcmp(m.sim, "leadr") == 0) {
+            CHECK(rockcat_profile_reset_inputs(p) == ROCKCAT_ERR_UNSUPPORTED);
+        } else {
+            CHECK(rockcat_profile_reset_inputs(p) == ROCKCAT_OK);
+            CHECK(rockcat_profile_get_input(p, 0, 2, &a) == ROCKCAT_OK && a.type == 0x03);
+        }
+        rockcat_profile_free(p);
+        rockcat_close(dev);
+    }
+    return failures ? 1 : 0;
+}
+
+// Isku and Isku FX against their pretend selves: keys stored column wise, the macro in its 2083 byte report, the FX light
+static int isku_checks()
+{
+    int failures = 0;
+    for (const char *name : {"isku", "isku-fx"}) {
+        std::fprintf(stderr, "%s\n", name);
+        const bool fx = std::strcmp(name, "isku-fx") == 0;
+        setenv("ROCKCAT_SIM", name, 1);
+        rockcat_device *dev = nullptr;
+        CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+        if (!dev)
+            return 1;
+        rockcat_profile *p = nullptr;
+        CHECK(rockcat_profile_read(dev, 1, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        rockcat_assignment a{};
+        CHECK(rockcat_profile_get_input(p, 0, 0x38, &a) == ROCKCAT_OK && a.type == 0xff); // Caps Lock is Easy-Shift
+        CHECK(rockcat_profile_get_input(p, 0, 0x0a, &a) == ROCKCAT_ERR_UNSUPPORTED);      // "1" is just 1 without Easy-Shift
+        CHECK(rockcat_profile_get_input(p, 0, 150, &a) == ROCKCAT_ERR_ARGUMENT);          // a key nothing can be set on
+        rockcat_assignment sc{0xb8, 0x01, 0x06};
+        CHECK(rockcat_profile_set_input(p, 1, 0x0f, &sc) == ROCKCAT_OK); // Q with Easy-Shift
+        rockcat_assignment up{0xb0, 0, 0};
+        CHECK(rockcat_profile_set_input(p, 1, 0x1e, &up) == ROCKCAT_OK); // T1 with Easy-Shift
+        rockcat_assignment media{0xa1, 0, 0};
+        CHECK(rockcat_profile_set_input(p, 0, 0x30, &media) == ROCKCAT_OK);
+        rockcat_macro mac;
+        std::memset(&mac, 0, sizeof mac);
+        std::snprintf(mac.name, sizeof mac.name, "hi");
+        mac.count = 2;
+        mac.keys[0] = rockcat_keystroke{0x0b, 1, 5};
+        mac.keys[1] = rockcat_keystroke{0x0b, 2, 5};
+        CHECK(rockcat_profile_set_macro(p, 1, 0, &mac) == ROCKCAT_OK);       // shift M1, key index 5
+        CHECK(rockcat_profile_set_macro(p, 0, 0x24, &mac) == ROCKCAT_ERR_UNSUPPORTED); // F1 cant
+        CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_BRIGHTNESS, 51) == ROCKCAT_OK);
+        CHECK((rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_BREATHING) == ROCKCAT_OK) == fx);
+        if (fx)
+            CHECK(rockcat_profile_set_led(p, 0, rockcat_color{255, 255, 0, 0}, 1) == ROCKCAT_OK);
+        CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
+        rockcat_profile_free(p);
+        p = nullptr;
+        CHECK(rockcat_profile_read(dev, 1, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        CHECK(rockcat_profile_get_input(p, 1, 0x0f, &a) == ROCKCAT_OK && a.type == 0xb8 && a.param1 == 0x01 && a.param2 == 0x06);
+        CHECK(rockcat_profile_get_input(p, 1, 0x1e, &a) == ROCKCAT_OK && a.type == 0xb0);
+        CHECK(rockcat_profile_get_input(p, 0, 0x1e, &a) == ROCKCAT_OK && a.type == 0xef); // T1 itself untouched
+        CHECK(rockcat_profile_get_input(p, 0, 0x30, &a) == ROCKCAT_OK && a.type == 0xa1);
+        rockcat_macro back;
+        CHECK(rockcat_profile_get_macro(dev, p, 1, 0, &back) == ROCKCAT_OK && back.count == 2 && back.button == 5 &&
+              std::strcmp(back.name, "hi") == 0);
+        int v = -1;
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_BRIGHTNESS, &v) == ROCKCAT_OK && v == 51);
+        if (fx) {
+            rockcat_color c{};
+            int en = 0;
+            CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_BREATHING);
+            CHECK(rockcat_profile_get_led(p, 0, &c, &en) == ROCKCAT_OK && c.r == 255 && c.b == 0 && en == 1);
+        }
+        CHECK(rockcat_profile_reset_inputs(p) == ROCKCAT_OK);
+        CHECK(rockcat_profile_get_input(p, 1, 0x0f, &a) == ROCKCAT_OK && a.type == 0xef && a.param1 == 0);
+        rockcat_profile_free(p);
+        rockcat_close(dev);
+    }
+    return failures ? 1 : 0;
+}
+
+// the pretend Skeltr: keys by Swarm number, macros on the Easy-Shift side, five light zones and frames for them
+static int skeltr_checks()
+{
+    int failures = 0;
+    setenv("ROCKCAT_SIM", "skeltr", 1);
+    rockcat_device *dev = nullptr;
+    CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+    if (!dev)
+        return 1;
+    rockcat_profile *p = nullptr;
+    CHECK(rockcat_profile_read(dev, 2, &p) == ROCKCAT_OK && p);
+    if (!p)
+        return 1;
+    rockcat_assignment a{};
+    CHECK(rockcat_profile_get_input(p, 0, 120, &a) == ROCKCAT_OK && a.type == 0x14); // Q in slot 120
+    CHECK(rockcat_profile_get_input(p, 2, 78, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_MUTE); // Fn + F1
+    CHECK(rockcat_profile_get_input(p, 0, 123, &a) == ROCKCAT_ERR_ARGUMENT); // Esc stays Esc
+    rockcat_assignment sc{0xb8, 0x06, 0x01};
+    CHECK(rockcat_profile_set_input(p, 1, 120, &sc) == ROCKCAT_OK);
+    rockcat_assignment up{0xb0, 0, 0};
+    CHECK(rockcat_profile_set_input(p, 1, 256, &up) == ROCKCAT_OK); // T2 with Easy-Shift
+    rockcat_macro mac;
+    std::memset(&mac, 0, sizeof mac);
+    mac.count = 1;
+    mac.keys[0] = rockcat_keystroke{0x04, 1, 5};
+    CHECK(rockcat_profile_set_macro(p, 1, 120, &mac) == ROCKCAT_OK); // Q with Easy-Shift: macro 21
+    CHECK(rockcat_profile_set_led(p, 3, rockcat_color{255, 0, 255, 0}, 1) == ROCKCAT_OK);
+    CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_FADE) == ROCKCAT_OK);
+    CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
+    rockcat_profile_free(p);
+    p = nullptr;
+    CHECK(rockcat_profile_read(dev, 2, &p) == ROCKCAT_OK && p);
+    if (!p)
+        return 1;
+    CHECK(rockcat_profile_get_input(p, 1, 120, &a) == ROCKCAT_OK && a.type == 0xb8 && a.param1 == 0x06);
+    CHECK(rockcat_profile_get_input(p, 1, 256, &a) == ROCKCAT_OK && a.type == 0xb0);
+    rockcat_macro back;
+    CHECK(rockcat_profile_get_macro(dev, p, 1, 120, &back) == ROCKCAT_OK && back.count == 1 && back.button == 21 && back.profile == 2);
+    rockcat_color c{};
+    CHECK(rockcat_profile_get_led(p, 3, &c, nullptr) == ROCKCAT_OK && c.g == 255 && c.r == 0);
+    int v = -1;
+    CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_FADE);
+    CHECK(std::strcmp(rockcat_led_label(rockcat_get_caps(dev), 1), "Top left") == 0); // a zone, not the key with led number 1
+    CHECK(rockcat_direct_begin(dev) == ROCKCAT_OK);
+    std::vector<rockcat_color> frame(5, rockcat_color{255, 10, 20, 30});
+    CHECK(rockcat_direct_frame(dev, frame.data(), 5) == ROCKCAT_OK);
+    CHECK(rockcat_direct_end(dev) == ROCKCAT_OK);
+    rockcat_profile_free(p);
+    rockcat_close(dev);
+    return failures ? 1 : 0;
+}
+
+// Isku+ and Isku+ Force FX against their pretend selves. the Force FX has Easy-Shift and thumb keys both on report 0b,
+// they must not end up in each others place
+static int isku_plus_checks()
+{
+    int failures = 0;
+    for (const char *name : {"isku-plus", "isku-plus-force-fx"}) {
+        std::fprintf(stderr, "%s\n", name);
+        setenv("ROCKCAT_SIM", name, 1);
+        rockcat_device *dev = nullptr;
+        CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+        if (!dev)
+            return 1;
+        rockcat_profile *p = nullptr;
+        CHECK(rockcat_profile_read(dev, 1, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        rockcat_assignment a{};
+        CHECK(rockcat_profile_get_input(p, 0, 120, &a) == ROCKCAT_OK && a.type == 0x14);
+        CHECK(rockcat_profile_get_input(p, 1, 59, &a) == ROCKCAT_ERR_UNSUPPORTED); // H has no Easy-Shift side, only the left 20
+        rockcat_assignment sc{0xb8, 0x06, 0x01}, up{0xb0, 0, 0}, mute{ROCKCAT_KF_MUTE, 0, 0};
+        CHECK(rockcat_profile_set_input(p, 1, 120, &sc) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_input(p, 1, 255, &up) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_input(p, 2, 118, &mute) == ROCKCAT_OK);
+        rockcat_macro mac;
+        std::memset(&mac, 0, sizeof mac);
+        mac.count = 1;
+        mac.keys[0] = rockcat_keystroke{0x04, 1, 5};
+        CHECK(rockcat_profile_set_macro(p, 1, 18, &mac) == ROCKCAT_OK); // M1 with Easy-Shift
+        CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
+        rockcat_profile_free(p);
+        p = nullptr;
+        CHECK(rockcat_profile_read(dev, 1, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        CHECK(rockcat_profile_get_input(p, 1, 120, &a) == ROCKCAT_OK && a.type == 0xb8 && a.param1 == 0x06);
+        CHECK(rockcat_profile_get_input(p, 1, 255, &a) == ROCKCAT_OK && a.type == 0xb0);
+        CHECK(rockcat_profile_get_input(p, 2, 118, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_MUTE);
+        rockcat_macro back;
+        CHECK(rockcat_profile_get_macro(dev, p, 1, 18, &back) == ROCKCAT_OK && back.count == 1 && back.button == 5);
+        CHECK(rockcat_profile_reset_inputs(p) == ROCKCAT_OK);
+        CHECK(rockcat_profile_get_input(p, 1, 120, &a) == ROCKCAT_OK && a.type == 0x14 && a.param1 == 0);
+        rockcat_profile_free(p);
+        rockcat_close(dev);
+    }
+    return failures ? 1 : 0;
+}
+
+// Vulcan 120 AIMO, TKL AIMO and Vulcan 80 against their pretend boards: keys on all three layers, the light settings, a write and a read back
+static int vulcan_checks()
+{
+    int failures = 0;
+    for (const char *name : {"vulcan-120-aimo", "vulcan-tkl-aimo", "vulcan-80"}) {
+        const bool v80 = std::strcmp(name, "vulcan-80") == 0, tkl = std::strcmp(name, "vulcan-tkl-aimo") == 0;
+        const int one = tkl ? 23 : 19; // the key "1", the TKL counts like the Vulcan Pro
+        std::fprintf(stderr, "%s\n", name);
+        setenv("ROCKCAT_SIM", name, 1);
+        rockcat_device *dev = nullptr;
+        CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+        if (!dev)
+            return 1;
+        const rockcat_caps *caps = rockcat_get_caps(dev);
+        CHECK(caps && caps->profile_count == 1 && caps->input_count == (v80 ? 116 : tkl ? 124 : 114));
+        CHECK(caps && ((caps->features & ROCKCAT_HAS_RGB) != 0) == !v80);
+        rockcat_profile *p = nullptr;
+        CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        rockcat_assignment a{};
+        CHECK(rockcat_profile_get_input(p, 0, 1, &a) == ROCKCAT_OK && a.type == 0x29); // Esc
+        // the Vulcan 80 has its media keys in 06 (Mute = d2 out of the box), the AIMO boards dont know what FX does
+        if (tkl) {
+            // Ins is in 07 with Print Screen on its Fn side, the numpad isnt there at all
+            CHECK(rockcat_profile_get_input(p, 0, 37, &a) == ROCKCAT_OK && a.type == 0x49);
+            CHECK(rockcat_profile_get_input(p, 2, 37, &a) == ROCKCAT_OK && a.type == 0x46);
+            CHECK(rockcat_profile_get_input(p, 0, 40, &a) == ROCKCAT_ERR_ARGUMENT);
+            CHECK(rockcat_profile_get_input(p, 0, 67, &a) == ROCKCAT_OK && a.type == 0xff); // Caps Lock is Easy-Shift
+        } else {
+            CHECK(rockcat_profile_get_input(p, 0, 112, &a) == (v80 ? ROCKCAT_OK : ROCKCAT_ERR_UNSUPPORTED));
+            if (v80)
+                CHECK(a.type == 0xd2);
+            CHECK(rockcat_profile_get_input(p, 0, 115, &a) == (v80 ? ROCKCAT_OK : ROCKCAT_ERR_ARGUMENT));
+        }
+        rockcat_assignment sc{0xb8, 0x06, 0x01}, mute{ROCKCAT_KF_MUTE, 0, 0}, b{0x05, 0, 0};
+        CHECK(rockcat_profile_set_input(p, 1, one, &sc) == ROCKCAT_OK); // Easy-Shift + 1
+        CHECK(rockcat_profile_set_input(p, 2, 2, &mute) == ROCKCAT_OK);  // Fn + F1
+        CHECK(rockcat_profile_set_input(p, 0, 1, &b) == ROCKCAT_OK);
+        if (v80) {
+            CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_AIMO) == ROCKCAT_ERR_ARGUMENT);
+            CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_FADE) == ROCKCAT_OK);
+            CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_BRIGHTNESS, 128) == ROCKCAT_OK); // step 6, 0x82
+            CHECK(rockcat_profile_set_led(p, 1, rockcat_color{128, 0x20, 0x60, 0xff}, 1) == ROCKCAT_OK);
+            CHECK(rockcat_profile_set_led(p, 113, rockcat_color{255, 0, 0, 0}, 0) == ROCKCAT_OK);
+        } else {
+            CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_FADE) == ROCKCAT_ERR_ARGUMENT);
+            CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_BREATHING) == ROCKCAT_OK);
+            CHECK(rockcat_profile_set_led(p, 1, rockcat_color{255, 0xff, 0x10, 0x00}, 1) == ROCKCAT_OK);
+        }
+        CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT_SPEED, 4) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT_SPEED, 12) == ROCKCAT_ERR_ARGUMENT);
+        CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
+        rockcat_profile_free(p);
+        p = nullptr;
+        CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        CHECK(rockcat_profile_get_input(p, 1, one, &a) == ROCKCAT_OK && a.type == 0xb8 && a.param1 == 0x06);
+        CHECK(rockcat_profile_get_input(p, 2, 2, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_MUTE);
+        CHECK(rockcat_profile_get_input(p, 0, 1, &a) == ROCKCAT_OK && a.type == 0x05);
+        int v = -1, on = -1;
+        rockcat_color c{};
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT_SPEED, &v) == ROCKCAT_OK && v == 4);
+        if (v80) {
+            CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_FADE);
+            CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_BRIGHTNESS, &v) == ROCKCAT_OK && v == 0x82);
+            CHECK(rockcat_profile_get_led(p, 1, &c, &on) == ROCKCAT_OK && on == 1 && c.a == 128 && c.b == 0xff);
+            CHECK(rockcat_profile_get_led(p, 113, &c, &on) == ROCKCAT_OK && on == 0);
+            CHECK(rockcat_profile_get_led(p, 2, &c, &on) == ROCKCAT_OK && on == 1 && c.a == 255); // F1 untouched
+            CHECK(rockcat_profile_get_led(p, 17, &c, &on) == ROCKCAT_ERR_ARGUMENT);               // no key 17
+        } else {
+            CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_BREATHING);
+            CHECK(rockcat_profile_get_led(p, 1, &c, &on) == ROCKCAT_OK && c.r == 0xff && c.g == 0x10 && c.b == 0);
+        }
+        CHECK(rockcat_profile_reset_inputs(p) == ROCKCAT_OK);
+        CHECK(rockcat_profile_get_input(p, 0, 1, &a) == ROCKCAT_OK && a.type == 0x29);
+        CHECK(rockcat_profile_get_input(p, 1, one, &a) == ROCKCAT_OK && a.type == 0x1e && a.param1 == 0);
+        rockcat_profile_free(p);
+        rockcat_close(dev);
+    }
+    // the Horde boards: key number = slot, M keys in 08 (normal and Easy-Shift), Caps Lock in 0a, the light kept as it is
+    for (const char *name : {"horde", "horde-aimo"}) {
+        std::fprintf(stderr, "%s\n", name);
+        setenv("ROCKCAT_SIM", name, 1);
+        rockcat_device *dev = nullptr;
+        CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+        if (!dev)
+            return 1;
+        rockcat_profile *p = nullptr;
+        CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        rockcat_assignment a{};
+        int v = 0;
+        CHECK(rockcat_profile_get_input(p, 0, 127, &a) == ROCKCAT_OK && a.type == 0x29); // Esc
+        CHECK(rockcat_profile_get_input(p, 0, 258, &a) == ROCKCAT_OK && a.type == 0x39); // Caps Lock
+        CHECK(rockcat_profile_get_input(p, 0, 125, &a) == ROCKCAT_OK && a.type == 0xd3); // M1
+        CHECK(rockcat_profile_get_input(p, 1, 125, &a) == ROCKCAT_OK && a.type == 0xd8); // M1 with Easy-Shift
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_ERR_UNSUPPORTED);
+        rockcat_assignment b{0x05, 0, 0}, mute{ROCKCAT_KF_MUTE, 0, 0};
+        CHECK(rockcat_profile_set_input(p, 0, 127, &b) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_input(p, 1, 125, &mute) == ROCKCAT_OK);
+        CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
+        rockcat_profile_free(p);
+        p = nullptr;
+        CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        CHECK(rockcat_profile_get_input(p, 0, 127, &a) == ROCKCAT_OK && a.type == 0x05);
+        CHECK(rockcat_profile_get_input(p, 1, 125, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_MUTE);
+        CHECK(rockcat_profile_reset_inputs(p) == ROCKCAT_OK);
+        CHECK(rockcat_profile_get_input(p, 1, 125, &a) == ROCKCAT_OK && a.type == 0xd8);
+        rockcat_profile_free(p);
+        rockcat_close(dev);
+    }
+    return failures ? 1 : 0;
+}
+
+// Vulcan Pro, TKL Pro, Vulcan II, II Max and II Mini against their pretend boards: five profiles, the 4 byte key entries, the light, write and read back
+static int vulcan_pro_checks()
+{
+    int failures = 0;
+    for (const char *name : {"vulcan-pro", "vulcan-tkl-pro", "vulcan-ii", "vulcan-ii-max", "vulcan-ii-mini", "pyro", "magma", "magma-mini"}) {
+        const bool mmini = std::strcmp(name, "magma-mini") == 0;
+        const bool mini = std::strcmp(name, "vulcan-ii-mini") == 0 || mmini, max = std::strcmp(name, "vulcan-ii-max") == 0;
+        const int es_key = mmini ? 46 : 23; // the Magma Minis Easy-Shift side starts at Q
+        const int f1 = mini ? 23 : 2, f2 = mini ? 24 : 3; // the Mini has its F keys on the number row with Fn
+        const uint8_t es1 = mmini ? 0x14 : mini ? 0x00 : 0x1e; // and the II Mini nothing on Easy-Shift out of the box
+        std::fprintf(stderr, "%s\n", name);
+        setenv("ROCKCAT_SIM", name, 1);
+        rockcat_device *dev = nullptr;
+        CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+        if (!dev)
+            return 1;
+        const rockcat_caps *caps = rockcat_get_caps(dev);
+        CHECK(caps && caps->profile_count == 5 && caps->layer_count == 3);
+        CHECK(rockcat_set_active_profile(dev, 2) == ROCKCAT_OK);
+        uint8_t active = 9, count = 0;
+        CHECK(rockcat_get_active_profile(dev, &active, &count) == ROCKCAT_OK && active == 2 && count == 5);
+        rockcat_profile *p = nullptr;
+        CHECK(rockcat_profile_read(dev, 2, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        rockcat_assignment a{};
+        CHECK(rockcat_profile_get_input(p, 0, 46, &a) == ROCKCAT_OK && a.type == 0x14);        // Q, one byte in 06
+        if (!mini)
+            CHECK(rockcat_profile_get_input(p, 0, 2, &a) == ROCKCAT_OK && a.type == 0x3a); // F1, an entry in 0a
+        CHECK(rockcat_profile_get_input(p, 1, es_key, &a) == ROCKCAT_OK && a.type == es1); // Easy-Shift + 1
+        // Fn + F1: profile 1 out of the box, except on the TKL Pro and the Pyro where the first F keys stay themselves
+        const bool tkl = std::strcmp(name, "vulcan-tkl-pro") == 0 || std::strcmp(name, "pyro") == 0 || std::strcmp(name, "magma") == 0;
+        CHECK(rockcat_profile_get_input(p, 2, f1, &a) == ROCKCAT_OK);
+        if (mini)
+            CHECK(a.type == 0x3a); // Fn + 1 is F1
+        else if (max)
+            CHECK(a.type == 0xfe && a.param1 == 0x01 && a.param2 == 0x0d); // kept, kind 0d nobody has a name for
+        else
+            CHECK(rockcat_profile_get_input(p, 2, 2, &a) == ROCKCAT_OK && a.type == (tkl ? 0x3a : ROCKCAT_KF_PROFILE_1));
+        CHECK(rockcat_profile_get_input(p, 2, mini ? 31 : 10, &a) == ROCKCAT_OK); // Fn + F9, whatever it is
+        rockcat_assignment b{0x05, 0, 0}, mute{ROCKCAT_KF_MUTE, 0, 0}, sc{0xb8, 0x06, 0x01}, cut{0x1b, 0, 0};
+        CHECK(rockcat_profile_set_input(p, 0, 46, &b) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_input(p, 0, 46, &mute) == ROCKCAT_ERR_ARGUMENT); // 06 only takes keys
+        CHECK(rockcat_profile_set_input(p, 2, f2, &mute) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_input(p, 1, es_key, &sc) == ROCKCAT_ERR_ARGUMENT); // no shortcuts (yet)
+        CHECK(rockcat_profile_set_input(p, 1, es_key, &cut) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_led(p, 1, rockcat_color{255, 0x12, 0x34, 0x56}, 1) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_BREATHING) == ROCKCAT_OK);
+        CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_BRIGHTNESS, 120) == ROCKCAT_OK);
+        CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
+        rockcat_profile_free(p);
+        p = nullptr;
+        CHECK(rockcat_profile_read(dev, 2, &p) == ROCKCAT_OK && p);
+        if (!p)
+            return 1;
+        CHECK(rockcat_profile_get_input(p, 0, 46, &a) == ROCKCAT_OK && a.type == 0x05);
+        CHECK(rockcat_profile_get_input(p, 2, f2, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_MUTE);
+        CHECK(rockcat_profile_get_input(p, 1, es_key, &a) == ROCKCAT_OK && a.type == 0x1b);
+        rockcat_color c{};
+        int on = 0, v = 0;
+        CHECK(rockcat_profile_get_led(p, 1, &c, &on) == ROCKCAT_OK && c.r == 0x12 && c.g == 0x34 && c.b == 0x56);
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_BREATHING);
+        CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_BRIGHTNESS, &v) == ROCKCAT_OK && v == 120);
+        // profile 1 is untouched
+        rockcat_profile *q = nullptr;
+        CHECK(rockcat_profile_read(dev, 0, &q) == ROCKCAT_OK && q);
+        if (q) {
+            CHECK(rockcat_profile_get_input(q, 0, 46, &a) == ROCKCAT_OK && a.type == 0x14);
+            rockcat_profile_free(q);
+        }
+        CHECK(rockcat_profile_reset_inputs(p) == ROCKCAT_OK);
+        CHECK(rockcat_profile_get_input(p, 0, 46, &a) == ROCKCAT_OK && a.type == 0x14);
+        CHECK(rockcat_profile_get_input(p, 1, es_key, &a) == ROCKCAT_OK && a.type == es1);
+        rockcat_profile_free(p);
+        rockcat_close(dev);
+    }
+    return failures ? 1 : 0;
+}
+
+// Suora against its pretend self: output reports and 64 byte packets instead of feature reports
+static int suora_checks()
+{
+    int failures = 0;
+    setenv("ROCKCAT_SIM", "suora", 1);
+    rockcat_device *dev = nullptr;
+    CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+    if (!dev)
+        return 1;
+    char fw[16] = "";
+    CHECK(rockcat_get_firmware_version(dev, fw, sizeof fw) == ROCKCAT_OK && std::strcmp(fw, "1.24") == 0);
+    rockcat_profile *p = nullptr;
+    CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+    if (!p)
+        return 1;
+    rockcat_assignment a{};
+    CHECK(rockcat_profile_get_input(p, 0, 24, &a) == ROCKCAT_OK && a.type == 0x14); // Q
+    CHECK(rockcat_profile_get_input(p, 0, 41, &a) == ROCKCAT_OK && a.type == 0x3a); // F1, type 10
+    CHECK(rockcat_profile_get_input(p, 0, 0, &a) == ROCKCAT_ERR_ARGUMENT);          // an empty matrix place
+    rockcat_assignment b{0x05, 0, 0}, sc{ROCKCAT_KF_SHORTCUT, 0x01, 0x06}, mute{ROCKCAT_KF_MUTE, 0, 0}, three{ROCKCAT_KF_SHORTCUT, 0x07, 0x06};
+    CHECK(rockcat_profile_set_input(p, 0, 24, &b) == ROCKCAT_OK);
+    CHECK(rockcat_profile_set_input(p, 0, 48, &sc) == ROCKCAT_OK);     // A -> ctrl+c
+    CHECK(rockcat_profile_set_input(p, 0, 48, &three) == ROCKCAT_ERR_ARGUMENT); // three modifiers dont fit
+    CHECK(rockcat_profile_set_input(p, 0, 31, &mute) == ROCKCAT_OK);   // H -> mute
+    CHECK(rockcat_profile_set_input(p, 0, 41, &b) == ROCKCAT_ERR_ARGUMENT); // F1 takes nothing else
+    CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_EFFECT, ROCKCAT_EFFECT_FULLY_LIT) == ROCKCAT_OK);
+    CHECK(rockcat_profile_set_int(p, ROCKCAT_SET_BRIGHTNESS, 128) == ROCKCAT_OK);
+    CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
+    rockcat_profile_free(p);
+    p = nullptr;
+    CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+    if (!p)
+        return 1;
+    CHECK(rockcat_profile_get_input(p, 0, 24, &a) == ROCKCAT_OK && a.type == 0x05);
+    CHECK(rockcat_profile_get_input(p, 0, 48, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_SHORTCUT && a.param1 == 0x01 && a.param2 == 0x06);
+    CHECK(rockcat_profile_get_input(p, 0, 31, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_MUTE);
+    int v = 0;
+    CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_OK && v == ROCKCAT_EFFECT_FULLY_LIT);
+    CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_BRIGHTNESS, &v) == ROCKCAT_OK && v == 127); // step 5 of 10
+    CHECK(rockcat_profile_reset_inputs(p) == ROCKCAT_OK);
+    CHECK(rockcat_profile_get_input(p, 0, 24, &a) == ROCKCAT_OK && a.type == 0x14);
+    rockcat_profile_free(p);
+    rockcat_close(dev);
+
+    // Suora FX: 126 slots in 8 packets, checksum 0xff - sum (the pretend one refuses anything else), no light settings, no factory table
+    setenv("ROCKCAT_SIM", "suora-fx", 1);
+    dev = nullptr;
+    CHECK(rockcat_open(nullptr, &dev) == ROCKCAT_OK && dev);
+    if (!dev)
+        return 1;
+    p = nullptr;
+    CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+    if (!p)
+        return 1;
+    CHECK(rockcat_profile_get_int(p, ROCKCAT_SET_EFFECT, &v) == ROCKCAT_ERR_UNSUPPORTED);
+    CHECK(rockcat_profile_get_input(p, 0, 5, &a) == ROCKCAT_OK);   // Esc
+    CHECK(rockcat_profile_get_input(p, 0, 126, &a) == ROCKCAT_ERR_ARGUMENT);
+    CHECK(rockcat_profile_set_input(p, 0, 5, &b) == ROCKCAT_OK);
+    CHECK(rockcat_profile_set_input(p, 0, 17, &mute) == ROCKCAT_OK); // F1 -> mute, a consumer usage like on the Suora
+    CHECK(rockcat_profile_set_input(p, 0, 23, &sc) == ROCKCAT_OK);
+    CHECK(rockcat_profile_reset_inputs(p) == ROCKCAT_ERR_UNSUPPORTED);
+    CHECK(rockcat_profile_write(dev, p) == ROCKCAT_OK);
+    rockcat_profile_free(p);
+    p = nullptr;
+    CHECK(rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK && p);
+    if (!p)
+        return 1;
+    CHECK(rockcat_profile_get_input(p, 0, 5, &a) == ROCKCAT_OK && a.type == 0x05);
+    CHECK(rockcat_profile_get_input(p, 0, 17, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_MUTE);
+    CHECK(rockcat_profile_get_input(p, 0, 23, &a) == ROCKCAT_OK && a.type == ROCKCAT_KF_SHORTCUT && a.param2 == 0x06);
+    rockcat_profile_free(p);
+    rockcat_close(dev);
+    return failures ? 1 : 0;
+}
 
 int main(int argc, char **argv)
 {
@@ -886,6 +1692,28 @@ int main(int argc, char **argv)
         return argc > 2 ? kova_checks(argv[2]) : fail("kova needs the recording");
     if (mode == "kb-engine")
         return keyboard_engine_checks();
+    if (mode == "ryos-mk-pro")
+        return argc > 2 ? ryos_mk_pro_checks(argv[2]) : fail("ryos-mk-pro needs the recording");
+    if (mode == "sova")
+        return argc > 2 ? sova_checks(argv[2]) : fail("sova needs the recording");
+    if (mode == "isku-plus")
+        return isku_plus_checks();
+    if (mode == "vulcan")
+        return vulcan_checks();
+    if (mode == "vulcan-pro")
+        return vulcan_pro_checks();
+    if (mode == "suora")
+        return suora_checks();
+    if (mode == "skeltr")
+        return skeltr_checks();
+    if (mode == "isku")
+        return isku_checks();
+    if (mode == "classic")
+        return classic_checks();
+    if (mode == "lua")
+        return lua_checks();
+    if (mode == "ryos-mk")
+        return ryos_mk_checks();
     if (mode == "ryos")
         return argc > 2 ? ryos_checks(argv[2]) : fail("ryos needs the recording");
     if (argc != 3)
