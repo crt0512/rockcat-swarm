@@ -30,28 +30,6 @@ Tested on a real one:
 - **ROCCAT Sova** membrane (`1e7d:2f76`): profiles, keys on all three layers, macros on the Easy-Shift keys, its effects, brightness and sleep timer. One backlight for the whole board, the picture shows what the effect does to it
 - **ROCCAT Lua** (`1e7d:2c2e`): dpi steps, polling, buttons, left handed, the logo light. The Lua cant be asked anything back, so rockcat keeps what it last sent in its config dir. The settings get accepted by a real one, whether it really does all of it is still to be looked at
 
-Not tried on hardware yet, written from roccat-tools or from what the Swarm modules do (please try yours, see [Known meh](#known-meh)):
-
-- mice: Kone AIMO Remastered (the one upstream supported, tested by upstream), Kone AIMO, Kone EMP, Kone Pure Owl-Eye, Leadr, Kova AIMO, Kova 2016 white and black, Nyth, Tyon, Kiro, Savu, Kone[+], Kone XTD and XTD Optical, Kone Pure, Pure Optical, Pure Military, Pure Optical Black
-- keyboards: Ryos MK, MK Glow, TKL, TKL Pro, Sova MK, Skeltr, Isku, Isku FX, Isku+ and Isku+ Force FX (no light yet), Vulcan 100 / 120 AIMO, Vulcan TKL AIMO, Vulcan 80, Vulcan Pro, Vulcan TKL Pro, Vulcan II, II Max, II Mini, Pyro, Magma, Magma Mini, Horde, Horde AIMO, Suora, Suora FX
-
-Everything else Swarm knew (about 55 more, Vulcan II Mini Air, Kone Pro, Burst, Kain, the headsets...) shows up by name in `list` and the gui with "not supported yet", nothing gets sent to those.
-
-What the Kone AIMO Remastered can do, as an example of how far a mouse goes:
-
-- read and switch the active profile (5 on board)
-- dpi switcher: 5 levels, 100 to 16000 in steps of 50, seperate X/Y, enable mask, active level
-- polling rate 125/250/500/1000 Hz, angle snapping, debounce time
-- button assignment for all 12 buttons plus the Easy-Shift[+] layer, with shortcuts, text macros and brightness up/down buttons
-- lighting: effect, speed, brightness, colour and on/off for each of the 11 leds, AIMO colour themes
-- a lighting engine for the effects the firmware cant draw by itself (AIMO, Heartbeat, Breathing 2.0, Heartbeat 2.0), reacts to mouse activity like Swarm did
-- your own Easy-Shift[+] colour while the button is held. the mouse has its light blue hard coded in the firmware so I draw it from the pc instead
-- any effect can be drawn by the engine, which also gets you an actual white (the firmware white looks mint because of the amber leds, ewww)
-- sensor (TDCU) calibration for your mousepad
-- backup and restore of all five profiles
-- raw report access for everything that isnt decoded yet
-
-Next up: the Suora FX and Horde lights, Arvo, Kova[+], Pyra out of roccat-tools, the per key light of the Sova MK, and then the Swarm only devices one module at a time.
 
 ## Building
 
@@ -115,12 +93,6 @@ make arch
 sudo pacman -U dist/rockcat-swarm-*.pkg.tar.zst
 ```
 
-> Note : every push also builds the `.deb` on github, its attached to the workflow run under Actions and to the release when a version gets tagged. Handy if you dont feel like compiling.
-
-> Note : `make arch` also runs on debian if `makepkg` and `libarchive-tools` are installed, thats how the package gets test built here. Wether a package built that way behaves on a real arch box is untested, build it on arch if you can.
-
-There are also PKGBUILDs for the AUR in [`aur/`](aur) but they are not published, see [Known meh](#known-meh).
-
 ## Permissions
 
 Before complaining that it cant find your mouse please read this section!
@@ -174,32 +146,8 @@ rockcat-cli --device /dev/hidraw4 raw get 0f 8   # read feature report 0f, 8 byt
 rockcat-cli capture mine.cap info        # run a command and write down everything that went over the wire
 ```
 
-No device on the desk? `ROCKCAT_SIM=NAME` in front of any command (the gui too) gives you a pretend one to play with. It answers like the real thing as far as I know and forgets everything when the program exits. The names: `kone-aimo-remastered`, `kone-aimo`, `kova-2016`, `nyth`, `tyon`, `kiro`, `savu`, `kone-emp`, `kone-pure-owl-eye`, `leadr`, `kova-aimo`, `lua`, `kone-plus`, `kone-xtd`, `kone-xtd-optical`, `kone-pure`, `kone-pure-optical`, `kone-pure-military`, `ryos-mk-fx`, `ryos-mk`, `ryos-mk-glow`, `ryos-mk-pro`, `ryos-tkl`, `ryos-tkl-pro`, `sova-membrane`, `sova-mk`, `skeltr`, `isku`, `isku-fx`, `isku-plus`, `isku-plus-force-fx`, `vulcan-120-aimo`, `vulcan-tkl-aimo`, `vulcan-80`, `vulcan-pro`, `vulcan-tkl-pro`, `vulcan-ii`, `vulcan-ii-max`, `vulcan-ii-mini`, `pyro`, `magma`, `magma-mini`, `horde`, `horde-aimo`, `suora`, `suora-fx`. `rockcat-swarm --debug` has them in a menu.
-
 How recordings work and how to make one of YOUR device (please do, thats how devices get supported): [docs/CAPTURES.md](docs/CAPTURES.md).
 
-`rockcat-cli --help` lists every key, `rockcat-cli types` lists the button functions. Profiles, dpi levels, buttons and leds count from 1 on the command line, like normal people count.
-
-## GUI and tray
-
-`rockcat-swarm` opens the Swarm style window, coloured by whatever GTK theme you run. Button Assignment takes shortcuts as text (`ctrl+c`, `alt+f4`) and text macros. Illumination has the effect list, the "render with the engine" option, AIMO themes and the Easy-Shift[+] lighting. Advanced Settings has angle snapping, debounce, sensor calibration and the raw settings report for the brave.
-
-The footer picks the profile you are editing (the `*` marks the one thats active on the mouse), **ACTIVATE** makes it the active one and the **AUTO APPLY** switch writes every change straight to the mouse instead of waiting for **APPLY**.
-
-Under Settings -> Application:
-
-- **Keep running in the system tray**: closing the window hides it to the tray instead of quitting. Needs something that speaks StatusNotifierItem (waybar, KDE, GNOME with the AppIndicator extension because of course gnome needs an extension for that).
-- **Start minimized to the tray**: only there when the tray is on.
-
-`rockcat-swarm --minimized` (or `-m`) starts hidden in the tray for that one run, thats the one you want in your autostart. On Hyprland for example:
-
-```
-exec-once = rockcat-swarm --minimized
-```
-
-The gui keeps its own preferences in `~/.config/rockcat/gui.ini`.
-
-> Note : coming from rossat-swarm? `~/.config/rossat` gets moved to `~/.config/rockcat` on the first start, nothing to do by hand.
 
 ## Lighting engine
 
@@ -215,30 +163,6 @@ systemctl --user enable --now rockcat-engine.service
 
 Only one engine runs at a time, the gui tells you when the service already has it. The engine follows the active profile so switching profiles on the mouse switches the effect too, and it hands the leds back to the firmware when it stops.
 
-## Library
-
-```c
-#include <rockcat/rockcat.h>
-
-rockcat_device *dev;
-if (rockcat_open(NULL, &dev) == ROCKCAT_OK) {
-    const rockcat_caps *caps = rockcat_get_caps(dev);   /* how many leds, buttons, dpi levels this thing has */
-    rockcat_profile *p;
-    if (rockcat_profile_read(dev, 0, &p) == ROCKCAT_OK) {
-        rockcat_profile_set_dpi(p, 0, 1200, 1200, 1);
-        for (int led = 0; led < caps->led_count; ++led)
-            rockcat_profile_set_led(p, led, (rockcat_color){255, 255, 0, 0}, 1);
-        rockcat_profile_write(dev, p);                  /* only sends what changed, unknown bytes are preserved */
-        rockcat_profile_free(p);
-    }
-    rockcat_close(dev);
-}
-rockcat_exit();
-```
-
-Link it with `pkg-config --cflags --libs rockcat`, or from CMake with `find_package(rockcat)` and `target_link_libraries(app rockcat::rockcat)`. Every call returns `ROCKCAT_OK` or a negative `rockcat_error`, `rockcat_strerror()` turns that into text.
-
-> Note : if you built something against rossat-swarm: the structs with 11 leds and 24 buttons baked in are gone from the header, on purpose. The profile api above works the same for every device, a keyboard just answers `ROCKCAT_ERR_UNSUPPORTED` when you ask it for a dpi.
 
 ## Known meh
 
@@ -246,11 +170,8 @@ Link it with `pkg-config --cflags --libs rockcat`, or from CMake with `find_pack
 - nobody working on this fork owns a Kone AIMO Remastered, the one device upstream supported. Changes to its code are guarded by the offline tests and a recording made against a simulated mouse, not a real one. If you own one: a real recording would be very prem
 - light from the pc (the engine effects) is only done for the Kone AIMO and AIMO Remastered, the Kone[+] / XTD / Pure family, the Kova 2016, the Ryos MK FX, MK Pro and TKL Pro. the others only show what they store themselves
 - the Nyth picture probably has its button markers on the wrong buttons, Swarm counts them differently than roccat-tools and I follow roccat-tools
-- not on the AUR. The PKGBUILDs in `aur/` are there but not pushed, nobody here has an arch machine to test them on. Use `make arch` on your own box instead. The old `rossat-swarm-bin` / `rossat-swarm-git` AUR packages are upstreams and still install the old thing.
 - firmware updates are not implemented.
 - the AIMO animation is my own take on Swarms (same themes, led groups and activity reaction), not a byte exact copy of `aimo.dll`.
-- Swarms "sensitivity" slider was the windows pointer speed and not a mouse setting, so its not here. Your desktop has a slider for that.
-- writes always start from the bytes last read from the mouse so fields I dont understand go back unchanged. Thats on purpose, not meh, but good to know.
 - This repo and the resulting executable is very very fat (I love bundeling PNGs ...)
     - Atleast now I understand why Roccat distributed everything as a module in Swarm
 
