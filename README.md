@@ -18,7 +18,7 @@ It comes in three parts:
 
 > Note : on windows? you dont need this, the original Swarm and Ryos Software still work fine there. Installers and modules are archived at [512mb Archive/Software/Roccat](https://dsl.512mb.net/Software/Roccat/).
 
-> Note : The docs and code comments are kept by an llm sorry im too lazy and tend to swear way too much in docs/comments. I do put real human effort into this project though where I can, as an example see [Handdrawn Icons for the devices](assets/free/)
+> Note : The docs and code comments are partially kept by an llm sorry im too lazy and tend to swear way too much in docs/comments. I do put real human effort into this project though where I can, as an example see [Handdrawn Icon Showcase](assets/free/SHOWCASE.md)
 
 ## What works
 
@@ -192,7 +192,7 @@ src/lib/                    protocol + HID transport (hidapi)
 src/cli/                    rockcat-cli
 src/gui/                    rockcat-swarm (GTK3)
 data/                       icon, css, udev rule, desktop file, user service, pkg-config template
-assets/roccat/              device pictures out of Swarm, not ours, read the ATTRIBUTION.md in there
+assets/roccat/              device pictures out of Swarm, not mine, read the ATTRIBUTION.md in there
 assets/free/                my own stand ins with the same names, for builds without the above
 tools/dev/                  gui-shot.sh, takes a picture of the gui without a screen
 tools/assets/               the scripts that fill those two folders (extract.py for icons, mouse-view.py for the mouse pictures with markers and lights), plus dump-swarm.sh and sort-swarm.py if you want ALL the artwork out of your own Swarm install, sorted per device

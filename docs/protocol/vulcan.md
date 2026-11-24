@@ -32,7 +32,7 @@ So rockcat shows this keyboard with ONE profile. `profile_count` is 1, the activ
 | `0d` | 443 | `b1` | lights, see below |
 | `13` | 8 | | light control, Swarm sends it when its own AIMO engine takes over or lets go, see the last part. Not used |
 
-The select values are the ones the firmware's SET_REPORT handler accepts for `04` (`FUN_0000acfc`, case `04`: `a0 a1 a3 a4 a5 b1` and `f0`). After a select it checks the checksum of what it has stored for that request and answers status `4` when the stored copy is broken (we treat that like ready). What a GET_REPORT returns was NOT traced in the firmware, that it hands out the stored report is a guess from how the Ryos does it. Swarm itself only ever reads `0d` back (`FUN_0056f450(0xb1, profile)` in the monitor), everything else it writes from its own copy.
+The select values are the ones the firmware's SET_REPORT handler accepts for `04` (`FUN_0000acfc`, case `04`: `a0 a1 a3 a4 a5 b1` and `f0`). After a select it checks the checksum of what it has stored for that request and answers status `4` when the stored copy is broken (rockcat treats that like ready). What a GET_REPORT returns was NOT traced in the firmware, that it hands out the stored report is a guess from how the Ryos does it. Swarm itself only ever reads `0d` back (`FUN_0056f450(0xb1, profile)` in the monitor), everything else it writes from its own copy.
 
 The sizes are the ones the firmware checks on SET_REPORT (`FUN_0000acfc` calls the checksum check `FUN_00007380` with `0x85`, `0x5f`, `0x2b`, `8`, `0x41`, `0x1bb`, and copies that many bytes). `08` (Ryos: macro keys) and `0e` (Ryos: macros) have no handler at all, so this keyboard has no macros in hardware. Swarm did them from the pc.
 
@@ -40,7 +40,7 @@ Report `0b` is odd. The firmware takes 65 bytes (and its own factory default, `F
 
 ## Keys
 
-Keys are numbered the way Swarm numbers them in `kb_matrix.xml` (1 to 113, Esc = 1, F1 = 2, ... FX = 112, volume wheel = 113). That is the input number in rockcat and the led number too, same idea as the Ryos. The key tables (`vulcan_keys.inc`) are generated from `DEV/Roccat-Swarm/Assets/Vulcan_120_121_122_AIMO/keyboard/base/kb_matrix.xml` with `tools/assets/kbmatrix.py` (US and DE regions, picture space 680x370). The Vulcan 100 has the same xml byte for byte.
+Keys are numbered the way Swarm numbers them in `kb_matrix.xml` (1 to 113, Esc = 1, F1 = 2, ... FX = 112, volume wheel = 113). That is the input number in rockcat and the led number too, same idea as the Ryos. The key tables (`vulcan_keys.inc`) are generated from Swarms `Assets/Vulcan_120_121_122_AIMO/keyboard/base/kb_matrix.xml` with `tools/assets/kbmatrix.py` (US and DE regions, picture space 680x370). The Vulcan 100 has the same xml byte for byte.
 
 Where the bytes of a key are:
 
@@ -51,7 +51,7 @@ Where the bytes of a key are:
 | Caps Lock ("Left+", 62) | byte 3 of `0a` | | |
 | Fn (104) | byte 4 of `0a` | | |
 | 1 to 5, Q to T, A to G, Z to B (US names) | 1 byte in `06` | 3 bytes in `0b`, in that order | |
-| FX, volume (112, 113) | nothing we understand | | |
+| FX, volume (112, 113) | nothing I understand | | |
 
 The slot table (`KEY_SLOT`) is the module's `vulcan_aimo_config/key_pos_mapping.txt` ("left value is default key pos, right value is firmware key mapping array index"). Checked against Swarms default `06`: every key lands on its own HID usage (Esc on `29`, A on `04`, numpad 0 on `62`, ...). The monitor has its own `config/vulcan/key_pos_mapping.txt` with a different numbering (it has room for five media keys after Pause), dont mix them up.
 
@@ -93,7 +93,7 @@ Not worked out. The firmware has an Easy-Shift callback into the monitor (`vulca
 
 ## Firmware version
 
-There is no info report we know of. rockcat shows bcdDevice, that it is the firmware version is a GUESS.
+There is no info report I know of. rockcat shows bcdDevice, that it is the firmware version is a GUESS.
 
 ## Vulcan TKL AIMO
 
@@ -113,7 +113,7 @@ A backup of a Vulcan holds its reports back to back, each as long as that board 
 
 `1e7d:305c`, the board with blue keys and no palm rest. Same code (`MODELS[]` in `vulcan.cpp`, tables in `vulcan_80_tables.inc` and `vulcan_80_keys.inc`), pretend one `ROCKCAT_SIM=vulcan-80`. NOBODY HERE HAS ONE either. Where it comes from:
 
-- the module `VULCAN_80/vulcan_80.dll` v1.0027: its default profile (Qt resource, compressed, `tools/re/qrcblobs.py` gets it), `vulcan_config/key_pos_mapping.txt`, `led_mapping.ini`, `key_data_mapping.txt` and `kb_matrix.xml` (those sit uncompressed in the dll as `[u32 length][text]`), and the decompile (`DEV/Roccat-Swarm/Decompiled/vulcan_80.c`) for which byte of `0d` is what
+- the module `VULCAN_80/vulcan_80.dll` v1.0027: its default profile (Qt resource, compressed, `tools/re/qrcblobs.py` gets it), `vulcan_config/key_pos_mapping.txt`, `led_mapping.ini`, `key_data_mapping.txt` and `kb_matrix.xml` (those sit uncompressed in the dll as `[u32 length][text]`), and the decompile of `vulcan_80.dll` for which byte of `0d` is what
 - the firmware `VULCAN_80/firmware/VULCAN_80_V1.19.bin` (Cortex-M, loads at `0x2000` like the AIMO one) for the light report and the effects
 - `ROCCAT_Swarm_Monitor.exe` 1.9477, class `vulcan_device_c` (vtable `0x8ca26c`, one colour, `config/vulcan/led_mapping.ini`): writes `0d` with 156 bytes (`FUN_0057b980`)
 
@@ -157,7 +157,7 @@ The AIMO generation of reports with other sizes:
 | `0b` | `a5` | 294 / 65 | Easy-Shift for 1 to 5, Q to T, A to G, Z to B |
 | `0d` | `b1` | 58 | light, `[0d 3a profile ? effect speed ...]` then what looks like zones. Not untangled, rockcat reads it and writes it back as it is |
 
-No `09`. The dial (259) has no byte we know of. One stored setup like the AIMO boards (GUESS: Swarms defaults have five lights but one of everything else). The Horde AIMO has the same keys and the same `06 07 0a 0b`, only its factory M keys and light differ (Swarms file had a wrong checksum on its `08`, the factory table has it summed again).
+No `09`. The dial (259) has no byte I know of. One stored setup like the AIMO boards (GUESS: Swarms defaults have five lights but one of everything else). The Horde AIMO has the same keys and the same `06 07 0a 0b`, only its factory M keys and light differ (Swarms file had a wrong checksum on its `08`, the factory table has it summed again).
 
 A backup keeps the parts in the old order with `08` last, so the AIMO boards backups keep their size.
 

@@ -4,10 +4,10 @@
 
 It is the Kone AIMO Remastered ([kone-aimo.md](kone-aimo.md)) with a shorter settings report. Everything else is shared, and the code borrows it from the Remastered family as it is: buttons (`07`, 75 bytes, same 24 slots, same factory layout), macros (`08`), active profile (`05`), info (`09`), direct lighting (`0d` + `0e`), events.
 
-How we know:
+How I know:
 
 - `ROCCAT_Swarm_Monitor.exe` (Swarm 1.9477) drives both mice with one class, `kone_aimo_base_device_c`. Its settings read (`FUN_0051ea60`) does `[04 profile 80]` and then reads `0x69` bytes when the product type is `0x1a` and `0x7e` otherwise. The buttons (`0x4b`) and the direct colours (`0x2e`) have one size for both
-- `KONE_AIMO.dll` v1.0135 (`DEV/Roccat-Swarm/Modules/KONE_AIMO/kone_aimo.dll`) has every settings setter twice, once for each layout: it writes `0x7e * profile + x` for the Remastered and `0x69 * profile + y` for this one. Those pairs give the table below
+- `KONE_AIMO.dll` v1.0135 (`Modules/KONE_AIMO/kone_aimo.dll` in Swarm) has every settings setter twice, once for each layout: it writes `0x7e * profile + x` for the Remastered and `0x69 * profile + y` for this one. Those pairs give the table below
 - the module caps the dpi spin box at 12000 for this mouse and 16000 for the Remastered (`QSpinBox::setMaximum(12000)` next to `setMaximum(16000)`)
 
 ## Settings, report `06`, 105 bytes

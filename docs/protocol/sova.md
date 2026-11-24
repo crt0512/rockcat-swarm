@@ -28,7 +28,7 @@ Factory reports are roccat-tools defaults, they match the real keyboard wherever
 
 ## Light
 
-Membrane: one backlight for the whole board. `0d`: byte 4 effect (0 off, 1 fully lit, 2 blinking, 3 breathing, 4 heartbeat, 5 impulse, 6 heatmap), 5 speed 0 to 2 (we say 1 to 3), 11 brightness 0 to 5, 13 minutes until it sleeps. Bytes 6 to 9 are what it does when switched on, going to sleep, waking up and on a profile switch, passed through, nothing in the api for them. No light from the pc.
+Membrane: one backlight for the whole board. `0d`: byte 4 effect (0 off, 1 fully lit, 2 blinking, 3 breathing, 4 heartbeat, 5 impulse, 6 heatmap), 5 speed 0 to 2 (rockcat says 1 to 3), 11 brightness 0 to 5, 13 minutes until it sleeps. Bytes 6 to 9 are what it does when switched on, going to sleep, waking up and on a profile switch, passed through, nothing in the api for them. No light from the pc.
 
 The MK lights every key on its own (says somebody who knows the thing), roccat-tools has no report for that. Swarms module for it is in the archive (`SOVA_MECHANICAL`), thats where to look. Until then it is a membrane with another name, and it gets the membrane key table: Swarm numbers the MK keys differently (probably its led numbers), which would point key assignment at the wrong slots.
 

@@ -2,7 +2,7 @@
 
 Every device module that ROCCAT Swarm 1.9482 can download, as returned by the official update server (`POST https://acpv.prod.turtlebeach.com/swarm1/autoupdate/SWARM`) when queried with each USB product ID listed in the bundled `settings.xml`. Module versions are as of 2026-10-21. `tools/re/allmods.py` regenerates the list from the update server. Devices from before Swarm never had a module, they say "no Swarm module" and come out of [roccat-tools](https://sourceforge.net/projects/roccat/) (GPL), which documented them years ago.
 
-The list is sorted by how much we trust our support:
+The list is sorted by how much I trust the support:
 
 - **Tested and Working**: checked on a real one, with the firmware it had
 - **Assumed to Work**: never on hardware here, but a sibling of a tested one (same reports, another colour, layout or size)

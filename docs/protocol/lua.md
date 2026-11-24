@@ -2,9 +2,9 @@
 
 `1e7d:2c2e`, the small ambidextrous one from before Swarm. From roccat-tools 5.9.1 (`lua/libroccatlua/`). Code: `src/lib/families/lua.cpp`, pretend one `lua`.
 
-It can be told things but never asked. Everything goes out as one 8 byte feature report, `[03 command data[5] sum]`, sum = the byte sum of command and data. There is no status report to wait on, roccat-tools just leaves 100 ms between two commands and we do the same. Reading report 03 gives zeros on the real one, nothing in there.
+It can be told things but never asked. Everything goes out as one 8 byte feature report, `[03 command data[5] sum]`, sum = the byte sum of command and data. There is no status report to wait on, roccat-tools just leaves 100 ms between two commands and rockcat does the same. Reading report 03 gives zeros on the real one, nothing in there.
 
-So there are no profiles on the mouse and nothing to read: what the gui and the cli show is what we last sent, kept in the config dir (`~/.config/rockcat/2c2e.ini`, `lua_settings`). Until something was sent the factory settings are shown, which is what a Lua nobody touched has. Whatever roccat-tools or Windows sent to it before, we cant know.
+So there are no profiles on the mouse and nothing to read: what the gui and the cli show is what rockcat last sent, kept in the config dir (`~/.config/rockcat/2c2e.ini`, `lua_settings`). Until something was sent the factory settings are shown, which is what a Lua nobody touched has. Whatever roccat-tools or Windows sent to it before, theres no way to know.
 
 A write sends everything, every time, in this order (a bit over a second):
 

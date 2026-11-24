@@ -4,7 +4,7 @@
 
 The family is called "ryos" and not "ryos mk fx" because the older boards (MK, MK Glow, MK Pro, TKL, TKL Pro) use the same reports for everything except the lighting. They live in the same file, see [the older boards](#the-older-boards-mk-mk-glow-mk-pro-tkl-tkl-pro) at the end.
 
-It talks like the mice (see [README.md](README.md) for the part all devices share): feature reports, a select on `04` before reading, and after every write `04` gets polled until it says ready. One difference in timing: after a select this keyboard is ready at once. Swarm and roccat-tools wait 150 ms before asking, we wait 2 ms, which was measured on the real keyboard (same data on three profiles, 0.2 s per profile instead of 1.5). After writes the 150 ms stay. The keyboard shows up as three hidraw nodes, the one to talk to is interface 1, the only one that declares these reports.
+It talks like the mice (see [README.md](README.md) for the part all devices share): feature reports, a select on `04` before reading, and after every write `04` gets polled until it says ready. One difference in timing: after a select this keyboard is ready at once. Swarm and roccat-tools wait 150 ms before asking, rockcat waits 2 ms, which was measured on the real keyboard (same data on three profiles, 0.2 s per profile instead of 1.5). After writes the 150 ms stay. The keyboard shows up as three hidraw nodes, the one to talk to is interface 1, the only one that declares these reports.
 
 ## Reports
 
@@ -167,23 +167,23 @@ Not tried: reset.
 | Ryos TKL | `3106` | none | `ryos-tkl` | no |
 | Ryos TKL Pro | `316a` | on / off per key, blue | `ryos-tkl-pro` | no |
 
-Key reports `06` to `0c`, macros `0e`, info `0f`, profile `05` and the events on `03` are the ones above, same sizes, same selects. The TKL boards have no M keys and roccat-tools never asks them for `08`, so we dont either, M1 to M5 answer "no such key" there. Everything else below is roccat-tools (`ryosmk/libroccatryosmk/`, `ryostkl/libroccatryostkl/`), on the MK Pro it was also read, written and sent frames.
+Key reports `06` to `0c`, macros `0e`, info `0f`, profile `05` and the events on `03` are the ones above, same sizes, same selects. The TKL boards have no M keys and roccat-tools never asks them for `08`, so rockcat doesnt either, M1 to M5 answer "no such key" there. Everything else below is roccat-tools (`ryosmk/libroccatryosmk/`, `ryostkl/libroccatryostkl/`), on the MK Pro it was also read, written and sent frames.
 
-On the MK Pro `05` says `[05 03 0y]`, the count half is 0. We report 5 anyway.
+On the MK Pro `05` says `[05 03 0y]`, the count half is 0. rockcat reports 5 anyway.
 
 ### Light settings, `0d`, 16 bytes
 
-`[0d 10 profile brightness dim minutes ? ? ? ? illumination feedback dimstyle ? sum sum]`. brightness, dim, minutes, feedback and dimstyle sit where they are on the MK FX (0 to 5, minutes, 0 / 1, 0 dim 1 starlit 2 macro 3 fall asleep). illumination: 0 = the automatic set shows, 1 = the manual one. The four unknown bytes are `f4 01 00 00` on every profile of the real MK Pro, 500 as 16 bit, nobody knows of what. They get passed through. On the MK and TKL (no leds) the report is still read and kept, nothing in it can be changed through us.
+`[0d 10 profile brightness dim minutes ? ? ? ? illumination feedback dimstyle ? sum sum]`. brightness, dim, minutes, feedback and dimstyle sit where they are on the MK FX (0 to 5, minutes, 0 / 1, 0 dim 1 starlit 2 macro 3 fall asleep). illumination: 0 = the automatic set shows, 1 = the manual one. The four unknown bytes are `f4 01 00 00` on every profile of the real MK Pro, 500 as 16 bit, nobody knows of what. They get passed through. On the MK and TKL (no leds) the report is still read and kept, nothing in it can be changed through rockcat.
 
 ### MK Pro: two sets of 11 layers, `17`, 1382 bytes
 
 Select `d0` gives the manual set, `c0` the automatic one: `[17 66 05 profile mode]` (size is 16 bit, mode 1 manual, 0 automatic, the real one says exactly that), then 11 layers of 125 bytes: effect (0 nothing, 1 a pressed key fades, 2 ripple), fade time in seconds, then 123 bytes for the primary keys and the three thumb keys, bit 0 lit, bit 1 blinks. Layers are normal, left shift, right shift, left ctrl, right ctrl, left alt, right alt, left win, right win, Easy-Shift, Fn.
 
-We show and change layer 0 (normal) of whichever set `0d` picks: the lit bit per key and the effect byte. Blink bits, fade time, the other ten layers and the other set go back untouched. The factory set of the real one lights 116 of 120: 111 keys of the ISO board plus 5 slots only japanese / korean boards have a key on.
+rockcat shows and changes layer 0 (normal) of whichever set `0d` picks: the lit bit per key and the effect byte. Blink bits, fade time, the other ten layers and the other set go back untouched. The factory set of the real one lights 116 of 120: 111 keys of the ISO board plus 5 slots only japanese / korean boards have a key on.
 
 ### TKL Pro: a report per layer, `17`, 253 bytes
 
-`[17 fd profile mode layer effect delay fade]`, then 120 x 16 bit big endian (bit 15 lit, bits 12-13 key effect off / blink / breathe, 6-8 breathe speed, 2-4 blink speed) and three thumb bytes (bit 7 lit). Select `c0 | layer` for the automatic ones (layers 0, 9, 10 only) and `d0 | layer` for manual (all 11). Same deal as the MK Pro: the normal layer of the chosen mode is what we show, only bit 15 and the effect byte move. Never seen on a real one.
+`[17 fd profile mode layer effect delay fade]`, then 120 x 16 bit big endian (bit 15 lit, bits 12-13 key effect off / blink / breathe, 6-8 breathe speed, 2-4 blink speed) and three thumb bytes (bit 7 lit). Select `c0 | layer` for the automatic ones (layers 0, 9, 10 only) and `d0 | layer` for manual (all 11). Same deal as the MK Pro: the normal layer of the chosen mode is what rockcat shows, only bit 15 and the effect byte move. Never seen on a real one.
 
 ### Lighting from the pc
 

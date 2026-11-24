@@ -44,7 +44,7 @@ Factory settings: the Nyth and Kiro ones are roccat-tools default arrays. Tyon a
 | 20 | colour flow (GUESS from the reset values) | 1 |
 | 21 | effect (GUESS, Nyth numbers assumed) | 3 |
 | 22 | speed | 2 |
-| 23 to 38 | 4 lights, index r g b, index `1e` = our rgb | |
+| 23 to 38 | 4 lights, index r g b, index `1e` = custom rgb | |
 | 39 | checksum | |
 
 Buttons: 11 on two layers, numbered like the markers Swarm puts on its picture (left, right, wheel, side front, side back, tilt left, tilt right, wheel up, wheel down, two behind the wheel). That the report order is the marker order is a GUESS. Nobody knows the factory buttons, so "reset buttons" says no.
@@ -59,7 +59,7 @@ Kone Pure Owl-Eye `1e7d:2dcd`, table `OWL`. Monitor `kone_pure_owl_eye_device_c`
 |---|---|
 | 3 to 17 | like the EMP: advanced sensitivity, x and y, dpi mask, dpi x, dpi y ((v + 1) x 100), active level |
 | 18 | polling |
-| 21 | bit 0 light on, bit 4 our rgb |
+| 21 | bit 0 light on, bit 4 custom rgb |
 | 22 | colour flow |
 | 23 | effect |
 | 24 | speed |
@@ -76,7 +76,7 @@ Kova AIMO `1e7d:2cf1`, `2cf2`, `2cf3`, table `KOVA_AIMO`. The Kova 2016 report g
 | 7 to 11 | dpi, x 50 | 400 800 1600 3500 7000 |
 | 12 | active level | 1 |
 | 13 | polling | |
-| 14 | lights on bits 0 1, our rgb bits 4 5 | `33` |
+| 14 | lights on bits 0 1, custom rgb bits 4 5 | `33` |
 | 15 | colour flow | 0 |
 | 16 | effect | 9 (AIMO) |
 | 17 | speed | 2 |

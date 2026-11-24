@@ -2,7 +2,7 @@
 
 Everything in this folder was made by ROCCAT (ROCCAT GmbH, since 2019 part of Turtle Beach Corporation) and shipped inside their ROCCAT Swarm software. It is THEIR artwork. It is not covered by the GPL the rest of this repository is under, and nobody at ROCCAT or Turtle Beach has given this project a license for it.
 
-It is in here because Swarm is discontinued and gone from the download pages, because a settings tool is a lot nicer when it shows you the device you are configuring, and because ROCCAT has historically been relaxed about linux tools doing this. That is an assumption on our side and not a permission.
+It is in here because Swarm is discontinued and gone from the download pages, because a settings tool is a lot nicer when it shows you the device you are configuring, and because ROCCAT has historically been relaxed about linux tools doing this. That is an assumption on my side and not a permission.
 
 If you are the rights holder and want it gone: open an issue on https://github.com/crt0512/rockcat-swarm and it will be removed, no discussion needed.
 
@@ -48,7 +48,7 @@ Then add a line to the table above, and run `tools/assets/placeholders.py` so th
 
 ## Why webp
 
-The table says `.png` because thats what came out of Swarm, and the originals are kept that way outside of git (in `DEV/roccat-assets-original/`, where all the tools above write to). What ends up in this folder and in the build is webp, made by `tools/assets/to-webp.py` (lossy quality 90 by default, the see-through part always lossless). The pngs made the binary about 50 MB, the webp about 10. After adding or changing pictures:
+The table says `.png` because thats what came out of Swarm, and the originals are kept that way outside of git (where all the tools above write to). What ends up in this folder and in the build is webp, made by `tools/assets/to-webp.py` (lossy quality 90 by default, the see-through part always lossless). The pngs made the binary about 50 MB, the webp about 10. After adding or changing pictures:
 
 ```bash
 tools/assets/to-webp.py            # or -q 90, or --lossless

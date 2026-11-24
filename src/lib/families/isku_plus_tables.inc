@@ -1,5 +1,5 @@
 // Isku+ factory reports, whole (header and checksum), out of the default profile in ROCCATs Swarm module ISKU+ (isku+.dll,
-// a QSettings file whose values are a 4 byte length and the report). made once by hand, see DEV/re-notes/
+// a QSettings file whose values are a 4 byte length and the report). made once by hand
 constexpr uint8_t FACTORY_EXTRA[8] = {
     0x0a, 0x08, 0x00, 0x39, 0xf1, 0x00, 0x3c, 0x01,
 };

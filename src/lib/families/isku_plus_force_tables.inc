@@ -1,4 +1,4 @@
-// Isku+ Force FX factory reports out of the default profile in ROCCATs Swarm module ISKU+_FORCE_FX (copy in DEV/re-notes/).
+// Isku+ Force FX factory reports out of the default profile in ROCCATs Swarm module ISKU+_FORCE_FX.
 // the Easy-Shift one is cut down from Swarms 294 byte buffer to the 65 bytes the keyboard has, the light is the first of five
 constexpr uint8_t FX_PRIMARY[149] = {
     0x06, 0x95, 0x00, 0x90, 0x62, 0xe7, 0x26, 0x00, 0x00, 0xa8, 0x91, 0x00, 0x5d, 0xe5, 0xa2, 0xa1, 0xae, 0x00, 0x24, 0x47, 0x00, 0x00, 0x59, 0xac,

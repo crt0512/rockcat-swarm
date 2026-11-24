@@ -17,6 +17,7 @@ struct device_view {
     std::vector<mark> marks;             // by input
     std::vector<cairo_surface_t *> lights; // by led, nullptr where there is no mask
     std::vector<char> painted;           // by led: the light is part of the picture (see view.ini)
+    std::vector<char> shine;             // by led: shines through the shell, only drawn on the illumination page
 };
 
 namespace {
@@ -134,6 +135,8 @@ device_view *view_load(int pid)
                 v->lights[static_cast<size_t>(led)] = asset_surface(std::string(dir) + value);
                 v->painted.resize(v->lights.size(), 0);
                 v->painted[static_cast<size_t>(led)] = static_cast<char>(g_key_file_get_integer(kf, "painted", keys[i], nullptr) != 0);
+                v->shine.resize(v->lights.size(), 0);
+                v->shine[static_cast<size_t>(led)] = static_cast<char>(g_key_file_get_integer(kf, "shine", keys[i], nullptr) != 0);
             }
             g_free(value);
         }
@@ -200,7 +203,8 @@ void draw_view_lights(app_state *s, cairo_t *cr, bool animate)
     }
     const bool flow = animate && s->color_flow && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(s->color_flow));
     for (size_t led = 0; led < v->lights.size(); ++led) {
-        if (!v->lights[led])
+        // light through the shell (free set) is a whole lot of glow, only worth it where the lights are the point
+        if (!v->lights[led] || (!animate && v->shine[led]))
             continue;
         double r = 0, g = 0, b = 0;
         if (have) {
