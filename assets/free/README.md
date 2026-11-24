@@ -1,6 +1,6 @@
 # The free set
 
-Stand ins for everything in `assets/roccat/`, same file names (and mostly the same sizes). Nothing in here came from ROCCAT, its all our my drawings. They are under the same license as the code (GPL-3.0-only).
+Stand ins for everything in `assets/roccat/`, same file names (and mostly the same sizes). Nothing in here came from ROCCAT, its all my drawings. They are under the same license as the code (GPL-3.0-only).
 
 The mice and keyboards are semi-hand traced outlines of the devices with the details drawn in by hand, the logo is a cat and the lettering is in Michroma. The light zones of a mouse are drawn unlit in `top.png`, every led gets a white mask (`lightN.png`) the gui paints its colour through. Keyboards are the board (`body.png`) and the caps (`keycaps-*.png`), we have no prints of our own so the legends are empty.
 
