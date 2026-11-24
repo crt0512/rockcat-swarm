@@ -18,6 +18,8 @@ It comes in three parts:
 
 > Note : on windows? you dont need this, the original Swarm and Ryos Software still work fine there. Installers and modules are archived at [512mb Archive/Software/Roccat](https://dsl.512mb.net/Software/Roccat/).
 
+> Note : The docs and code comments are kept by an llm sorry im too lazy and tend to swear way too much in docs/comments. I do put real human effort into this project though where I can, as an example see [Handdrawn Icons for the devices](assets/free/)
+
 ## What works
 
 Short version: 56 devices, 5 of them tried on real hardware here so far. The full list is in [MODULES.md](MODULES.md), sorted into tested and working, assumed to work (siblings of tested ones), might work, basics might work and todo.
