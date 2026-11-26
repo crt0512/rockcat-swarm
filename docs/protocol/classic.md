@@ -20,9 +20,20 @@ Polling is the shared `0 125, 1 250, 2 500, 3 1000` everywhere, on the Tyon and 
 
 Factory settings: the Nyth and Kiro ones are roccat-tools default arrays. Tyon and Savu have only default rmp files, their settings are put together from those values (that only matters for the pretend ones) and their factory buttons are the type bytes out of the rmp.
 
+## Nyth sensor (TCU and DCU)
+
+Out of roccat-tools (`nyth_control_unit.c`, `nyth_tcu_calibration_assistant.c`). Report `0f`, 6 bytes, not per profile: `[0f 06 dcu tcu 00 action]`, `ff` in `dcu` or `tcu` leaves that one alone.
+
+- read: `dcu` is the lift-off distance (0 off, 1 extra low, 2 low, 3 normal), `tcu` 1 = calibrated to the surface, 0 = factory tracking
+- calibrate: write `tcu 1 action 1`, move the mouse in slow circles, the mouse sends the input report `[03 xx 30 ..]` when its done (roccat-tools gives it 15 s, about 8 is normal), then `tcu 1 action 3` keeps it and `tcu 1 action 4` throws it away
+- `tcu 0 action 0` goes back to the factory tracking, `dcu N tcu ff action 0` sets the lift-off distance
+
+A real one (black, firmware 1.38) reads `0f 06 00 00 00 00` untouched: factory tracking, and a lift-off distance of 0, which by roccat-tools would be "off". Calibrating and the lift-off distance have only run against the pretend mouse so far.
+
 ## Unsure
 
 - the Nyth numbers its buttons in roccat-tools order here. Swarms pictures put marker 4 under the wheel, 5 in front of it and 6 at the front left, so its order is another one and the markers on the mouse view probably point at the wrong buttons. the module dll knows
+- the Nyth side buttons: Side 1 to 12 go row by row from the top front slot (seen from the left), the way Swarm prints the numbers into the side. checked on a real one: with the factory buttons Side 1 to 9 type 1 to 9, Side 10 `0`, 11 `-` and 12 `=`, so the numbers are the same as roccat-tools ones. a double cap presses the switch on the outside of its row: on 1+2 it types 1, 3+4 types 4, 5+6 5, 7+8 8, 9+10 9, 11+12 `=`. which caps are in is only kept in the gui (`gui.ini`), the button set report `0a` (its last two bytes look like a 12 bit mask of the side slots, factory `ff 0f`) is carried along untouched
 - light from the pc (talk fx `10` on Nyth and Tyon, `10` with 13 bytes on the Kiro) is not done
 - sensitivity bytes (x, y, advanced) survive but nothing can set them yet
 - the Savu macros

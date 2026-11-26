@@ -29,6 +29,7 @@ That builds against `assets/free/` instead (plain placeholder drawings made for 
 | `views/*/light0.png` | Kova AIMO module, `Backlight.png` (the glow at the back, same shape of mouse), scaled to fit |
 | `views/*/light1.png` | cut out of the top view above: the wheel light ROCCAT painted into it in red, as a mask |
 | `views/*/view.ini` | not a picture: where Swarm puts the marker of each button, read out of the Kova module |
+| `views/2e7c/side*.png`, `views/2e7d/side*.png` | Nyth module (`NYTH`), `buttons/Nyth_standard.png` (`Nyth_standard_White.png` for 2e7d) and the caps in `buttons/side-grid/` (`Single-Button-NN`, `Single-blanc_NN`, `Double-button_0N`, `Quad-blanc_0N`), renamed by `tools/assets/side-view.py`. Where the caps go on the side was placed by hand |
 | `keyboards/2fda/kb_matrix.xml` | same module, `graphics/keyboard_layout/base/kb_matrix.xml`. Not a picture: which key sits where and which led it has |
 
 Files are named after the usb product id of the device. Icons and keyboard pictures were copied out unchanged by `tools/assets/extract.py`, the `views/` are put together by `tools/assets/mouse-view.py` (recipes in `tools/assets/views.json`). Adding the icon of the next device:

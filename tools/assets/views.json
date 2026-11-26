@@ -202,16 +202,18 @@
  "2e4e": {"like": "2e4c"},
 
  "2e7c": {
-  "device": "Nyth", "picture": "buttons/NYTH_BLK_TOP_VIEW.png",
+  "device": "Nyth", "side": {"picture": "buttons/Nyth_standard.png", "pieces": "buttons/side-grid", "pieces_at": [212, 36],
+           "slots": [[6, 14, 40, 44], [39, 10, 78, 42], [76, 9, 116, 40], [115, 10, 151, 38], [6, 51, 43, 79], [43, 49, 81, 77], [80, 47, 119, 75], [118, 45, 156, 73], [9, 85, 47, 113], [46, 83, 84, 113], [83, 81, 122, 112], [121, 79, 158, 109]]},
+  "picture": "buttons/NYTH_BLK_TOP_VIEW.png",
   "inputs": [1, 2, 3, 4, 5, 6, 7, 8],
-  "extras": [{"picture": "Nyth/views/Nyth-back_black.png", "at": [25, 515]}],
+  "extras": [{"picture": "Nyth/views/Nyth-back_black.png", "lights_only": true, "at": [25, 515]}],
   "lights": [
    {"led": 0, "hue": [5, 45]},
    {"led": 1, "from": "Nyth/lighting/Light-Pipe_Mask.png", "at": [25, 515]}
   ]
  },
- "2e7d": {"like": "2e7c", "picture": "buttons/NYTH_WHT_TOP_VIEW.png",
-  "extras": [{"picture": "Nyth/views/Nyth-back_white.png", "at": [25, 515]}]},
+ "2e7d": {"like": "2e7c", "side": {"picture": "buttons/Nyth_standard_White.png"}, "picture": "buttons/NYTH_WHT_TOP_VIEW.png",
+  "extras": [{"picture": "Nyth/views/Nyth-back_white.png", "lights_only": true, "at": [25, 515]}]},
 
  "_older": "the ones below are from before Swarm, roccat-tools knows them. Swarm never drew them, they borrow the art of the Swarm mouse with the same shell: Kone Pure, Kone Pure Military and both Kone Pure Optical take the Owl-Eye (same body, lit logo), Kone XTD, Kone XTD Optical and Kone[+] take the Kone EMP (same body, four leds in the same spots, roccat-tools counts them top left, bottom left, top right, bottom right like the EMP recipe does)",
  "2dbe": {"like": "2dcd"},

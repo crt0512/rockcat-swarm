@@ -99,7 +99,7 @@ GtkWidget *device_panel(app_state *s)
     }
     std::string can;
     for (auto &f : {std::pair<uint32_t, const char *>{ROCKCAT_HAS_MACROS, "macros"}, {ROCKCAT_HAS_EASYSHIFT, "Easy-Shift[+]"},
-                    {ROCKCAT_HAS_DIRECT_LIGHT, "lights from the pc"}, {ROCKCAT_HAS_CALIBRATION, "sensor calibration"}})
+                    {ROCKCAT_HAS_DIRECT_LIGHT, "lights from the pc"}, {ROCKCAT_HAS_CALIBRATION, "sensor calibration"}, {ROCKCAT_HAS_LIFT_OFF, "lift-off distance"}})
         if (caps->features & f.first)
             can += (can.empty() ? "" : ", ") + std::string(f.second);
     if (!can.empty())

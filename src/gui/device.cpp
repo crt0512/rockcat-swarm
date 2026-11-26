@@ -120,6 +120,8 @@ void connect_device(app_state *s)
     s->caps = rockcat_get_caps(s->dev);
     view_free(s->view);
     s->view = view_load(s->info.product_id);
+    side_panel_free(s->side);
+    s->side = side_panel_load(s->info.product_id);
     keyboard_free(s->kb);
     s->kb = nullptr;
     keyboard_load(s);

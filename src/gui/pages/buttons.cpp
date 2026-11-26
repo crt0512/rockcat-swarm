@@ -39,6 +39,49 @@ void set_highlight(app_state *s, int input)
     s->highlighted_button = input;
     if (s->mouse_buttons)
         gtk_widget_queue_draw(s->mouse_buttons);
+    if (s->side_view)
+        gtk_widget_queue_draw(s->side_view);
+}
+
+int button_number(const app_state *s, int input)
+{
+    int n = view_button_number(s->view, input);
+    return n ? n : input + 1;
+}
+
+// a mouse with a TOP and a SIDE picture lists only the buttons of the picture showing, so the numbers in the list
+// are the ones on the markers. the side ones only while a cap you can press sits on them
+void side_apply_rows(app_state *s)
+{
+    if (!s->side)
+        return;
+    const int inputs = n_inputs(s);
+    const char *showing = s->button_stack ? gtk_stack_get_visible_child_name(GTK_STACK(s->button_stack)) : nullptr;
+    // (nothing showing yet while the page gets built: the TOP tab comes first, if there is one)
+    const bool side_tab = showing ? std::strcmp(showing, "side") == 0 : !s->mouse_buttons;
+    for (int i = 0; i < inputs; ++i) {
+        const bool on = side_input(s, i) ? side_tab && side_input_fitted(s, i) : !side_tab;
+        std::vector<GtkWidget *> row;
+        if (static_cast<size_t>(i) < s->button_names.size())
+            row.push_back(s->button_names[static_cast<size_t>(i)]);
+        for (int layer = 0; layer < n_layers(s); ++layer)
+            if (static_cast<size_t>(i + layer * inputs) < s->button_cells.size())
+                row.push_back(s->button_cells[static_cast<size_t>(i + layer * inputs)]);
+        for (GtkWidget *w : row) {
+            if (!w)
+                continue;
+            // (no_show_all, or the next show_all of the window brings it back)
+            gtk_widget_set_no_show_all(w, !on);
+            if (on)
+                gtk_widget_show_all(w);
+            else
+                gtk_widget_hide(w);
+        }
+        // the cell shows its macro text box only for some types, show_all just showed it for everyone
+        for (int layer = 0; on && layer < n_layers(s); ++layer)
+            if (static_cast<size_t>(i + layer * inputs) < s->buttons.size())
+                update_button_row_sensitivity(s, i + layer * inputs);
+    }
 }
 
 gboolean on_button_row_focus(GtkWidget *w, GdkEvent *, gpointer data)
@@ -110,12 +153,13 @@ GtkWidget *build_buttons_page(app_state *s)
     const int inputs = n_inputs(s), layers = n_layers(s);
     s->buttons.assign(static_cast<size_t>(inputs * layers), button_row{});
     s->button_names.assign(static_cast<size_t>(inputs), nullptr);
+    s->button_cells.assign(static_cast<size_t>(inputs * layers), nullptr);
     // every other mouse gets ROCCATs picture of it with a marker on every button, if the build has one
     if (s->view) {
         s->mouse_buttons = gtk_drawing_area_new();
         int w = 0, h = 0;
-        // one size, the same on the button and the lighting page, so the mouse stays put when switching between them
-        view_size(s->view, MOUSE_VIEW_HEIGHT, &w, &h);
+        // as high as on the lighting page. what is below the buttons (the back of the Nyth) is left out here
+        view_buttons_size(s->view, MOUSE_VIEW_HEIGHT, &w, &h);
         gtk_widget_set_size_request(s->mouse_buttons, w, h);
         gtk_widget_set_hexpand(s->mouse_buttons, TRUE);
         gtk_widget_set_vexpand(s->mouse_buttons, TRUE);
@@ -125,15 +169,37 @@ GtkWidget *build_buttons_page(app_state *s)
         g_signal_connect(s->mouse_buttons, "button-press-event", G_CALLBACK(on_view_click), s);
         gtk_widget_add_events(s->mouse_buttons, GDK_LEAVE_NOTIFY_MASK);
         g_signal_connect(s->mouse_buttons, "leave-notify-event", G_CALLBACK(on_view_leave), s);
+    }
+    // a mouse with caps on its side to put in yourself: the picture gets a TOP and a SIDE tab
+    if (s->side) {
+        s->button_stack = gtk_stack_new();
+        gtk_stack_set_transition_type(GTK_STACK(s->button_stack), GTK_STACK_TRANSITION_TYPE_CROSSFADE);
+        if (s->mouse_buttons)
+            gtk_stack_add_titled(GTK_STACK(s->button_stack), s->mouse_buttons, "top", "TOP");
+        gtk_stack_add_titled(GTK_STACK(s->button_stack), build_side_view(s), "side", "SIDE");
+        GtkWidget *tabs = gtk_stack_switcher_new();
+        gtk_stack_switcher_set_stack(GTK_STACK_SWITCHER(tabs), GTK_STACK(s->button_stack));
+        gtk_widget_set_halign(tabs, GTK_ALIGN_CENTER);
+        g_signal_connect_swapped(s->button_stack, "notify::visible-child-name", G_CALLBACK(side_apply_rows), s);
+        // which picture is showing is no change to the profile
+        g_object_set_data(G_OBJECT(tabs), "rc-no-autoapply", GINT_TO_POINTER(1));
+        GtkWidget *col = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+        gtk_box_pack_start(GTK_BOX(col), tabs, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(col), s->button_stack, TRUE, TRUE, 0);
+        gtk_widget_set_hexpand(col, TRUE);
+        gtk_box_pack_start(GTK_BOX(page), col, TRUE, TRUE, 0);
+    } else if (s->mouse_buttons) {
         gtk_box_pack_start(GTK_BOX(page), s->mouse_buttons, TRUE, TRUE, 0);
     }
     // the list goes in the order of the numbers on the markers, which is the order Swarm had. without a view its our own order
     std::vector<int> order(static_cast<size_t>(inputs));
     for (int i = 0; i < inputs; ++i)
         order[static_cast<size_t>(i)] = i;
-    auto number = [s](int input) { int n = view_button_number(s->view, input); return n ? n : input + 1; };
+    // the side buttons go after the top ones and count 1 to 12 like the markers on the side
+    auto number = [s](int input) { return side_input(s, input) ? side_number(s, input) : button_number(s, input); };
+    auto place = [s, &number](int input) { return (side_input(s, input) ? 1000 : 0) + number(input); };
     if (s->view)
-        std::stable_sort(order.begin(), order.end(), [&](int a, int b) { return number(a) < number(b); });
+        std::stable_sort(order.begin(), order.end(), [&](int a, int b) { return place(a) < place(b); });
 
     GtkWidget *grid = gtk_grid_new();
     gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
@@ -171,6 +237,7 @@ GtkWidget *build_buttons_page(app_state *s)
             gtk_widget_set_no_show_all(r.p1, TRUE);
             gtk_widget_set_no_show_all(r.p2, TRUE);
             gtk_widget_set_no_show_all(r.text, TRUE);
+            s->button_cells[static_cast<size_t>(idx)] = cell;
             gtk_grid_attach(GTK_GRID(grid), cell, 1 + layer, line + 1, 1, 1);
         }
     }
@@ -191,7 +258,7 @@ GtkWidget *build_buttons_page(app_state *s)
     // a row that gets the focus (a click on its marker does that) scrolls itself into sight
     gtk_container_set_focus_vadjustment(GTK_CONTAINER(grid), gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll)));
     // the table keeps its own width, a bigger window gives the room to the picture. without a picture it may spread
-    const bool picture = s->mouse_buttons != nullptr;
+    const bool picture = s->mouse_buttons != nullptr || s->side;
     gtk_scrolled_window_set_propagate_natural_width(GTK_SCROLLED_WINDOW(scroll), picture);
     GtkWidget *panel = box_panel("BUTTON ASSIGNMENT", scroll);
     // next to the picture the table has the width every mouse page has on that side
@@ -201,6 +268,7 @@ GtkWidget *build_buttons_page(app_state *s)
         gtk_scrolled_window_set_propagate_natural_width(GTK_SCROLLED_WINDOW(scroll), FALSE);
     }
     gtk_box_pack_start(GTK_BOX(page), panel, !picture, TRUE, 0);
+    side_apply_rows(s);
     return page;
 }
 

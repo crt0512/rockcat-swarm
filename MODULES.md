@@ -21,6 +21,7 @@ Protocol notes per family: [docs/protocol/](docs/protocol/).
 - [x] **Kova** - `1E7D:2CEE`, module `KOVA` v1.2123 (3.7 MB) - tested, firmware 1.18 (gray)
 - [x] **Kone AIMO Remastered** - `1E7D:2E2C`, module `KONE_AIMO` v1.0009 (1.4 MB) - tested by upstream, firmware 1.05. dont own one though.
 - [x] **Lua** - `1E7D:2C2E`, no Swarm module - settings get through on a real one, the mouse cant be read afaik, does what it should when configured from PC though.
+- [x] **Nyth** - `1E7D:2E7C`, module `NYTH` v1.7124 (6.2 MB) - tested, firmware 1.38 (black)
 
 ### Keyboard
 
@@ -35,6 +36,7 @@ Protocol notes per family: [docs/protocol/](docs/protocol/).
 - [x] **Kova** - `1E7D:2CEF`, module `KOVA` v1.2123 (3.7 MB) - untested, same mouse as the tested gray one in white
 - [x] **Kova** - `1E7D:2CF0`, module `KOVA` v1.2123 (3.7 MB) - untested, same mouse as the tested gray one in black
 - [x] **Kone AIMO** - `1E7D:2E27`, module `KONE_AIMO` v1.0135 (3.5 MB) - untested, the original of the Remastered
+- [x] **Nyth** - `1E7D:2E7D`, module `NYTH` v1.7124 (6.2 MB) - untested, same mouse as the tested black one in white
 
 ### Keyboard
 
@@ -56,8 +58,6 @@ Protocol notes per family: [docs/protocol/](docs/protocol/).
 - [x] **Kova AIMO** - `1E7D:2CF3`, module `KOVA_AIMO` v1.0017 (1.5 MB) - untested, from the Swarm monitor and module, AIMO effect not drawn
 - [x] **Leadr** - `1E7D:2E4C`, module `LEADR` v1.0122 (1.9 MB) - untested, from the Swarm monitor and module (a Tyon without the cable), no factory buttons, nothing wireless
 - [x] **Leadr** - `1E7D:2E4E`, module `LEADR` v1.0122 (1.9 MB) - untested, from the Swarm monitor and module (a Tyon without the cable), no factory buttons, nothing wireless
-- [x] **Nyth** - `1E7D:2E7C`, module `NYTH` v1.7124 (6.2 MB) - untested
-- [x] **Nyth** - `1E7D:2E7D`, module `NYTH` v1.7124 (6.2 MB) - untested
 - [x] **Kone[+]** - `1E7D:2D51`, no Swarm module - untested
 - [x] **Kone XTD** - `1E7D:2E22`, no Swarm module - untested
 - [x] **Kone XTD Optical** - `1E7D:2E23`, no Swarm module - untested

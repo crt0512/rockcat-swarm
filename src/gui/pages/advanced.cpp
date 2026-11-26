@@ -5,18 +5,61 @@
 
 namespace gui {
 
+// what the sensor has right now: calibrated or not, and the lift-off distance. both live in the mouse and not in a
+// profile, so they are read from it every time
 void update_tdcu_label(app_state *s)
 {
     if (!s->dev || !s->tdcu_label)
         return;
     rockcat_tdcu t;
     char msg[128];
-    if (rockcat_read_tdcu(s->dev, &t) == ROCKCAT_OK)
+    const bool ok = rockcat_read_tdcu(s->dev, &t) == ROCKCAT_OK;
+    if (!ok)
+        std::snprintf(msg, sizeof msg, "Could not read the sensor calibration");
+    else if (t.value) // the Kone AIMO has a number for it, the Nyth hasnt
         std::snprintf(msg, sizeof msg, t.mode == 2 ? "Calibrated for your surface (value 0x%04x)"
                                                    : "Factory calibration (value 0x%04x)", t.value);
     else
-        std::snprintf(msg, sizeof msg, "Could not read the sensor calibration");
+        std::snprintf(msg, sizeof msg, t.mode == 2 ? "Calibrated for your surface" : "Factory calibration");
     gtk_label_set_text(GTK_LABEL(s->tdcu_label), msg);
+    if (s->calib_off)
+        gtk_widget_set_visible(s->calib_off, ok && t.mode == 2);
+    int level = 0;
+    if (s->lift_off && rockcat_get_lift_off(s->dev, &level) == ROCKCAT_OK) {
+        s->updating = true;
+        char id[4];
+        std::snprintf(id, sizeof id, "%d", level);
+        gtk_combo_box_set_active_id(GTK_COMBO_BOX(s->lift_off), id);
+        s->updating = false;
+    }
+}
+
+// the lift-off distance goes to the mouse right away, it isnt part of a profile and APPLY has nothing to do with it
+void on_lift_off_changed(GtkComboBox *box, gpointer data)
+{
+    auto *s = static_cast<app_state *>(data);
+    const char *id = gtk_combo_box_get_active_id(box);
+    if (s->updating || !s->dev || !id)
+        return;
+    int r = rockcat_set_lift_off(s->dev, std::atoi(id));
+    if (r != ROCKCAT_OK)
+        report_error(s, "Lift-off distance", r);
+    else
+        set_status(s, "Lift-off distance set", "connected");
+    update_tdcu_label(s);
+}
+
+void on_calib_off(GtkButton *, gpointer data)
+{
+    auto *s = static_cast<app_state *>(data);
+    if (!s->dev)
+        return;
+    int r = rockcat_calibration_off(s->dev);
+    if (r != ROCKCAT_OK)
+        report_error(s, "Sensor calibration", r);
+    else
+        set_status(s, "The sensor tracks the way it came from the factory again", "connected");
+    update_tdcu_label(s);
 }
 
 struct calib_state {
@@ -105,6 +148,8 @@ void on_calibrate(GtkButton *, gpointer data)
     auto *s = static_cast<app_state *>(data);
     if (!s->dev)
         return;
+    // (the Nyth wants slow circles, roccat-tools says so. it takes about 8 s there)
+    const bool nyth = s->caps && std::strcmp(s->caps->family, "nyth") == 0;
     auto *c = new calib_state;
     c->app = s;
     c->dialog = gtk_dialog_new();
@@ -116,9 +161,11 @@ void on_calibrate(GtkButton *, gpointer data)
     GtkWidget *area = gtk_dialog_get_content_area(GTK_DIALOG(c->dialog));
     gtk_container_set_border_width(GTK_CONTAINER(area), 16);
     gtk_box_set_spacing(GTK_BOX(area), 12);
-    gtk_box_pack_start(GTK_BOX(area), title_label("TRACKING & DISTANCE CONTROL UNIT"), FALSE, FALSE, 0);
-    c->text = label("Put the mouse on the surface you play on. Press START, then keep moving the mouse "
-                    "in large circles and figure-eights until calibration completes (about 10-20 s).");
+    gtk_box_pack_start(GTK_BOX(area), title_label(nyth ? "TRACKING CONTROL UNIT" : "TRACKING & DISTANCE CONTROL UNIT"), FALSE, FALSE, 0);
+    c->text = label(nyth ? "Put the mouse on the surface you play on. Press START, then keep moving the mouse "
+                           "in slow circles until calibration completes (about 10 s)."
+                         : "Put the mouse on the surface you play on. Press START, then keep moving the mouse "
+                           "in large circles and figure-eights until calibration completes (about 10-20 s).");
     gtk_label_set_line_wrap(GTK_LABEL(c->text), TRUE);
     gtk_box_pack_start(GTK_BOX(area), c->text, FALSE, FALSE, 0);
     c->progress = gtk_progress_bar_new();
@@ -198,8 +245,34 @@ GtkWidget *build_advanced_page(app_state *s)
         g_signal_connect(s->calib_button, "clicked", G_CALLBACK(on_calibrate), s);
         s->tdcu_label = label("", "rc-hint");
         gtk_box_pack_start(GTK_BOX(cb), s->calib_button, FALSE, FALSE, 0);
+        if (caps->features & ROCKCAT_HAS_CALIBRATION_OFF) {
+            s->calib_off = gtk_button_new_with_label("BACK TO FACTORY");
+            gtk_widget_set_tooltip_text(s->calib_off, "Forget the calibration, the sensor tracks the way it came from the factory");
+            g_signal_connect(s->calib_off, "clicked", G_CALLBACK(on_calib_off), s);
+            // only there while there is a calibration to forget (update_tdcu_label)
+            gtk_widget_set_no_show_all(s->calib_off, TRUE);
+            gtk_box_pack_start(GTK_BOX(cb), s->calib_off, FALSE, FALSE, 0);
+        }
         gtk_box_pack_start(GTK_BOX(cb), s->tdcu_label, FALSE, FALSE, 0);
-        gtk_grid_attach(GTK_GRID(page), box_panel("SENSOR CALIBRATION (TDCU)", cb), 0, row++, 2, 1);
+        gtk_grid_attach(GTK_GRID(page), box_panel(caps->features & ROCKCAT_HAS_LIFT_OFF ? "SENSOR CALIBRATION (TCU)" : "SENSOR CALIBRATION (TDCU)", cb), 0, row++, 2, 1);
+    }
+    if (caps->features & ROCKCAT_HAS_LIFT_OFF) {
+        GtkWidget *lb = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+        s->lift_off = gtk_combo_box_text_new();
+        const char *levels[] = {"Off", "Extra low", "Low", "Normal"};
+        for (int i = 0; i < 4; ++i) {
+            char id[4];
+            std::snprintf(id, sizeof id, "%d", i);
+            gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(s->lift_off), id, levels[i]);
+        }
+        // the mouse keeps it for every profile, its no change to the profile being edited
+        g_object_set_data(G_OBJECT(s->lift_off), "rc-no-autoapply", GINT_TO_POINTER(1));
+        g_signal_connect(s->lift_off, "changed", G_CALLBACK(on_lift_off_changed), s);
+        gtk_box_pack_start(GTK_BOX(lb), s->lift_off, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(lb), label("How high the mouse can be lifted before the sensor stops tracking. "
+                                              "Set by the mouse for all profiles, right away.", "rc-hint"),
+                           FALSE, FALSE, 0);
+        gtk_grid_attach(GTK_GRID(page), box_panel("LIFT-OFF DISTANCE (DCU)", lb), 0, row++, 2, 1);
     }
     return page;
 }

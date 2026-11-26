@@ -50,10 +50,16 @@ constexpr uint8_t DEFAULT_LAYOUT[ROCKCAT_BUTTON_COUNT] = {
     ROCKCAT_BT_UNUSED,     ROCKCAT_BT_PROFILE_UP,  ROCKCAT_BT_PROFILE_DOWN,
 };
 
-// the sensor calibration reports are a Kone AIMO thing, sending them to a keyboard would be asking for trouble
+// the sensor calibration reports here are a Kone AIMO thing, sending them to a keyboard would be asking for trouble
 bool has_calibration(const rockcat_device *dev)
 {
     return dev && dev->desc && (dev->desc->caps.features & ROCKCAT_HAS_CALIBRATION);
+}
+
+// a family with a calibration of its own (the Nyth), nullptr for the Kone AIMO way
+const calibration_ops *own_calibration(const rockcat_device *dev)
+{
+    return has_calibration(dev) ? dev->desc->family->calibration : nullptr;
 }
 
 } // namespace
@@ -350,6 +356,8 @@ int rockcat_read_tdcu(rockcat_device *dev, rockcat_tdcu *out)
         return ROCKCAT_ERR_UNSUPPORTED;
     if (!out)
         return ROCKCAT_ERR_ARGUMENT;
+    if (const calibration_ops *own = own_calibration(dev))
+        return own->read ? own->read(dev, out) : ROCKCAT_ERR_UNSUPPORTED;
     uint8_t buf[ROCKCAT_DCU_SIZE] = {REPORT_TDCU};
     int r = get_raw(dev, buf, sizeof buf);
     if (r != ROCKCAT_OK)
@@ -364,6 +372,8 @@ int rockcat_calibration_start(rockcat_device *dev)
 {
     if (!has_calibration(dev))
         return ROCKCAT_ERR_UNSUPPORTED;
+    if (const calibration_ops *own = own_calibration(dev))
+        return own->start ? own->start(dev) : ROCKCAT_ERR_UNSUPPORTED;
     const uint8_t buf[ROCKCAT_DCU_SIZE] = {REPORT_TDCU, ROCKCAT_DCU_SIZE, 2, 0xff, 0, 0};
     return set_raw(dev, buf, sizeof buf, false);
 }
@@ -374,6 +384,8 @@ int rockcat_calibration_poll(rockcat_device *dev, int *finished)
         return ROCKCAT_ERR_UNSUPPORTED;
     if (!dev || !dev->io || !finished)
         return ROCKCAT_ERR_ARGUMENT;
+    if (const calibration_ops *own = own_calibration(dev))
+        return own->poll ? own->poll(dev, finished) : ROCKCAT_ERR_UNSUPPORTED;
     uint8_t status[3] = {REPORT_CONTROL, 0, 0};
     int r = dev->io->get_feature(status, sizeof status);
     if (r < 0)
@@ -388,8 +400,33 @@ int rockcat_calibration_finish(rockcat_device *dev, int save)
 {
     if (!has_calibration(dev))
         return ROCKCAT_ERR_UNSUPPORTED;
+    if (const calibration_ops *own = own_calibration(dev))
+        return own->finish ? own->finish(dev, save) : ROCKCAT_ERR_UNSUPPORTED;
     const uint8_t buf[ROCKCAT_DCU_SIZE] = {REPORT_TDCU, ROCKCAT_DCU_SIZE, 2, static_cast<uint8_t>(save ? 1 : 0), 0, 0};
     return set_raw(dev, buf, sizeof buf, true);
+}
+
+// the rest only exists on families with their own calibration
+int rockcat_calibration_off(rockcat_device *dev)
+{
+    const calibration_ops *own = own_calibration(dev);
+    return own && own->off ? own->off(dev) : ROCKCAT_ERR_UNSUPPORTED;
+}
+
+int rockcat_get_lift_off(rockcat_device *dev, int *level)
+{
+    if (!level)
+        return ROCKCAT_ERR_ARGUMENT;
+    const calibration_ops *own = own_calibration(dev);
+    return own && own->get_lift_off ? own->get_lift_off(dev, level) : ROCKCAT_ERR_UNSUPPORTED;
+}
+
+int rockcat_set_lift_off(rockcat_device *dev, int level)
+{
+    if (level < ROCKCAT_LIFT_OFF_OFF || level > ROCKCAT_LIFT_OFF_NORMAL)
+        return ROCKCAT_ERR_ARGUMENT;
+    const calibration_ops *own = own_calibration(dev);
+    return own && own->set_lift_off ? own->set_lift_off(dev, level) : ROCKCAT_ERR_UNSUPPORTED;
 }
 
 /* ---- direct lighting ----------------------------------------------------- */

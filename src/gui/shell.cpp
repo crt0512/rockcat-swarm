@@ -115,6 +115,8 @@ void build_pages(app_state *s)
     s->effect = s->speed = s->brightness = s->group_color = s->theme = s->render_engine = nullptr;
     s->shift_enable = s->shift_color = s->shift_style = s->shift_hint = s->engine_label = s->colors_panel = nullptr;
     s->all_color = s->color_flow = s->idle_minutes = s->idle_style = s->idle_brightness = s->macro_feedback = nullptr;
+    s->side_view = s->button_stack = nullptr;
+    s->button_cells.clear();
     s->mouse_light = s->mouse_buttons = s->kb_view = s->kb_hint = s->fx_panel = s->fx_box = nullptr;
     s->idle_panel = s->idle_fx_panel = s->idle_fx_box = nullptr;
     s->es_enable = s->es_row = s->es_panel = s->es_effect = s->es_box = nullptr;
@@ -126,7 +128,7 @@ void build_pages(app_state *s)
     s->fx_shown = -1;
     s->kb_hover = s->kb_drag = -1;
     s->idle_preview_t0 = -1;
-    s->angle_snapping = s->debounce = s->left_handed = s->raw_view = s->tdcu_label = s->calib_button = nullptr;
+    s->angle_snapping = s->debounce = s->left_handed = s->raw_view = s->tdcu_label = s->calib_button = s->calib_off = s->lift_off = nullptr;
     for (auto &w : s->theme_swatches)
         w = nullptr;
     s->highlighted_button = -1;
@@ -185,6 +187,7 @@ void on_destroy(GtkWidget *, gpointer data)
     if (s->dev)
         rockcat_close(s->dev);
     view_free(s->view);
+    side_panel_free(s->side);
     keyboard_free(s->kb);
 #ifdef ROCKCAT_HAVE_TRAY
     if (s->indicator)

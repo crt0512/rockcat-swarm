@@ -22,7 +22,7 @@ It comes in three parts:
 
 ## What works
 
-Short version: 56 devices, 5 of them tried on real hardware here so far. The full list is in [MODULES.md](MODULES.md), sorted into tested and working, assumed to work (siblings of tested ones), might work, basics might work and todo.
+Short version: 56 devices, 6 of them tried on real hardware here so far. The full list is in [MODULES.md](MODULES.md), sorted into tested and working, assumed to work (siblings of tested ones), might work, basics might work and todo.
 
 Tested on a real one:
 
@@ -31,6 +31,7 @@ Tested on a real one:
 - **ROCCAT Kova 2016** gray (`1e7d:2cee`): profiles, dpi, polling, both lights, buttons with the Easy-Shift[+] layer, macros, lighting from the pc. Shown with ROCCATs picture of the mouse, a marker on every button and the lights in the colours you pick
 - **ROCCAT Sova** membrane (`1e7d:2f76`): profiles, keys on all three layers, macros on the Easy-Shift keys, its effects, brightness and sleep timer. One backlight for the whole board, the picture shows what the effect does to it
 - **ROCCAT Lua** (`1e7d:2c2e`): dpi steps, polling, buttons, left handed, the logo light. The Lua cant be asked anything back, so rockcat keeps what it last sent in its config dir. The settings get accepted by a real one, whether it really does all of it is still to be looked at
+- **ROCCAT Nyth** black (`1e7d:2e7c`): profiles, dpi, polling, both lights, all 20 buttons with the Easy-Shift[+] layer, macros, sensor calibration (TCU) and lift-off distance (DCU) on the advanced page (those two not tried on the real one yet). The button page has the top of the mouse and its side, where you drag the caps you actually put in (buttons, blanks, doubles, blank rows, Swarms own pictures of them) onto it, so the list only shows the side buttons that are there
 
 
 ## Building

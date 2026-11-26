@@ -10,6 +10,9 @@ struct device_view {
     cairo_surface_t *picture = nullptr;
     int width = 0, height = 0;
     double marker = 27;
+    // the buttons page shows only this much of the picture from the top (the Nyth has its back below, that one is
+    // there for its light and has no buttons). height when the view.ini doesnt say
+    int buttons_height = 0;
     struct mark {
         double x = 0, y = 0;
         int number = 0; // what Swarm prints on it. 0 = this button has no marker
@@ -22,12 +25,12 @@ struct device_view {
 
 namespace {
 
-// fits the picture into the widget and leaves cairo in picture coordinates. returns the scale
-double fit(const device_view *v, GtkWidget *w, cairo_t *cr, double *left = nullptr, double *top = nullptr)
+// fits the picture (its top vh rows) into the widget and leaves cairo in picture coordinates. returns the scale
+double fit(const device_view *v, int vh, GtkWidget *w, cairo_t *cr, double *left = nullptr, double *top = nullptr)
 {
     double W = gtk_widget_get_allocated_width(w), H = gtk_widget_get_allocated_height(w);
-    double k = std::min(W / v->width, H / v->height);
-    double x = (W - v->width * k) / 2, y = (H - v->height * k) / 2;
+    double k = std::min(W / v->width, H / vh);
+    double x = (W - v->width * k) / 2, y = (H - vh * k) / 2;
     if (cr) {
         cairo_translate(cr, x, y);
         cairo_scale(cr, k, k);
@@ -58,7 +61,7 @@ void paint_light(cairo_t *cr, cairo_surface_t *mask, double r, double g, double 
 int marker_at(app_state *s, GtkWidget *w, double px, double py)
 {
     const device_view *v = s->view;
-    double left = 0, top = 0, k = fit(v, w, nullptr, &left, &top);
+    double left = 0, top = 0, k = fit(v, v->buttons_height, w, nullptr, &left, &top);
     double x = (px - left) / k, y = (py - top) / k;
     for (size_t i = 0; i < v->marks.size(); ++i)
         if (v->marks[i].number && std::hypot(v->marks[i].x - x, v->marks[i].y - y) <= v->marker / 2 + 3)
@@ -88,6 +91,9 @@ device_view *view_load(int pid)
         v->width = g_key_file_get_integer(kf, "view", "width", nullptr);
         v->height = g_key_file_get_integer(kf, "view", "height", nullptr);
         v->marker = g_key_file_get_integer(kf, "view", "marker", nullptr);
+        v->buttons_height = g_key_file_get_integer(kf, "view", "buttons_height", nullptr);
+        if (v->buttons_height <= 0 || v->buttons_height > v->height)
+            v->buttons_height = v->height;
     }
     if (!ok || !v->picture || v->width <= 0 || v->height <= 0) {
         g_key_file_unref(kf);
@@ -169,6 +175,13 @@ void view_size(const device_view *v, int height, int *w, int *h)
 {
     *h = height;
     *w = v->width * height / v->height;
+}
+
+// the same for the buttons page, which leaves out what is below buttons_height
+void view_buttons_size(const device_view *v, int height, int *w, int *h)
+{
+    *h = height;
+    *w = v->width * height / v->buttons_height;
 }
 
 // the lights as the page has them set right now. a light that is off gets painted dark, the picture itself has
@@ -255,7 +268,7 @@ gboolean on_draw_view_lights(GtkWidget *w, cairo_t *cr, gpointer data)
     auto *s = static_cast<app_state *>(data);
     if (!s->view)
         return FALSE;
-    fit(s->view, w, cr);
+    fit(s->view, s->view->height, w, cr);
     cairo_set_source_surface(cr, s->view->picture, 0, 0);
     cairo_paint(cr);
     draw_view_lights(s, cr, true);
@@ -268,7 +281,9 @@ gboolean on_draw_view_buttons(GtkWidget *w, cairo_t *cr, gpointer data)
     const device_view *v = s->view;
     if (!v)
         return FALSE;
-    fit(v, w, cr);
+    fit(v, v->buttons_height, w, cr);
+    cairo_rectangle(cr, 0, 0, v->width, v->buttons_height);
+    cairo_clip(cr);
     cairo_set_source_surface(cr, v->picture, 0, 0);
     cairo_paint(cr);
     // the lights in their colours here too, a mouse with a red wheel on one page and a blue one on the next looks broken

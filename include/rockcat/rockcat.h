@@ -356,6 +356,19 @@ ROCKCAT_API int rockcat_calibration_start(rockcat_device *dev);
 /* *finished = 1 once the sensor is done (the device leaves its busy state). */
 ROCKCAT_API int rockcat_calibration_poll(rockcat_device *dev, int *finished);
 ROCKCAT_API int rockcat_calibration_finish(rockcat_device *dev, int save);
+/* drops the own calibration, the sensor tracks the way it came from the factory again (ROCKCAT_HAS_CALIBRATION_OFF,
+ * the Nyth). ROCKCAT_ERR_UNSUPPORTED elsewhere */
+ROCKCAT_API int rockcat_calibration_off(rockcat_device *dev);
+/* how high the mouse can be lifted before the sensor stops (DCU, ROCKCAT_HAS_LIFT_OFF): one of rockcat_lift_off.
+ * stored in the mouse for all profiles, not in a profile */
+typedef enum rockcat_lift_off {
+    ROCKCAT_LIFT_OFF_OFF = 0,
+    ROCKCAT_LIFT_OFF_EXTRA_LOW = 1,
+    ROCKCAT_LIFT_OFF_LOW = 2,
+    ROCKCAT_LIFT_OFF_NORMAL = 3
+} rockcat_lift_off;
+ROCKCAT_API int rockcat_get_lift_off(rockcat_device *dev, int *level);
+ROCKCAT_API int rockcat_set_lift_off(rockcat_device *dev, int level);
 
 /* ------------------------------------------------------------------------ */
 /* Lighting engine: AIMO and other software effects                          */
@@ -446,7 +459,9 @@ enum { /* rockcat_caps.features */
     ROCKCAT_HAS_LED_BRIGHTNESS = 1 << 6, /* the a in rockcat_color means something per led */
     ROCKCAT_HAS_RGB            = 1 << 7,
     ROCKCAT_HAS_DEBOUNCE       = 1 << 8,
-    ROCKCAT_HAS_ANGLE_SNAP     = 1 << 9
+    ROCKCAT_HAS_ANGLE_SNAP     = 1 << 9,
+    ROCKCAT_HAS_LIFT_OFF       = 1 << 10, /* rockcat_get_lift_off / rockcat_set_lift_off */
+    ROCKCAT_HAS_CALIBRATION_OFF = 1 << 11 /* rockcat_calibration_off: back to the factory tracking */
 };
 
 typedef struct rockcat_caps {

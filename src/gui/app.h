@@ -44,6 +44,7 @@ inline const rockcat_caps *kone_caps()
 struct device_view;  // device_view.cpp
 struct keyboard_art; // keyboard_view.cpp
 struct key_page;     // pages/keys.cpp
+struct side_panel;   // side_panel.cpp
 
 struct dpi_row {
     GtkWidget *enabled;
@@ -79,6 +80,11 @@ struct app_state {
     // buttons page
     std::vector<button_row> buttons; // layer * inputs + input
     std::vector<GtkWidget *> button_names; // the label in front of each row, by input
+    std::vector<GtkWidget *> button_cells; // what each row has per layer (layer * inputs + input), shown and hidden with it
+    // a mouse with side buttons you put in yourself (the Nyth): which caps are in, the drawing of its side, and the
+    // TOP / SIDE switch the picture sits in. nullptr for every other mouse
+    side_panel *side = nullptr;
+    GtkWidget *side_view = nullptr, *button_stack = nullptr;
 
     // illumination page
     GtkWidget *effect = nullptr;
@@ -122,6 +128,8 @@ struct app_state {
     GtkWidget *raw_view = nullptr;
     GtkWidget *tdcu_label = nullptr;
     GtkWidget *calib_button = nullptr;
+    GtkWidget *calib_off = nullptr;  // back to the factory tracking, only shown while calibrated (Nyth)
+    GtkWidget *lift_off = nullptr;   // the lift-off distance chooser (Nyth)
 
     // application preferences (~/.config/rockcat/gui.ini)
     GtkWidget *pref_tray_icon = nullptr;
@@ -340,6 +348,18 @@ device_view *view_load(int pid);
 void view_free(device_view *v);
 int view_button_number(const device_view *v, int input);
 void view_size(const device_view *v, int height, int *w, int *h);
+void view_buttons_size(const device_view *v, int height, int *w, int *h);
+// the number the buttons page puts in front of a button (the marker number, or our own one)
+int button_number(const app_state *s, int input);
+side_panel *side_panel_load(int pid);
+void side_panel_free(side_panel *p);
+bool side_input_fitted(const app_state *s, int input);
+bool side_input(const app_state *s, int input);
+// the number a side button has on its marker, 1 for the top front slot
+int side_number(const app_state *s, int input);
+GtkWidget *build_side_view(app_state *s);
+// shows the rows of the side buttons that have a cap on them and hides the others
+void side_apply_rows(app_state *s);
 gboolean on_draw_view_lights(GtkWidget *w, cairo_t *cr, gpointer data);
 gboolean on_draw_view_buttons(GtkWidget *w, cairo_t *cr, gpointer data);
 gboolean on_view_motion(GtkWidget *w, GdkEventMotion *e, gpointer data);

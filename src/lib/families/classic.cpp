@@ -1,7 +1,8 @@
 // the mice that talk like the Kova 2016 but have their own report sizes: Nyth, Tyon, Kiro, Savu. a settings report on 06
 // and a button report on 07, each read after a select on 04, macros on 08, firmware on 09. what differs is where things sit,
 // so this is one profile class and a table per mouse (LAYOUTS). the Kova 2016 itself stays in kova.cpp, its code is the one
-// that was checked on a real mouse and it doesnt get touched for this. everything here is roccat-tools, never on hardware.
+// that was checked on a real mouse and it doesnt get touched for this. everything here is roccat-tools, only the Nyth (black,
+// firmware 1.38) was on real hardware so far.
 // docs/protocol/classic.md
 
 #include "../internal.h"
@@ -735,6 +736,94 @@ template <const layout &L>
 constexpr family_ops ops = {firmware,  get_active,    set_active,   new_profile,     no_direct,      no_frame,  no_direct,
                             no_switch, direct_active, decode_event, input_label<L>, led_label<L>, layer_label};
 
+// the Nyth sensor: tracking control unit (TCU, calibrated to the surface or not) and distance control unit (DCU, the
+// lift-off distance) in one report, out of roccat-tools nyth_control_unit.c and nyth_tcu_calibration_assistant.c:
+// [0f 06 dcu tcu 00 action]. ff in dcu or tcu = leave that one alone. a calibration is tcu 1 action 1 (start), the
+// mouse says its done with the input report [03 xx 30 ..] (roccat-tools waits up to 15 s), then action 3 keeps it and
+// action 4 throws it away. tcu 0 action 0 = back to how it came from the factory
+constexpr uint8_t REPORT_CONTROL_UNIT = 0x0f, CU_START = 1, CU_ACCEPT = 3, CU_CANCEL = 4;
+constexpr uint8_t SPECIAL_REPORT = 0x03, SPECIAL_TCU = 0x30;
+
+int nyth_cu_write(rockcat_device *dev, uint8_t dcu, uint8_t tcu, uint8_t action)
+{
+    const uint8_t buf[6] = {REPORT_CONTROL_UNIT, 6, dcu, tcu, 0, action};
+    return set_raw(dev, buf, sizeof buf, true);
+}
+
+int nyth_cu_read(rockcat_device *dev, uint8_t out[6])
+{
+    std::memset(out, 0, 6);
+    out[0] = REPORT_CONTROL_UNIT;
+    int r = get_raw(dev, out, 6);
+    return r != ROCKCAT_OK ? r : out[0] == REPORT_CONTROL_UNIT ? ROCKCAT_OK : ROCKCAT_ERR_PROTOCOL;
+}
+
+// mode 2 = calibrated like on the Kone AIMO, 0 = factory. the Nyth has no number for its calibration, value stays 0
+int nyth_tdcu_read(rockcat_device *dev, rockcat_tdcu *out)
+{
+    uint8_t cu[6];
+    int r = nyth_cu_read(dev, cu);
+    if (r != ROCKCAT_OK)
+        return r;
+    *out = rockcat_tdcu{static_cast<uint8_t>(cu[3] == 1 ? 2 : 0), 0, 0};
+    return ROCKCAT_OK;
+}
+
+int nyth_tdcu_start(rockcat_device *dev)
+{
+    // whatever input reports are still waiting are from before, the one that counts comes after the start
+    uint8_t junk[16];
+    for (int i = 0; i < 256 && dev->io->read(junk, sizeof junk, 0) > 0; ++i) {
+    }
+    return nyth_cu_write(dev, 0xff, 1, CU_START);
+}
+
+int nyth_tdcu_poll(rockcat_device *dev, int *finished)
+{
+    *finished = 0;
+    uint8_t in[16];
+    for (int i = 0; i < 256; ++i) {
+        int n = dev->io->read(in, sizeof in, 0);
+        if (n < 0)
+            return n;
+        if (n == 0)
+            break;
+        if (n >= 3 && in[0] == SPECIAL_REPORT && in[2] == SPECIAL_TCU)
+            *finished = 1;
+    }
+    return ROCKCAT_OK;
+}
+
+int nyth_tdcu_finish(rockcat_device *dev, int save)
+{
+    return nyth_cu_write(dev, 0xff, 1, save ? CU_ACCEPT : CU_CANCEL);
+}
+
+int nyth_tdcu_off(rockcat_device *dev)
+{
+    return nyth_cu_write(dev, 0xff, 0, 0);
+}
+
+int nyth_get_lift_off(rockcat_device *dev, int *level)
+{
+    uint8_t cu[6];
+    int r = nyth_cu_read(dev, cu);
+    if (r == ROCKCAT_OK)
+        *level = cu[2];
+    return r;
+}
+
+int nyth_set_lift_off(rockcat_device *dev, int level)
+{
+    return nyth_cu_write(dev, static_cast<uint8_t>(level), 0xff, 0);
+}
+
+constexpr calibration_ops NYTH_CALIBRATION = {nyth_tdcu_read, nyth_tdcu_start, nyth_tdcu_poll, nyth_tdcu_finish,
+                                              nyth_tdcu_off,  nyth_get_lift_off, nyth_set_lift_off};
+constexpr family_ops nyth_ops = {firmware,  get_active,    set_active,   new_profile,         no_direct,          no_frame,
+                                 no_direct, no_switch,     direct_active, decode_event,       input_label<NYTH>, led_label<NYTH>,
+                                 layer_label, nullptr,     nullptr,      &NYTH_CALIBRATION};
+
 constexpr uint32_t bit(int n)
 {
     return 1u << n;
@@ -744,15 +833,19 @@ constexpr uint32_t FIVE = bit(ROCKCAT_EFFECT_OFF) | bit(ROCKCAT_EFFECT_FULLY_LIT
 constexpr uint32_t THREE = bit(ROCKCAT_EFFECT_FULLY_LIT) | bit(ROCKCAT_EFFECT_BLINKING) | bit(ROCKCAT_EFFECT_BREATHING);
 constexpr uint32_t SAVU_FX = bit(ROCKCAT_EFFECT_OFF) | bit(ROCKCAT_EFFECT_FULLY_LIT) | bit(ROCKCAT_EFFECT_BREATHING);
 
-#define CLASSIC_CAPS(L, features, profiles, effects, speed_max)                                                                        \
-    {ROCKCAT_KIND_MOUSE, L.family, ROCKCAT_TESTED_NO, "", features, profiles, L.inputs, L.layers, L.leds, L.dpi_levels, L.dpi_min,    \
+#define CLASSIC_CAPS_TESTED(L, tested, firmware, features, profiles, effects, speed_max)                                          \
+    {ROCKCAT_KIND_MOUSE, L.family, tested, firmware, features, profiles, L.inputs, L.layers, L.leds, L.dpi_levels, L.dpi_min,       \
      L.dpi_max, L.dpi_step ? L.dpi_step : 1, {125, 250, 500, 1000, 0}, effects, 0, speed_max ? 1 : 0, speed_max, -1}
+#define CLASSIC_CAPS(L, features, profiles, effects, speed_max) CLASSIC_CAPS_TESTED(L, ROCKCAT_TESTED_NO, "", features, profiles, effects, speed_max)
 
 constexpr uint32_t MOUSE = ROCKCAT_HAS_DPI | ROCKCAT_HAS_RGB;
+constexpr uint32_t NYTH_SENSOR = ROCKCAT_HAS_CALIBRATION | ROCKCAT_HAS_CALIBRATION_OFF | ROCKCAT_HAS_LIFT_OFF;
 
 const device_desc DEVICES[] = {
-    {0x2e7c, "ROCCAT Nyth Black", &ops<NYTH>, nullptr, 0x06, CLASSIC_CAPS(NYTH, MOUSE | ROCKCAT_HAS_MACROS | ROCKCAT_HAS_EASYSHIFT, 5, FIVE, 3)},
-    {0x2e7d, "ROCCAT Nyth White", &ops<NYTH>, nullptr, 0x06, CLASSIC_CAPS(NYTH, MOUSE | ROCKCAT_HAS_MACROS | ROCKCAT_HAS_EASYSHIFT, 5, FIVE, 3)},
+    // the black one is on the desk here and does what it should. the white one is the same mouse in another shell
+    {0x2e7c, "ROCCAT Nyth Black", &nyth_ops, nullptr, 0x06,
+     CLASSIC_CAPS_TESTED(NYTH, ROCKCAT_TESTED_HARDWARE, "1.38", MOUSE | ROCKCAT_HAS_MACROS | ROCKCAT_HAS_EASYSHIFT | NYTH_SENSOR, 5, FIVE, 3)},
+    {0x2e7d, "ROCCAT Nyth White", &nyth_ops, nullptr, 0x06, CLASSIC_CAPS(NYTH, MOUSE | ROCKCAT_HAS_MACROS | ROCKCAT_HAS_EASYSHIFT | NYTH_SENSOR, 5, FIVE, 3)},
     {0x2e4a, "ROCCAT Tyon Black", &ops<TYON>, nullptr, 0x06, CLASSIC_CAPS(TYON, MOUSE | ROCKCAT_HAS_MACROS | ROCKCAT_HAS_EASYSHIFT, 5, FIVE, 3)},
     {0x2e4b, "ROCCAT Tyon White", &ops<TYON>, nullptr, 0x06, CLASSIC_CAPS(TYON, MOUSE | ROCKCAT_HAS_MACROS | ROCKCAT_HAS_EASYSHIFT, 5, FIVE, 3)},
     {0x2c38, "ROCCAT Kiro", &ops<KIRO>, nullptr, 0x06, CLASSIC_CAPS(KIRO, MOUSE, 1, THREE, 3)},

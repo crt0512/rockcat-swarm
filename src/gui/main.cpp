@@ -35,6 +35,10 @@ void press_in(GtkWidget *w, const char *text, bool *done)
     // (a toggle button gets switched on, the way a click on one that is up would)
     if (GTK_IS_BUTTON(w)) {
         const char *label = gtk_button_get_label(GTK_BUTTON(w));
+        // (a stack switcher puts its own label into the button instead of setting the label of the button)
+        GtkWidget *child = gtk_bin_get_child(GTK_BIN(w));
+        if (!label && child && GTK_IS_LABEL(child))
+            label = gtk_label_get_text(GTK_LABEL(child));
         if (label && std::strcmp(label, text) == 0) {
             if (GTK_IS_TOGGLE_BUTTON(w))
                 gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), TRUE);

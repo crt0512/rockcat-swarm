@@ -4,12 +4,12 @@
 # where the marker of every button sits
 # usage: tools/assets/mouse-view.py SORTED_ASSETS [PID...]      (no PID = every recipe in tools/assets/views.json)
 #   SORTED_ASSETS  the folder tools/assets/sort-swarm.py wrote (it has manifest.json and one folder per device)
-# writes DEV/roccat-assets-original/views/PID/{top.png, lightN.png, view.ini} and copies view.ini to assets/free/views/PID/
+# writes DEV/roccat-assets-original/views/PID/{top.png, lightN.png, view.ini} (and side*.png, see side-view.py) and copies view.ini to assets/free/views/PID/
 # (the numbers in it are ours to give away, the pictures are not: run tools/assets/placeholders.py for stand ins)
 # needs python3-pil. safe to run again, it overwrites what it wrote last time
 # the artwork belongs to ROCCAT / Turtle Beach, see assets/roccat/ATTRIBUTION.md before you add more of it
 # the pngs land in DEV/roccat-assets-original (the originals, outside of git), tools/assets/to-webp.py makes the webp the build uses out of them
-import json, os, sys
+import json, os, subprocess, sys
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -89,9 +89,13 @@ def build(pid):
     # more pictures next to the main one: a second view with its own markers (the side of the Leadr), or the side of a
     # mouse whose lights are only drawn from there (the back of the Nyth)
     extras = []
+    # an extra with "lights_only" (the back of the Nyth) has no buttons, the buttons page stops above it
+    lights_only = []
     for e in r.get('extras', []):
         im = load(e['picture'], e.get('scale', 1), e.get('rotate', 0))
         extras.append((im, tuple(e['at'])))
+        if e.get('lights_only'):
+            lights_only.append(e['at'][1])
         if 'view' in e and b:
             for n, xy in view_marks(b, b['views'][e['view']], nudge, e['at'], e.get('scale', 1)).items():
                 marks.setdefault(n, xy)
@@ -139,7 +143,8 @@ def build(pid):
         top.alpha_composite(im, (at[0] - x0, at[1] - y0))
     top.save(os.path.join(out, 'top.png'), optimize=True)
     ini = ['# written by tools/assets/mouse-view.py, dont edit by hand. recipe: tools/assets/views.json',
-           '[view]', 'picture=top.png', 'width=%d' % size[0], 'height=%d' % size[1], 'marker=%d' % mw, '',
+           '[view]', 'picture=top.png', 'width=%d' % size[0], 'height=%d' % size[1], 'marker=%d' % mw] + \
+          (['buttons_height=%d' % (min(lights_only) - y0 - 3)] if lights_only else []) + ['',
            '# button (our number, from 0) = x;y of the middle of its marker on the picture;the number Swarm prints on it',
            '[buttons]']
     for i, n in enumerate(r.get('inputs', [])):
@@ -162,6 +167,9 @@ def build(pid):
     os.makedirs(free, exist_ok=True)
     open(os.path.join(free, 'view.ini'), 'w').write(text)
     print('%s: %s, %dx%d, %d buttons, %d lights' % (pid, r['device'], size[0], size[1], len(wanted), len(masks)))
+    # a side with caps to put in (the Nyth) has its own pictures and its own part of view.ini, side-view.py does those
+    if r.get('side'):
+        subprocess.run([sys.executable, os.path.join(HERE, 'side-view.py'), assets, pid], check=True)
 
 for pid in sys.argv[2:] or [p for p in recipes if not p.startswith('_')]:
     if pid not in recipes:

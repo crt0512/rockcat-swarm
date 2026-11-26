@@ -11,6 +11,11 @@ struct classic_sim final : transport {
     std::map<int, std::vector<uint8_t>> macros; // profile * 256 + slot -> macro body (halves glued, or the single report)
     int macro_slot = 0;
     std::mutex lock;
+    // the Nyth sensor (report 0f): lift-off distance, calibrated or not, and a calibration that says its done with an
+    // input report 3 s after it started (the real one takes about 8)
+    uint8_t dcu = 3, tcu = 0;
+    bool calibrating = false, told = false; // told = the done report went out already
+    std::chrono::steady_clock::time_point calib_since;
 
     static void seal(std::vector<uint8_t> &b, int at)
     {
@@ -106,6 +111,11 @@ struct classic_sim final : transport {
             out[1] = L.info_size;
             out[2] = 0x6e; // 1.10
             break;
+        case REPORT_CONTROL_UNIT:
+            if (&L != &NYTH)
+                return ROCKCAT_ERR_IO;
+            out = {REPORT_CONTROL_UNIT, 6, dcu, tcu, 0, 0};
+            break;
         default:
             if (L.extra.size && buf[0] == L.extra.id && selected(L.extra.request)) {
                 out = extra[select_a];
@@ -166,6 +176,25 @@ struct classic_sim final : transport {
                 return ROCKCAT_OK;
             }
             return ROCKCAT_ERR_IO;
+        case REPORT_CONTROL_UNIT:
+            if (&L != &NYTH || len != 6)
+                return ROCKCAT_ERR_IO;
+            if (buf[2] != 0xff)
+                dcu = buf[2] <= 3 ? buf[2] : dcu;
+            if (buf[3] == 1 && buf[5] == CU_START) {
+                calibrating = true;
+                told = false;
+                calib_since = std::chrono::steady_clock::now();
+            } else if (buf[3] == 1 && (buf[5] == CU_ACCEPT || buf[5] == CU_CANCEL)) {
+                if (buf[5] == CU_ACCEPT)
+                    tcu = 1;
+                calibrating = false;
+            } else if (buf[3] == 0) {
+                tcu = 0;
+                calibrating = false;
+            }
+            status_queue = {3};
+            return ROCKCAT_OK;
         default:
             if (L.extra.size && buf[0] == L.extra.id)
                 return take(extra, buf, len, L.extra.size, -1);
@@ -173,8 +202,15 @@ struct classic_sim final : transport {
         }
     }
 
-    int read(uint8_t *, size_t, int timeout_ms) override
+    // the only input report the pretend mouse ever sends: "calibration done"
+    int read(uint8_t *buf, size_t len, int timeout_ms) override
     {
+        if (calibrating && !told && len >= 5 && std::chrono::steady_clock::now() - calib_since >= std::chrono::seconds(3)) {
+            const uint8_t done[5] = {SPECIAL_REPORT, 0, SPECIAL_TCU, 1, 0};
+            std::memcpy(buf, done, sizeof done);
+            told = true;
+            return 5;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(timeout_ms));
         return 0;
     }
@@ -205,8 +241,15 @@ template <uint16_t PID> struct classic_door final : transport {
         std::lock_guard<std::mutex> g(s.lock);
         return s.set_feature(buf, len);
     }
-    int read(uint8_t *, size_t, int timeout_ms) override
+    int read(uint8_t *buf, size_t len, int timeout_ms) override
     {
+        {
+            classic_sim &s = shared_classic(PID);
+            std::lock_guard<std::mutex> g(s.lock);
+            int n = s.read(buf, len, 0);
+            if (n)
+                return n;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(timeout_ms));
         return 0;
     }

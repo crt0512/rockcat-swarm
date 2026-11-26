@@ -55,6 +55,18 @@ struct led_geo {
     int ring;
 };
 
+// a family whose sensor calibration isnt the Kone AIMO one (kone_aimo_reports.cpp) brings its own. the public
+// rockcat_calibration_* and rockcat_*_lift_off calls end up here. nullptr entries answer ROCKCAT_ERR_UNSUPPORTED
+struct calibration_ops {
+    int (*read)(rockcat_device *dev, rockcat_tdcu *out);
+    int (*start)(rockcat_device *dev);
+    int (*poll)(rockcat_device *dev, int *finished);
+    int (*finish)(rockcat_device *dev, int save);
+    int (*off)(rockcat_device *dev);
+    int (*get_lift_off)(rockcat_device *dev, int *level);
+    int (*set_lift_off)(rockcat_device *dev, int level);
+};
+
 struct family_ops {
     // firmware version as text, the way the vendor writes it ("1.05")
     int (*firmware)(rockcat_device *dev, char *buf, size_t len);
@@ -77,6 +89,8 @@ struct family_ops {
     const char *(*type_label)(uint8_t type) = nullptr;
     // true when the type byte is a function of the device and not a key (keyboards). nullptr = everything is a function
     bool (*type_is_function)(uint8_t type) = nullptr;
+    // its own sensor calibration. nullptr = the Kone AIMO one, if the caps say there is calibration at all
+    const calibration_ops *calibration = nullptr;
 };
 
 struct device_desc {
