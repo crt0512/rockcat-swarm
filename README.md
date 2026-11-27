@@ -18,39 +18,56 @@ It comes in three parts:
 
 > Note : on windows? you dont need this, the original Swarm and Ryos Software still work fine there. Installers and modules are archived at [512mb Archive/Software/Roccat](https://dsl.512mb.net/Software/Roccat/).
 
-> Note : The docs and code comments are partially kept by an llm sorry im too lazy and tend to swear way too much in docs/comments. I do put real human effort into this project though where I can, as an example see [Handdrawn Icon Showcase](assets/free/SHOWCASE.md)
+> Note : The docs and code comments are partially kept by an llm, sorry im too lazy for that and documenting everything plus I tend to swear way too much in docs/comments. I do put alot of real human effort into this project wherever I can though, as an example see [Handdrawn Icon Showcase](assets/free/SHOWCASE.md) which serve as drop in replacements incase Roccats new owner (Turtlebeach) doesnt want me using them or to let this package ever ship on true libre oui oui free free distributions.
+
 
 ## What works
 
-Short version: 56 devices, 6 of them tried on real hardware here so far. The full list is in [MODULES.md](MODULES.md), sorted into tested and working, assumed to work (siblings of tested ones), might work, basics might work and todo.
+TLDR: 56 devices, 6 of them tried on real hardware here so far. The full list is in [MODULES.md](MODULES.md), sorted into tested and working, assumed to work (siblings of tested ones), might work, basics might work and todo.
 
-Tested on a real one:
+Tested on a real hardware:
 
-- **ROCCAT Ryos MK FX** (`1e7d:2fda`): profiles, what every key does on all three layers (normal, Easy-Shift[+], Fn), macros, the colour of every key, effects, idle settings, lighting from the pc. In the gui: the keyboard to paint on, a key assignment page and macro recording. Effects the keyboard cant do are drawn by rockcat itself while the gui (or `rockcat-cli engine`) runs: wave, ripple, heatmap, an equalizer for what the computer plays, fire and drip, each with its own settings, plus idle and wake animations
-- **ROCCAT Ryos MK Pro** (`1e7d:3232`): same keys and macros as the MK FX. Its keys are blue and only go on and off (no brightness per key, the hardware just cant), so the gui gives you LIGHT ON / LIGHT OFF instead of a colour picker. The engine effects work on it too, squashed into on and off
-- **ROCCAT Kova 2016** gray (`1e7d:2cee`): profiles, dpi, polling, both lights, buttons with the Easy-Shift[+] layer, macros, lighting from the pc. Shown with ROCCATs picture of the mouse, a marker on every button and the lights in the colours you pick
-- **ROCCAT Sova** membrane (`1e7d:2f76`): profiles, keys on all three layers, macros on the Easy-Shift keys, its effects, brightness and sleep timer. One backlight for the whole board, the picture shows what the effect does to it
-- **ROCCAT Lua** (`1e7d:2c2e`): dpi steps, polling, buttons, left handed, the logo light. The Lua cant be asked anything back, so rockcat keeps what it last sent in its config dir. The settings get accepted by a real one, whether it really does all of it is still to be looked at
-- **ROCCAT Nyth** black (`1e7d:2e7c`): profiles, dpi, polling, both lights, all 20 buttons with the Easy-Shift[+] layer, macros, sensor calibration (TCU) and lift-off distance (DCU) on the advanced page (those two not tried on the real one yet). The button page has the top of the mouse and its side, where you drag the caps you actually put in (buttons, blanks, doubles, blank rows, Swarms own pictures of them) onto it, so the list only shows the side buttons that are there
+- **ROCCAT Ryos MK FX** (`1e7d:2fda`)
+- **ROCCAT Ryos MK Pro** (`1e7d:3232`)
+- **ROCCAT Kova 2016** gray (`1e7d:2cee`)
+- **ROCCAT Sova** membrane (`1e7d:2f76`)
+- **ROCCAT Lua** (`1e7d:2c2e`)
+- **ROCCAT Nyth** black (`1e7d:2e7c`)
 
+Soon to be tested/supported hardware (I made bad financial decissions) :
+- Mice
+    - Tyon
+    - Kova Aimo (Aka. Kova Remastered)
+    - Kone Aimo
+    - Kone Pure (Military)
+    - Kone XTD
+- Keyboards
+    - Sova MK
+    - Isku
+    - Horde Aimo
+    - Vulkan 122 Aimo
+    - Valo (their first 2009 Keyboard)
+
+The Roccat Leadr would've also been on that list but some doofus overbid me on the only reasonably priced one I could find. **IF YOU HAVE ONE AND DONT WANT IT ANYMORE ILL HAPPILY TAKE IT OFF YOUR HANDS** 
+All above are currently being shipped to me and should therefore soon gain verified support.
 
 ## Building
 
-You need CMake 3.16 or newer, a C++17 compiler, `hidapi` 0.14 or newer (the hidraw backend), GTK 3, `libwebp` (the device pictures) and `glib-compile-resources`. `libayatana-appindicator3` is optional and gets you the tray icon.
+You need CMake 3.16 or newer, a C++17 compiler, `hidapi` 0.14 or newer, GTK 3, `libwebp` (the device pictures) and `glib-compile-resources`. `libayatana-appindicator3` is optional and gets you the tray icon.
 
-Arch:
-
-```bash
-sudo pacman -S cmake hidapi gtk3 libwebp libayatana-appindicator
-```
-
-Debian and friends:
+Debian (like me) :
 
 ```bash
 sudo apt install build-essential cmake pkg-config libhidapi-dev libgtk-3-dev libwebp-dev libayatana-appindicator3-dev
 ```
 
-Gentoo or whatever you use: you know what to do.
+For the I use Arch btw people:
+
+```bash
+sudo pacman -S cmake hidapi gtk3 libwebp libayatana-appindicator
+```
+
+Gentoo/LFS or whatever you use: you know what to do.
 
 Theres a Makefile so nobody has to remember the cmake incantations:
 
@@ -62,21 +79,13 @@ make
 sudo make install
 ```
 
-`make install` only installs what `make` built before, it doesnt build as root. `PREFIX=/usr` and `DESTDIR=...` work the way you expect, `make uninstall` takes it all out again and `make help` lists the rest.
-
-The tests dont need a mouse:
-
-```bash
-make test
-```
-
 If you would rather talk to cmake yourself thats fine too, the Makefile doesnt do anything magic. The switches are `-DROCKCAT_BUILD_GUI=OFF`, `-DROCKCAT_BUILD_CLI=OFF` and `-DROCKCAT_BUILD_TESTS=OFF`.
 
 ### Packages
 
 Installing through the package manager is nicer than `make install` because it can be removed cleanly again and the udev rule gets reloaded for you. Both of these drop the package into `dist/`.
 
-Debian, Ubuntu and whatever else eats `.deb`:
+Based Debian :
 
 ```bash
 make deb
@@ -86,7 +95,7 @@ make deb
 sudo apt install ./dist/rockcat-swarm_*.deb
 ```
 
-Arch (needs `makepkg`, which you have):
+Arch btw:
 
 ```bash
 make arch
@@ -98,7 +107,7 @@ sudo pacman -U dist/rockcat-swarm-*.pkg.tar.zst
 
 ## Permissions
 
-Before complaining that it cant find your mouse please read this section!
+Before complaining that it cant find your mouse please read this!
 
 The devices are talked to through `/dev/hidraw*`, which normal users are not allowed to open. The udev rule fixes that. `cmake --install` puts it into `<prefix>/lib/udev/rules.d`, if you didnt install then copy it yourself:
 
@@ -114,7 +123,7 @@ sudo udevadm control --reload
 sudo udevadm trigger
 ```
 
-If it still says no: UNPLUG THE MOUSE AND PLUG IT BACK IN. udev only hands out the new permissions when the device shows up again.
+If it still says no: UNPLUG THE MOUSE AND PLUG IT BACK IN.
 
 ## CLI
 
@@ -149,22 +158,16 @@ rockcat-cli --device /dev/hidraw4 raw get 0f 8   # read feature report 0f, 8 byt
 rockcat-cli capture mine.cap info        # run a command and write down everything that went over the wire
 ```
 
-How recordings work and how to make one of YOUR device (please do, thats how devices get supported): [docs/CAPTURES.md](docs/CAPTURES.md).
+How recordings work and how to make one of YOUR device (please do, thats how devices I cant impulse buy can get support through me): [docs/CAPTURES.md](docs/CAPTURES.md).
 
 
 ## Lighting engine
 
-The mouse firmware draws Off, Fully lit, Blinking, Breathing, Snake and Colorwave by itself. AIMO, Heartbeat, Breathing 2.0 and Heartbeat 2.0 are drawn BY THE PC (Swarm did the exact same thing), and so are profiles set to engine rendering, the Easy-Shift[+] lighting and the brightness buttons. Meaning: if nothing on the pc is running, those effects are just dark. One of these has to be up:
-
-- `rockcat-swarm`, window or tray
-- `rockcat-cli engine` in a terminal
-- the user service, if you want it always on without the gui:
+Many of the peripherals built in effects are a bit meh but I mean thats fine by me, if you want more dedicated effects they need to be sent by the PC and require Rockcat Swarm to stay running, close to tray in GUI or if you dont want to start it each time :
 
 ```bash
 systemctl --user enable --now rockcat-engine.service
 ```
-
-Only one engine runs at a time, the gui tells you when the service already has it. The engine follows the active profile so switching profiles on the mouse switches the effect too, and it hands the leds back to the firmware when it stops.
 
 
 ## Known meh
